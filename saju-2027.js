@@ -177,8 +177,9 @@
         : favCount === 1
           ? '한쪽은 내게 유리하고 한쪽은 부담이라, 벌이와 정리를 함께 가져가야 하는 해입니다.'
           : '두 기운 모두 내 용신과 멀어, 새로 벌이기보다 정리하며 힘을 아끼는 편이 나은 해입니다.';
+      const tail = '지지 未(토)는 내게 ' + branchRel + ' 기운입니다. ' + relText[branchRel] + ' ' + verdict;
       return {
-        stemRel: stemRel, branchRel: branchRel, favCount: favCount,
+        stemRel: stemRel, branchRel: branchRel, favCount: favCount, tail: tail,
         text: '올해 천간 丁(화)은 내게 ' + stemRel + ' 기운, 지지 未(토)는 ' + branchRel + ' 기운입니다. ' + relText[stemRel] + (branchRel !== stemRel ? ' ' + relText[branchRel] : '') + ' ' + verdict
       };
     })();
@@ -247,11 +248,11 @@
       story.push(relMine.length
         ? '내 일지 쪽과는 ' + flatRel(relMine) + ' — ' + MINE_SCENE[relMine[0]] + (relMine.length > 1 ? ' ' + relMine.slice(1).map(r => (E.REL_SIT[r] || r)).join(' · ') + '까지 겹쳐 마음 쓸 일이 한 가지 더 생깁니다.' : '')
         : '내 일지와는 부딪히지도 붙지도 않아, 내 생활의 리듬을 그대로 지킬 수 있는 달입니다.');
-      if (base.branchElem === yongEl) story.push('월지가 용신 ' + yongEl + '과 같은 기운이라 이 달은 내가 편해집니다. 같은 일을 해도 피로가 덜하고 판단이 빨라집니다.');
+      if (base.branchElem === yongEl) story.push('월지가 용신 ' + E.josa(yongEl, '과', '와') + ' 같은 기운이라 이 달은 내가 편해집니다. 같은 일을 해도 피로가 덜하고 판단이 빨라집니다.');
       else if (base.branchElem === heeEl) story.push('희신 ' + heeEl + ' 기운이 실려 주변의 도움이 따라오는 달입니다. 누군가의 소개나 제안이 실제 이익으로 이어집니다.');
       else if (base.branchElem === dm.elem) story.push('내 기운(' + dm.elem + ')이 겹치는 달이라 의욕은 앞서는데 결과는 늦습니다. 혼자 결정하기보다 한 번 검토를 거치세요.');
       story.push('그래서 이 달은 ' + (verdict === '추진' ? '밀어붙여도 좋은 달입니다. ' : verdict === '균형' ? '절반은 진행하고 절반은 확인하는 달입니다. ' : '확인과 방어가 먼저인 달입니다. ')
-        + gs.tip + '. ' + fix);
+        + gs.tip + '.');
 
       const pick = verdict === '추진'
         ? (ACTION[god] || '평소의 일') + '에 힘이 실립니다. ' + (relMine.indexOf('합') >= 0 ? '내 일지와 합해 사람이 붙으니 미뤄 둔 연락과 제안을 이 달에 꺼내세요.' : relYear.indexOf('합') >= 0 ? '올해의 未토와 합해 거래와 계약이 맺어지기 좋습니다.' : '흐름이 순해 미뤄 둔 일을 꺼내기 좋습니다.')

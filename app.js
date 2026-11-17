@@ -1071,7 +1071,7 @@
     const dm = chart.dayMaster;
     const gs = E.GOD_SIT[y.yearGod];
     const out = [];
-    out.push('<p class="rp-lead">2027 정미년의 하늘은 丁(음화), 땅은 未(음토)입니다. 내 일간 ' + dm.hanja + '(' + dm.ko + dm.elem + ')에게 올해 천간 丁은 ' + E.josa(y.yearGod, '은', '는') + ' 자리 — ' + gs.sit + '입니다. ' + y.yearRead.text + '</p>');
+    out.push('<p class="rp-lead">2027 정미년의 하늘은 丁(음화), 땅은 未(음토)입니다. 내 일간 ' + dm.hanja + '(' + dm.ko + dm.elem + ')에게 올해 천간 丁은 ' + y.yearGod + ' 자리 — ' + gs.sit + '입니다. ' + (y.yearRead.tail || y.yearRead.text) + '</p>');
     if (item.kind === 'newyear') {
       out.push('<p class="rp-para">이 사주에서 2027년이 가장 힘을 주는 달은 <b>' + y.good[0].no + '월(' + y.good[0].hanja + ') ' + y.good[0].score + '점</b>입니다. ' + y.good[0].pick + ' 반대로 가장 조심할 달은 <b>' + y.warn[0].no + '월(' + y.warn[0].hanja + ') ' + y.warn[0].score + '점</b> — ' + y.warn[0].pick + '</p>');
     } else if (item.kind === 'samjae') {
