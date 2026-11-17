@@ -509,7 +509,7 @@ window.SAJU_RX = (function () {
     var base = f.dmKey + ' 일간에 ' + x.hanja + '(' + x.ko + ') ' + x.stemGod + '·' + x.branchGod + ' ' + x.stage;
     if (field === 'flow') return '이 10년은 ' + base + ' 자리이고, 용신 ' + E.josa(f.yong, '과', '와') + '는 ' + (x.stemEl === f.yong || x.branchEl === f.yong ? '같은 방향이라 힘이 실립니다.' : x.stemEl === f.hee || x.branchEl === f.hee ? '희신으로 이어져 버티는 힘이 붙습니다.' : '거리가 있어 새로 벌이기보다 지키는 쪽이 남습니다.');
     if (field === 'money') return '이 대운에서는 ' + f.jaeEl + ' 재성 ' + f.groups.재성 + '개가 ' + x.branchGod + ' 자리와 만나 ' + (x.branchGod === '편재' || x.branchGod === '정재' ? '돈의 문이 직접 열립니다.' : '직접 열리지는 않아도 ' + f.yong + ' 기운을 채우면 새는 돈이 줄어듭니다.');
-    if (field === 'work') return '일에서는 ' + f.monB + ' 월지의 ' + f.monG + '과 이 대운의 ' + x.stemGod + '이 겹쳐 ' + (x.stemGod === '정관' || x.stemGod === '편관' ? '조직과 평가의 자리가 커집니다.' : x.stemGod === '식신' || x.stemGod === '상관' ? '만들어 내놓는 일이 성과로 남습니다.' : '내 자리를 다지는 시기입니다.');
+    if (field === 'work') return '일에서는 ' + f.monB + ' 월지의 ' + E.josa(f.monG, '과', '와') + ' 이 대운의 ' + x.stemGod + E.josa(x.stemGod, '이', '가').slice(x.stemGod.length) + ' 겹쳐 ' + (x.stemGod === '정관' || x.stemGod === '편관' ? '조직과 평가의 자리가 커집니다.' : x.stemGod === '식신' || x.stemGod === '상관' ? '만들어 내놓는 일이 성과로 남습니다.' : '내 자리를 다지는 시기입니다.');
     return '사는 법은 ' + (f.strongKey === 'weak' ? '사람을 곁에 두는 것' : f.strongKey === 'strong' ? '일정을 비우는 것' : '기한을 스스로 거는 것') + '이 답이고, 이 10년에는 ' + f.thinEl + ' 기운(' + f.pct[f.thinEl] + '%)을 채우는 습관이 그 일을 도와줍니다.';
   }
 
@@ -578,7 +578,7 @@ window.SAJU_RX = (function () {
   var DEC = {
     '비견': { key: '내 이름으로 서는 10년',
       money: function (f, x) { return x.hanja + ' 10년의 돈은 같이 벌고 같이 나누는 자리에서 들어옵니다. ' + f.dmKey + '에 재성 ' + f.groups.재성 + '개인 이 사주는 ' + x.ageFrom + '세 무렵부터 배분을 글로 남기지 않으면 그 돈이 사람을 상하게 합니다.'; },
-      work: function (f, x) { return '남 밑에 있기 답답해지는 시기입니다. ' + x.hanja + '가 ' + x.stemGod + '으로 서는 ' + x.ageFrom + '~' + x.ageTo + '세에는 내 이름을 걸고 작게라도 결정권이 있는 자리로 옮기세요.'; },
+      work: function (f, x) { return '남 밑에 있기 답답해지는 시기입니다. ' + E.josaHan(x.hanja, x.ko, '이', '가') + ' ' + x.stemGod + E.josa(x.stemGod, '으로', '로').slice(x.stemGod.length) + ' 서는 ' + x.ageFrom + '~' + x.ageTo + '세에는 내 이름을 걸고 작게라도 결정권이 있는 자리로 옮기세요.'; },
       life: function (f, x) { return '이 10년은 몸이 곧 자본입니다. ' + f.dmKey + '의 ' + f.yong + ' 기운이 ' + f.pct[f.yong] + '%인 만큼 사람을 많이 만나느라 잠을 줄이면 그 값이 다음 대운에 옵니다.'; } },
     '겁재': { key: '나누고 지키는 법을 배우는 10년',
       money: function (f, x) { return '돈이 들어오는 만큼 나가는 길도 함께 열립니다. ' + x.hanja + ' 대운에 재성 ' + f.groups.재성 + '개가 겹치니 통장을 하나 분리해 두는 것만으로 결과가 달라집니다.'; },
@@ -682,7 +682,7 @@ window.SAJU_RX = (function () {
     var dd = DAILY_DAEUN[x.stemGod] || DAILY_DAEUN['비견'];
     return {
       key: x.hanja + ' ' + x.stemGod + ' 대운 · ' + dec.key,
-      flow: (E.STAGE_DEEP[x.stage] || '') + '. ' + x.hanja + '의 ' + x.stemGod + '·' + x.branchGod + '이 ' + f.dmKey + ' 일간에 앉아 ' + fav,
+      flow: (E.STAGE_DEEP[x.stage] || '') + '. ' + x.hanja + '의 ' + x.stemGod + '·' + x.branchGod + E.josa(x.branchGod, '이', '가').slice(x.branchGod.length) + ' ' + f.dmKey + ' 일간에 앉아 ' + fav,
       money: dec.money(f, x) + ' ' + dd.money(f, x),
       work: dec.work(f, x) + ' ' + dd.work(f, x),
       life: dec.life(f, x) + ' ' + dd.life(f, x)
