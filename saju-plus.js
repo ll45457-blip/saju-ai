@@ -169,11 +169,13 @@
       if (!hit && sameSamhap(x, y)) tally['반합'] += 1;
     }));
     const samhapDone = SAMHAP.filter(g => g.branches.every(x => allBr.indexOf(x) >= 0));
-    score += Math.min(tally['합'] * 2 + tally['반합'] * 1.5, 9);
-    score -= Math.min(tally['충'] * 2.5, 10);
-    score -= Math.min(tally['형'] * 1.2, 5);
-    score -= Math.min((tally['파'] + tally['해']) * 1, 4);
-    if (samhapDone.length) score += 7;
+    let tallyPts = Math.min(tally['합'] * 2 + tally['반합'] * 1.5, 9);
+    tallyPts -= Math.min(tally['충'] * 2.5, 10);
+    tallyPts -= Math.min(tally['형'] * 1.2, 5);
+    tallyPts -= Math.min((tally['파'] + tally['해']) * 1, 4);
+    if (samhapDone.length) tallyPts += 7;
+    score += Math.round(tallyPts);
+    if (Math.round(tallyPts) !== 0) parts.push({ k: '지지 관계', v: (Math.round(tallyPts) > 0 ? '+' : '') + Math.round(tallyPts) });
 
     /* 서로에게 필요한 오행 */
     const aNeedY = A.yongsin.elem, aNeedH = A.yongsin.hee;
@@ -181,8 +183,10 @@
     const helperOf = el => ELEM[(ELEM.indexOf(el) + 4) % 5];   // 그 오행을 살리는 기운(수생목)
     const toB = Math.round((Bc.pct[aNeedY] || 0) + (Bc.pct[aNeedH] || 0) * 0.6 + (Bc.pct[helperOf(aNeedY)] || 0) * 0.3);
     const toA = Math.round((A.pct[bNeedY] || 0) + (A.pct[bNeedH] || 0) * 0.6 + (A.pct[helperOf(bNeedY)] || 0) * 0.3);
-    score += Math.max(-6, Math.min(9, Math.round((toB - 18) * 0.45)));
-    score += Math.max(-6, Math.min(9, Math.round((toA - 18) * 0.45)));
+    const fillPts = Math.max(-6, Math.min(9, Math.round((toB - 18) * 0.45))) +
+      Math.max(-6, Math.min(9, Math.round((toA - 18) * 0.45)));
+    score += fillPts;
+    if (fillPts !== 0) parts.push({ k: '오행 보완', v: (fillPts > 0 ? '+' : '') + fillPts });
 
     return {
       score: Math.max(34, Math.min(98, Math.round(score))),

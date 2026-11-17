@@ -1246,9 +1246,9 @@ body::before {
 .du-god { color: var(--ink-2); font-size: 9px; }
 .du-god i { font-style: normal; font-size: 7.5px; color: #57534C; display: block; }
 .du-st { color: #9FB6E8; font-size: 8.5px; }
-.du-bar { display: flex; align-items: center; gap: 4px; }
-.du-bar i { display: block; height: 6px; border-radius: 999px; background: linear-gradient(90deg, rgba(212, 175, 55, .45), var(--gold)); min-width: 3px; }
-.du-bar em { font-style: normal; font-size: 8px; color: var(--ink-3); }
+.du-bar { position: relative; height: 6px; margin-right: 19px; border-radius: 999px; background: rgba(255, 255, 255, .07); }
+.du-bar i { position: absolute; left: 0; top: 0; height: 6px; border-radius: 999px; background: linear-gradient(90deg, rgba(212, 175, 55, .45), var(--gold)); min-width: 3px; }
+.du-bar em { position: absolute; right: -19px; top: -3px; font-style: normal; font-size: 8px; color: var(--ink-3); }
 .du-high { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
 .du-hi, .du-low {
   padding: 10px 11px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, .26);

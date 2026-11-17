@@ -1490,7 +1490,7 @@
       '<div class="du-tr th"><span>나이</span><span>간지</span><span>십성</span><span>운성</span><span>흐름</span></div>' +
       d.list.map(x => daeunRow(x, d.current && d.current.no === x.no)).join('') + '</div>' +
       '<p class="rp-note" style="margin-top:6px">나이는 세는나이 · 시작은 그 대운이 열린 해와 달 · 십성 큰 글씨는 대운 천간, 작은 글씨는 대운 지지 · 흐름 100점 만점</p>' +
-      '<div class="du-high">' + d.golden.map(g => '<div class="du-hi"><span>인생 전성기</span><b>' + g.ageFrom + '~' + g.ageTo + '세 · ' + g.hanja + '</b><i>' + g.yearFrom + '~' + g.yearTo + '년</i><p>' + esc(d.say(g).key) + ' — ' + esc(d.say(g).flow) + '</p></div>').join('') + '</div>' +
+      '<div class="du-high">' + d.golden.map((g, gi) => '<div class="du-hi"><span>' + (gi === 0 ? '인생 전성기' : '두 번째 전성기') + '</span><b>' + g.ageFrom + '~' + g.ageTo + '세 · ' + g.hanja + '</b><i>' + g.yearFrom + '~' + g.yearTo + '년</i><p>' + esc(d.say(g).key) + ' — ' + esc(d.say(g).flow) + '</p></div>').join('') + '</div>' +
       '<div class="du-low"><span>조심해서 넘길 10년</span><b>' + d.caution.ageFrom + '~' + d.caution.ageTo + '세 · ' + d.caution.hanja + '</b><i>' + d.caution.stemGod + ' 대운 · ' + d.caution.stage + '</i><p>' + esc(d.say(d.caution).life) + '</p></div>' +
       '<p class="rp-para" style="margin-top:10px">' + esc(d.goldenNote) + '</p></div>';
 
@@ -1515,7 +1515,7 @@
       '<li>대운은 10년이지만 실제 변화는 그 안의 세운(해)에서 옵니다. 좋은 대운이라도 해가 나쁘면 그해는 조심하세요.</li></ul>';
 
     return head + free +
-      payWrapHTML({ kind: 'daeun', price: 24900, list: 49000, label: '10년 대운 전체 풀이 열기', desc: '10개 대운의 재물·커리어·인생 전략 · 지금 대운의 의미 · 대운을 쓰는 순서', inner: body }) +
+      payWrapHTML({ kind: 'daeun', price: 24900, list: 49000, label: '10년 대운 전체 풀이 열기', desc: '대운 8개의 재물·커리어·인생 전략 · 지금 대운의 의미 · 대운을 쓰는 순서', inner: body }) +
       '<div class="rp-actions"><button class="btn-ghost" id="duClose">닫기</button><button class="btn-ghost" id="duAgain">내 정보 수정</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="duSave">보관함 저장</button></div>' +
       '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 대운수는 출생 시각에서 절입까지의 날수를 3일=1년으로 셈했습니다.<br />' + esc(D.BRAND.footer) + '</div>';
   }
