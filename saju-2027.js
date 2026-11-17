@@ -239,15 +239,35 @@
       /* ---- 심층 문장 (유료 본문) ---- */
       const gs = E.GOD_SIT[god], bs = E.GOD_SIT[branchGod];
       const story = [];
-      story.push(base.no + '월(' + base.hanja + ', ' + base.startLabel + ' 절입) — 하늘에는 ' + base.stemKo + base.stemElem + '(' + god + '), 땅에는 ' + base.branchKo + base.branchElem + ' — ' + branchGod + ' 자리가 앉는 달입니다.'
-        + ' 내 일간 ' + dm.hanja + '에게 ' + E.josa(god, '은', '는') + ' ' + gs.sit + '이고, 이 달의 주제는 ' + gs.scene + '입니다.');
-      story.push('여기에 월지 본기의 ' + branchGod + '까지 겹쳐 ' + E.josa(bs.sit, '이', '가') + ' 한 겹 더해지고, 12운성은 ' + stage + ' — ' + E.STAGE_DEEP[stage] + '.');
+      const v = base.no % 3;
+      const headV = [
+        base.no + '월(' + base.hanja + ', ' + base.startLabel + ' 절입) — 하늘에는 ' + base.stemKo + base.stemElem + '(' + god + '), 땅에는 ' + base.branchKo + base.branchElem + ' — ' + branchGod + ' 자리가 앉는 달입니다.',
+        base.no + '월(' + base.hanja + ', ' + base.startLabel + ' 절입) — 천간은 ' + base.stemKo + base.stemElem + '(' + god + '), 지지는 ' + base.branchKo + base.branchElem + '라 ' + branchGod + ' 자리가 깔립니다.',
+        base.no + '월(' + base.hanja + ', ' + base.startLabel + ' 절입) — 이 달의 간지는 ' + base.stemKo + base.stemElem + '(' + god + ') 위에 ' + base.branchKo + base.branchElem + '(' + branchGod + ')가 앉았습니다.'
+      ];
+      story.push(headV[v] + ' 내 일간 ' + dm.hanja + '에게 ' + E.josa(god, '은', '는') + ' ' + gs.sit + '이고, 이 달의 주제는 ' + gs.scene + '입니다.');
+      const secondV = [
+        '여기에 월지 본기의 ' + branchGod + '까지 겹쳐 ' + E.josa(bs.sit, '이', '가') + ' 한 겹 더해지고, 12운성은 ' + stage + ' — ' + E.STAGE_DEEP[stage] + '.',
+        '월지 본기로는 ' + E.josa(branchGod, '이', '가') + ' 한 겹 더 얹힙니다 — ' + bs.sit + '. 12운성은 ' + stage + ', ' + E.STAGE_DEEP[stage] + '.',
+        '게다가 이 달의 지지는 ' + branchGod + ' 자리라 ' + E.josa(bs.sit, '이', '가') + ' 함께 걸립니다. 운성은 ' + stage + ' — ' + E.STAGE_DEEP[stage] + '.'
+      ];
+      story.push(secondV[v]);
+      const noYearV = [
+        '2027년의 未토와는 충·합이 없습니다. 해의 기운이 이 달을 크게 흔들지 않고, 월운 자체의 흐름으로만 움직입니다.',
+        '올해의 未토는 이 달을 건드리지 않습니다. 흐름은 월운 자체로만 결정되고, 해의 기운은 잠잠합니다.',
+        '未토와 이 달 사이에는 아무 작용이 없습니다. 그래서 해의 도움도 방해도 없이 이 달은 제 몫으로 굴러갑니다.'
+      ];
       story.push(relYear.length
         ? '2027년의 未토와는 ' + flatRel(relYear) + ' 관계입니다. ' + REL_SCENE[relYear[0]] + (relYear.length > 1 ? ' 여기에 ' + relYear.slice(1).map(r => (E.REL_SIT[r] || r)).join(' · ') + '까지 겹쳐 같은 방향의 부담이 한 번 더 옵니다.' : '')
-        : '2027년의 未토와는 충·합이 없습니다. 해의 기운이 이 달을 크게 흔들지 않고, 월운 자체의 흐름으로만 움직입니다.');
+        : noYearV[v]);
+      const noMineV = [
+        '내 일지와는 부딪히지도 붙지도 않아, 내 생활의 리듬을 그대로 지킬 수 있는 달입니다.',
+        '내 일지와는 아무 작용이 없습니다. 생활의 큰 틀은 흔들리지 않으니 평소대로 가시면 됩니다.',
+        '내 자리와는 조용한 달입니다 — 크게 얻을 것도 잃을 것도 없이 담담하게 지나갑니다.'
+      ];
       story.push(relMine.length
         ? '내 일지 쪽과는 ' + flatRel(relMine) + ' — ' + MINE_SCENE[relMine[0]] + (relMine.length > 1 ? ' ' + relMine.slice(1).map(r => (E.REL_SIT[r] || r)).join(' · ') + '까지 겹쳐 마음 쓸 일이 한 가지 더 생깁니다.' : '')
-        : '내 일지와는 부딪히지도 붙지도 않아, 내 생활의 리듬을 그대로 지킬 수 있는 달입니다.');
+        : noMineV[v]);
       if (base.branchElem === yongEl) story.push('월지가 용신 ' + E.josa(yongEl, '과', '와') + ' 같은 기운이라 이 달은 내가 편해집니다. 같은 일을 해도 피로가 덜하고 판단이 빨라집니다.');
       else if (base.branchElem === heeEl) story.push('희신 ' + heeEl + ' 기운이 실려 주변의 도움이 따라오는 달입니다. 누군가의 소개나 제안이 실제 이익으로 이어집니다.');
       else if (base.branchElem === dm.elem) story.push('내 기운(' + dm.elem + ')이 겹치는 달이라 의욕은 앞서는데 결과는 늦습니다. 혼자 결정하기보다 한 번 검토를 거치세요.');
