@@ -497,6 +497,8 @@
 
     openSheet(c.name + '의 리포트', html, null);
 
+    const closeBtn = $('#rpClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeSheet);
     const saveBtn = $('#rpSave');
     if (saveBtn) saveBtn.addEventListener('click', () => {
       saveHistory({
@@ -604,7 +606,7 @@
       '<div class="rp-top"><img class="rp-ava" src="' + c.img + '" alt="' + esc(c.name) + '" />' +
       '<div class="rp-who"><b>' + esc(c.name) + ' <small style="font-size:9px;letter-spacing:.2em;color:var(--ink-3)">' + esc(c.hanja) + '</small></b>' +
       '<span>' + esc(c.role) + ' · ' + chart.dayMaster.hanja + chart.dayMaster.elem + ' ' + chart.strengthKo + '</span></div>' +
-      '<span class="rp-stamp">' + esc(D.BRAND.name) + ' 정통 蟠</span></div>' +
+      '<span class="rp-stamp">' + esc(D.BRAND.name) + ' 정통 만세력</span></div>' +
 
       (o.question ? '<div class="rp-question"><b>질문</b>' + esc(o.question) + '</div>' : '') +
 
