@@ -630,6 +630,21 @@ body::before {
 .rp-who span { font-size: 10.5px; color: var(--ink-3); }
 .rp-stamp { font-size: 9.5px; color: var(--gold-dp); letter-spacing: .1em; }
 
+/* 결과 상단 프로필 배너 — 누구의 사주인지 한눈에 */
+.rp-prof {
+  display: flex; flex-direction: column; gap: 3px; margin-bottom: 14px; padding: 11px 13px;
+  border-radius: 13px; background: linear-gradient(180deg, rgba(212, 175, 55, .13), rgba(212, 175, 55, .04));
+  border: 1px solid rgba(212, 175, 55, .34);
+}
+.rp-prof-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rp-prof-name { font-family: var(--serif); font-size: 14px; color: var(--gold-lt); letter-spacing: .01em; }
+.rp-prof-edit {
+  flex: 0 0 auto; padding: 4px 9px; border-radius: 9px; border: 1px solid rgba(212, 175, 55, .38);
+  background: rgba(255, 255, 255, .04); color: var(--gold-lt); font-family: var(--sans); font-size: 10px;
+}
+.rp-prof-meta { font-size: 11px; color: #DCD4C4; line-height: 1.5; }
+.rp-prof-sol { font-size: 10px; color: var(--ink-3); }
+
 .rp-question {
   padding: 13px 14px; margin-bottom: 16px; border-radius: 13px;
   background: rgba(255, 255, 255, .04); border-left: 2px solid var(--gold);

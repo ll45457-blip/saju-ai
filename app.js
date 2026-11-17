@@ -21,6 +21,40 @@
   const K_HISTORY = 'wolha_history_v1';
   const K_TRIAL = 'wolha_trial_v1';
 
+  /* ---------------- 생년월일 표기 도우미 ---------------- */
+  const SIZI_NAMES = ['자시', '축시', '인시', '묘시', '진시', '사시', '오시', '미시', '신시', '유시', '술시', '해시'];
+  function siziName(hour) {
+    if (hour === null || hour === undefined || hour === '') return '시간 모름';
+    const h = +hour;
+    if (isNaN(h)) return '시간 모름';
+    return SIZI_NAMES[Math.floor(((h + 0.5) % 24) / 2) % 12];
+  }
+  function normalizeProfile(p) {
+    if (!p) return null;
+    const out = Object.assign({}, p);
+    out.calendar = out.calendar === 'lunar' ? 'lunar' : 'solar';
+    out.leap = out.calendar === 'lunar' ? !!out.leap : false;
+    return out;
+  }
+  function birthLabel(p) {
+    if (!p) return '';
+    const leap = (p.calendar === 'lunar' && p.leap) ? '윤달 ' : '';
+    return leap + p.year + '.' + pad(p.month) + '.' + pad(p.day) + ' ' + (p.calendar === 'lunar' ? '음력' : '양력');
+  }
+  function birthDetail(p) {
+    if (!p) return '';
+    return birthLabel(p) + ' · ' + siziName(p.hour) + ' · ' + (p.gender === 'female' ? '여' : '남');
+  }
+  function solarConversionLine(p) {
+    if (!p || p.calendar !== 'lunar') return '';
+    let sy = p.solarYear, sm = p.solarMonth, sd = p.solarDay;
+    if (!sy) {
+      try { const s = E.lunarToSolar(p.year, p.month, p.day, !!p.leap); sy = s.y; sm = s.m; sd = s.d; }
+      catch (e) { return ''; }
+    }
+    return '음력 ' + p.year + '.' + pad(p.month) + '.' + pad(p.day) + ' → 양력 ' + sy + '.' + pad(sm) + '.' + pad(sd);
+  }
+
   /* ---------------- 방문자 추적 (GA4) ----------------
      index.html 의 window.WOLHA_ANALYTICS.ga4Id 에 측정 ID(G-XXXXXXXXXX)만 넣으면
      gtag.js 가 자동 로드되고, 그 전까지 쌓인 이벤트가 한꺼번에 전송됩니다. */
@@ -65,7 +99,7 @@
 
   const state = {
     view: 'home',
-    profile: store.get(K_PROFILE, null),
+    profile: normalizeProfile(store.get(K_PROFILE, null)),
     history: store.get(K_HISTORY, []),
     unlocked: store.get(K_TRIAL, {}),
     askChar: D.CHARACTERS[0].id,
@@ -350,8 +384,10 @@
     const chart = E.buildChart(state.profile);
     const r = E.todayReading(chart, t);
     r.myNote = '나의 일간 ' + chart.dayMaster.hanja + '(' + chart.dayMaster.ko + ') ' + chart.dayMaster.elem + '과 오늘 일진 ' + t.pillar.hanja + '이 만나 ' + r.god + '의 자리입니다. ' + (r.combine ? '일지가 합(合)하는 날로, 만남과 약속에 힘이 실립니다.' : r.clash ? '일지가 충(沖)하는 날로, 계약·이동·약속 변경은 조심스럽게.' : '큰 자극 없이 흘러가니 평소의 리듬을 지키면 충분합니다.');
-    wrap.innerHTML = todayHTML(t, r, true) +
-      '<div class="block" style="margin-top:18px"><div class="rp-note">' + esc(D.REPORT.solarNote) + ' · ' + esc(D.REPORT.mockNote) + '</div></div>';
+    wrap.innerHTML = profileBannerHTML(chart) + todayHTML(t, r, true) +
+      '<div class="block" style="margin-top:18px"><div class="rp-note">' + esc(calendarNote(chart.input)) + ' · ' + esc(D.REPORT.mockNote) + '</div></div>';
+    const pe = $('#todayPage [data-prof-edit]');
+    if (pe) pe.addEventListener('click', () => openBirthForm({ title: '생년월일 수정', onDone: () => renderTodayPage() }));
   }
 
   /* ---------------- 보관함 ---------------- */
@@ -428,8 +464,8 @@
       return;
     }
     const c = E.buildChart(p);
-    target.innerHTML = '<div class="arch-profile">' +
-      '<div class="rp-id"><b>' + esc(p.name || '익명의 발견자') + '</b><span>' + (p.gender === 'female' ? '여성' : '남성') + ' · ' + p.year + '.' + pad(p.month) + '.' + pad(p.day) + (p.hour != null && p.hour !== '' ? ' ' + pad(p.hour) + ':' + pad(p.minute || 0) : ' · 시간 모름') + '</span></div>' +
+    target.innerHTML = profileBannerHTML(c) + '<div class="arch-profile">' +
+      '<div class="rp-id"><b>' + esc(p.name || '익명의 발견자') + '</b><span>' + (p.gender === 'female' ? '여성' : '남성') + ' · ' + p.year + '.' + pad(p.month) + '.' + pad(p.day) + (p.hour != null && p.hour !== '' ? ' ' + pad(p.hour) + ':' + pad(p.minute || 0) : ' · 시간 모름') + ' · ' + (p.calendar === 'lunar' ? '음력' + (p.leap ? ' 윤달' : '') : '양력') + '</span></div>' +
       '<div class="preview-mini">' + c.pillars.year.hanja + ' ' + c.pillars.month.hanja + ' <b style="color:var(--gold-lt)">' + c.pillars.day.hanja + '</b>' + (c.pillars.hour ? ' ' + c.pillars.hour.hanja : '') +
       '<small>' + c.ganjiKo + (c.pillars.hour ? '' : ' · 시주 제외') + '</small></div>' +
       '<div class="stat-row" style="margin-top:10px">' +
@@ -440,6 +476,8 @@
       '<div class="rp-actions"><button class="btn-ghost" id="editBirth">정보 수정</button><button class="btn-ghost" id="resetAll">전체 초기화</button></div>' +
       '</div>';
     $('#editBirth').addEventListener('click', () => openBirthForm({ title: '정보 수정' }));
+    const pe = target.querySelector('[data-prof-edit]');
+    if (pe) pe.addEventListener('click', () => openBirthForm({ title: '정보 수정', onDone: () => { renderArchive(); renderAskProfile(); renderTodayWidget(); } }));
     $('#resetAll').addEventListener('click', () => {
       if (confirm('저장된 프로필과 본 사주 내역을 모두 지울까요?')) {
         state.profile = null; state.history = [];
@@ -467,21 +505,33 @@
     { v: 18, l: '유시 (17:30~19:30)' }, { v: 20, l: '술시 (19:30~21:30)' }, { v: 22, l: '해시 (21:30~23:30)' }
   ];
 
-  function birthFormHTML(p) {
+  function birthFormHTML(p, opts) {
+    opts = opts || {};
     const y = p ? p.year : 1995, m = p ? p.month : 1, d = p ? p.day : 1;
+    const cal = (p && p.calendar === 'lunar') ? 'lunar' : 'solar';
+    const leap = !!(p && p.leap);
     let hourOpts = '<option value=""' + (!p || p.hour == null ? ' selected' : '') + '>태어난 시간 모름</option>' + SIZI.map(s => '<option value="' + s.v + '"' + (p && +p.hour === s.v ? ' selected' : '') + '>' + s.l + '</option>').join('');
+    const saved = state.profile;
+    const quick = (opts.quick && saved)
+      ? '<button type="button" class="btn-ghost wide" id="bfQuick">저장된 정보(' + esc((saved.name || '이름 없음') + ' · ' + birthLabel(saved)) + ')로 바로 보기</button>'
+      : '';
     return '<form class="form-grid" id="birthForm" autocomplete="off">' +
       '<div class="field"><label for="bfName">이름 또는 별명</label><input id="bfName" maxlength="12" placeholder="예) 승현" value="' + esc(p && p.name || '') + '" /></div>' +
       '<div class="field"><label>성별</label><div class="seg" id="bfGender">' +
       '<button type="button" data-g="male"' + (!p || p.gender === 'male' ? ' class="is-on"' : '') + '>남성</button>' +
       '<button type="button" data-g="female"' + (p && p.gender === 'female' ? ' class="is-on"' : '') + '>여성</button></div></div>' +
-      '<div class="field"><label>생년월일 (양력)</label><div class="field-row">' +
+      '<div class="field"><label>달력</label><div class="seg" id="bfCal">' +
+      '<button type="button" data-c="solar"' + (cal === 'solar' ? ' class="is-on"' : '') + '>양력</button>' +
+      '<button type="button" data-c="lunar"' + (cal === 'lunar' ? ' class="is-on"' : '') + '>음력</button></div></div>' +
+      '<div class="field"><label>생년월일 <span id="bfCalLabel">(' + (cal === 'lunar' ? '음력' : '양력') + ')</span></label><div class="field-row">' +
       '<select id="bfY">' + rangeOpts(1930, 2026, y, '년') + '</select>' +
       '<select id="bfM">' + rangeOpts(1, 12, m, '월') + '</select>' +
       '<select id="bfD">' + rangeOpts(1, 31, d, '일') + '</select></div></div>' +
+      '<div class="checkline" id="bfLeapWrap"' + (cal === 'lunar' ? '' : ' hidden') + '><input type="checkbox" id="bfLeap"' + (leap ? ' checked' : '') + ' /><label for="bfLeap">윤달(음력 윤월)입니다</label></div>' +
       '<div class="field"><label for="bfH">태어난 시간</label><select id="bfH">' + hourOpts + '</select></div>' +
-      '<div class="checkline"><input type="checkbox" id="bfRemember" checked /><label for="bfRemember">이 기기에 사주 프로필 저장 (보관함에서 다시 보기)</label></div>' +
+      '<div class="checkline"><input type="checkbox" id="bfRemember"' + (p ? ' checked' : '') + ' /><label for="bfRemember">이 기기에 사주 프로필 저장 (보관함에서 다시 보기)</label></div>' +
       '<div class="form-note" id="bfNote">' + esc(D.REPORT.noTimeNote) + ' ' + esc(D.REPORT.timeNote) + '</div>' +
+      quick +
       '<button class="btn-gold wide" type="submit">사주 세우기</button>' +
       '</form>';
   }
@@ -493,39 +543,75 @@
 
   function openBirthForm(opts) {
     opts = opts || {};
-    openSheet(opts.title || '생년월일 확인', birthFormHTML(state.profile));
-    const gender = state.profile ? state.profile.gender : 'male';
-    let g = gender;
+    const base = opts.prefill || state.profile || null;
+    openSheet(opts.title || '생년월일 확인', birthFormHTML(base, opts));
+    let g = base ? base.gender : 'male';
+    let cal = base ? (base.calendar === 'lunar' ? 'lunar' : 'solar') : 'solar';
     $('#bfGender').addEventListener('click', e => {
       const b = e.target.closest('button[data-g]'); if (!b) return;
       g = b.dataset.g;
       $$('#bfGender button').forEach(x => x.classList.toggle('is-on', x === b));
+    });
+    $('#bfCal').addEventListener('click', e => {
+      const b = e.target.closest('button[data-c]'); if (!b) return;
+      cal = b.dataset.c;
+      $$('#bfCal button').forEach(x => x.classList.toggle('is-on', x === b));
+      $('#bfCalLabel').textContent = '(' + (cal === 'lunar' ? '음력' : '양력') + ')';
+      $('#bfLeapWrap').hidden = cal !== 'lunar';
+      const note = $('#bfNote');
+      note.classList.remove('warn');
+      note.textContent = cal === 'lunar'
+        ? '음력 생일은 양력으로 바꾼 뒤 사주를 세웁니다. 윤달이 든 해는 윤달도 따로 골라 주세요. ' + D.REPORT.timeNote
+        : D.REPORT.noTimeNote + ' ' + D.REPORT.timeNote;
+      trackEvent('calendar_select', { value: cal });
+    });
+    const quickBtn = $('#bfQuick');
+    if (quickBtn) quickBtn.addEventListener('click', () => {
+      if (!state.profile) return;
+      let c;
+      try { c = E.buildChart(state.profile); } catch (err) { showToast('저장된 프로필을 읽을 수 없어요'); return; }
+      closeSheet();
+      if (opts.onDone) opts.onDone(c);
     });
     $('#birthForm').addEventListener('submit', e => {
       e.preventDefault();
       const input = {
         name: $('#bfName').value.trim(),
         gender: g,
+        calendar: cal,
+        leap: cal === 'lunar' ? !!($('#bfLeap') && $('#bfLeap').checked) : false,
         year: +$('#bfY').value, month: +$('#bfM').value, day: +$('#bfD').value,
         hour: $('#bfH').value === '' ? null : +$('#bfH').value,
         minute: $('#bfH').value === '' ? 0 : 30
       };
-      const day = new Date(input.year, input.month - 1, input.day);
-      if (day.getMonth() + 1 !== input.month || day.getDate() !== input.day) {
-        $('#bfNote').textContent = '존재하지 않는 날짜예요. 다시 확인해 주세요.'; $('#bfNote').classList.add('warn'); return;
+      if (cal === 'solar') {
+        const day = new Date(input.year, input.month - 1, input.day);
+        if (day.getMonth() + 1 !== input.month || day.getDate() !== input.day) {
+          $('#bfNote').textContent = '존재하지 않는 날짜예요. 다시 확인해 주세요.'; $('#bfNote').classList.add('warn'); return;
+        }
       }
       let chart;
       try { chart = E.buildChart(input); } catch (err) {
-        $('#bfNote').textContent = '날짜를 세다가 문제가 생겼어요: ' + err.message; $('#bfNote').classList.add('warn'); return;
+        $('#bfNote').textContent = (cal === 'lunar' ? '음력 날짜를 확인해 주세요: ' : '날짜를 세다가 문제가 생겼어요: ') + err.message;
+        $('#bfNote').classList.add('warn'); return;
       }
       if ($('#bfRemember').checked) {
         state.profile = input; store.set(K_PROFILE, input);
         renderTodayWidget(); renderAskProfile();
         if ($('#archiveProfile')) renderArchive();
       }
+      trackEvent('build_chart', {
+        calendar: cal, gender: input.gender, has_time: input.hour != null,
+        year: input.year, month: input.month, day: input.day
+      });
       closeSheet();
       if (opts.onDone) opts.onDone(chart);
-      else runPending(chart);
+      else {
+        runPending(chart);
+        if (state.view === 'today') renderTodayPage();
+        if (state.view === 'archive') renderArchive();
+        if (state.view === 'ask') renderAskProfile();
+      }
     });
   }
 
@@ -534,8 +620,8 @@
     const cat = pending.category || categoryOf(pending.question);
     const charId = pending.charId || state.askChar || charForCategory(cat);
     state.pending = { question: pending.question, category: cat, charId: charId, type: pending.type || 'qna', title: pending.title || pending.question };
-    if (!state.profile) openBirthForm({ title: '생년월일 확인', onDone: runPending });
-    else runPending(E.buildChart(state.profile));
+    /* 저장된 프로필이 있어도 입력받은 이름·생년월일·성별을 확인하고 그 값으로 세운다 */
+    openBirthForm({ title: '생년월일 확인', onDone: runPending, quick: true });
   }
 
   function runPending(chart) {
@@ -611,6 +697,54 @@
     return '<div class="rp-disclaimer">' + esc(D.REPORT.disclaimer) + '</div>';
   }
 
+  /* ---------------- 결과 상단 프로필 배너 (이름·생년월일·성별) ---------------- */
+  function profileBannerHTML(chart) {
+    const p = (chart && chart.input) || state.profile;
+    if (!p) return '';
+    const name = (p.name || '').trim();
+    const title = name ? esc(name) + '님의 사주 풀이' : '나의 사주 풀이';
+    const conv = solarConversionLine(p);
+    return '<div class="rp-prof">' +
+      '<div class="rp-prof-row"><b class="rp-prof-name">' + title + '</b>' +
+      '<button type="button" class="rp-prof-edit" data-prof-edit>정보 수정</button></div>' +
+      '<span class="rp-prof-meta">(' + esc(birthDetail(p)) + ')</span>' +
+      (conv ? '<span class="rp-prof-sol">' + esc(conv) + '</span>' : '') +
+      '</div>';
+  }
+
+  function compatBannerHTML(A, B) {
+    const one = p => esc((p.name || '이름 없음')) + ' (' + esc(birthDetail(p)) + ')';
+    return '<div class="rp-prof">' +
+      '<div class="rp-prof-row"><b class="rp-prof-name">' + esc((A.name || '나')) + ' · ' + esc((B.name || '상대')) + ' 두 사람의 궁합 풀이</b>' +
+      '<button type="button" class="rp-prof-edit" data-prof-edit>정보 수정</button></div>' +
+      '<span class="rp-prof-meta">' + one(A) + ' / ' + one(B) + '</span>' +
+      ((A.calendar === 'lunar' || B.calendar === 'lunar') ? '<span class="rp-prof-sol">' + esc((A.calendar === 'lunar' ? solarConversionLine(A) : '') + (A.calendar === 'lunar' && B.calendar === 'lunar' ? ' · ' : '') + (B.calendar === 'lunar' ? solarConversionLine(B) : '')) + '</span>' : '') +
+      '</div>';
+  }
+
+  function personOpen(chart, text) {
+    const name = ((chart && chart.input && chart.input.name) || '').trim();
+    return name ? name + '님, ' + text : text;
+  }
+
+  function bindProfileEdit(root, rerun, chart) {
+    if (!root) return;
+    const b = root.querySelector('[data-prof-edit]');
+    if (!b) return;
+    b.addEventListener('click', () => {
+      closeSheet();
+      openBirthForm({ title: '생년월일 수정', prefill: (chart && chart.input) || null, onDone: rerun });
+    });
+  }
+
+  function calendarNote(p) {
+    if (!p) return D.REPORT.solarNote;
+    if (p.calendar === 'lunar') {
+      return '음력 생일을 양력으로 변환해 계산 · KST(UTC+9) · 24절기 절입시각 기준';
+    }
+    return D.REPORT.solarNote;
+  }
+
   /* ---------------- 리포트 생성 ---------------- */
   function ensureChart(chart) {
     if (!chart) return chart;
@@ -627,6 +761,11 @@
     const html = reportHTML({ chart: chart, char: c, question: o.question, category: o.category, today: today, typeLabel: o.typeLabel });
 
     openSheet(c.name + '의 리포트', html, null);
+    bindProfileEdit($('#sheetBody'), next => {
+      const again = Object.assign({}, o, { chart: next });
+      if (o.reading) again.reading = E.todayReading(next);
+      openReportSheet(again);
+    }, chart);
     trackEvent('view_report', {
       content_kind: 'report', char_id: c.id, char_name: c.name,
       category: o.category || 'fate', report_type: o.typeLabel || '질문즉답',
@@ -750,7 +889,7 @@
     const sinsalHTML = '<div class="mini-grid">' + sinsalList.map(s =>
       '<div class="mini-item"><span>' + s[0] + '</span><b>' + s[1] + '</b><em>' + (s[1].indexOf('도화') >= 0 ? '사람을 끄는 힘' : s[1] === '역마살' ? '움직이는 기운' : s[1] === '화개살' ? '혼자 깊어지는 자리' : '') + '</em></div>').join('') + '</div>' +
       '<p class="rp-note" style="margin-top:6px">십이신살은 년지 삼합을 기준으로 봅니다(겁살·재살·천살·지살·년살·월살·망신·장성·반안·역마·육해·화개).</p>';
-    const natureHTML = '<p class="rp-lead"><span class="em">' + esc(dm.key) + ' · ' + esc(dm.name) + '</span>의 사주입니다.</p>' +
+    const natureHTML = '<p class="rp-lead"><span class="em">' + esc(dm.key) + ' · ' + esc(dm.name) + '</span>' + (chart.input.name ? ' — ' + esc(chart.input.name) + '님' : '') + '의 사주입니다.</p>' +
       '<p class="rp-para">' + esc(dm.text) + '</p>' +
       '<p class="rp-para"><strong>' + esc(group.name) + '이 강한 구조</strong> — ' + esc(group.trait) + '</p>' +
       '<p class="rp-para">' + esc(C.strength[chart.strength]) + ' ' + esc(chart.yongsin.reason) + '. 그래서 <strong>' + chart.yongsin.elem + '(' + E.ELEMENTS_HANJA[E.ELEMENTS.indexOf(chart.yongsin.elem)] + ')</strong> 오행이 도움이 되며, ' + esc(chart.yongsin.care) + '</p>';
@@ -805,12 +944,13 @@
       '<div class="rp-title"><span>17. 조심할 점</span></div>' + cautionHTML;
 
     return '' +
+      profileBannerHTML(chart) +
       '<div class="rp-top"><img class="rp-ava" src="' + c.img + '" alt="' + esc(c.name) + '" />' +
       '<div class="rp-who"><b>' + esc(c.name) + ' <small style="font-size:9px;letter-spacing:.2em;color:var(--ink-3)">' + esc(c.hanja) + '</small></b>' +
       '<span>' + esc(c.role) + ' · ' + chart.dayMaster.hanja + chart.dayMaster.elem + ' ' + chart.strengthKo + '</span></div>' +
       '<span class="rp-stamp">' + esc(D.BRAND.name) + ' 정통 만세력</span></div>' +
       pdfBarHTML() +
-      '<p class="rp-voice">' + esc(dx.voice.open) + '</p>' +
+      '<p class="rp-voice">' + esc(personOpen(chart, dx.voice.open)) + '</p>' +
 
       (o.question ? '<div class="rp-question"><b>질문</b>' + esc(o.question) + '</div>' : '') +
 
@@ -840,7 +980,7 @@
 
       '<div class="rp-actions"><button class="btn-ghost" id="rpClose">닫기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="rpSave">보관함 저장</button></div>' +
       disclaimerHTML() +
-      '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · ' + esc(D.REPORT.noTimeNote) + '<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
+      '<div class="rp-note">' + esc(calendarNote(chart.input)) + ' · ' + esc(D.REPORT.noTimeNote) + '<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
   }
 
   function ELEMENTS_TOTAL(chart) {
@@ -1018,8 +1158,7 @@
     const item = D.Y2027.items.find(x => x.id === kind); if (!item) return;
     const go = c => y2027Sheet(kind, c);
     if (chart) { go(chart); return; }
-    if (!state.profile) { openBirthForm({ title: '2027 정미년 · 생년월일 확인', onDone: go }); return; }
-    go(E.buildChart(state.profile));
+    openBirthForm({ title: '2027 정미년 · 생년월일 확인', onDone: go, quick: true });
   }
 
   function y2027Sheet(kind, chart, opts) {
@@ -1028,6 +1167,7 @@
     const chart2 = ensureChart(chart);
     const y = Y27.build(chart2);
     openSheet(item.title, y2027HTML(item, chart2, y));
+    bindProfileEdit($('#sheetBody'), next => y2027Sheet(kind, next, opts), chart2);
     bindPay($('#sheetBody'), item.id);
     bindPdf($('#sheetBody'), item.id);
     const cl = $('#y27Close'); if (cl) cl.addEventListener('click', closeSheet);
@@ -1304,7 +1444,7 @@
         y27Share(y.reunion.head, '내 일지 ' + chart.pillars.day.hanja + ' · 2027년에 문이 열리는 달 ' + (y.reunion.open.join('·') || '없음'));
     }
 
-    return head + preview +
+    return profileBannerHTML(chart) + head + preview +
       (paid ? payWrapHTML({
         kind: item.id, price: item.price, list: item.list,
         label: esc(item.title) + ' 전체 열기', desc: y27PayDesc(item.kind), inner: body
@@ -1312,7 +1452,7 @@
       '<div class="rp-title"><span>행운 포인트</span></div>' + y27Lucky(chart) +
       '<div class="rp-actions"><button class="btn-ghost" id="y27Close">닫기</button><button class="btn-ghost" id="y27Home">2027 전체 보기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="y27Save">보관함 저장</button></div>' +
       disclaimerHTML() +
-      '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 2027년 월운은 24절기 절입 기준입니다.<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
+      '<div class="rp-note">' + esc(calendarNote(chart.input)) + ' · 2027년 월운은 24절기 절입 기준입니다.<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
   }
 
   /* ================= 정밀 궁합 · 10년 대운 · 2027 길일 ================= */
@@ -1363,6 +1503,8 @@
   /* ---- 정밀 궁합: 두 사람 입력 ---- */
   function personFieldsHTML(key, title, p) {
     const y = p && p.year ? p.year : 1995, m = p && p.month ? p.month : 1, d = p && p.day ? p.day : 1;
+    const cal = (p && p.calendar === 'lunar') ? 'lunar' : 'solar';
+    const leap = !!(p && p.leap);
     const hourOpts = '<option value=""' + (!p || p.hour == null || p.hour === '' ? ' selected' : '') + '>태어난 시간 모름</option>' +
       SIZI.map(s => '<option value="' + s.v + '"' + (p && +p.hour === s.v ? ' selected' : '') + '>' + s.l + '</option>').join('');
     return '<div class="pf-block">' +
@@ -1371,10 +1513,14 @@
       '<div class="field"><label>성별</label><div class="seg" id="pf' + key + 'Gender">' +
       '<button type="button" data-g="male"' + (!p || p.gender !== 'female' ? ' class="is-on"' : '') + '>남성</button>' +
       '<button type="button" data-g="female"' + (p && p.gender === 'female' ? ' class="is-on"' : '') + '>여성</button></div></div>' +
-      '<div class="field"><label>생년월일 (양력)</label><div class="field-row">' +
+      '<div class="field"><label>달력</label><div class="seg" id="pf' + key + 'Cal">' +
+      '<button type="button" data-c="solar"' + (cal === 'solar' ? ' class="is-on"' : '') + '>양력</button>' +
+      '<button type="button" data-c="lunar"' + (cal === 'lunar' ? ' class="is-on"' : '') + '>음력</button></div></div>' +
+      '<div class="field"><label>생년월일 <span id="pf' + key + 'CalLabel">(' + (cal === 'lunar' ? '음력' : '양력') + ')</span></label><div class="field-row">' +
       '<select id="pf' + key + 'Y">' + rangeOpts(1930, 2026, y, '년') + '</select>' +
       '<select id="pf' + key + 'M">' + rangeOpts(1, 12, m, '월') + '</select>' +
       '<select id="pf' + key + 'D">' + rangeOpts(1, 31, d, '일') + '</select></div></div>' +
+      '<div class="checkline" id="pf' + key + 'LeapWrap"' + (cal === 'lunar' ? '' : ' hidden') + '><input type="checkbox" id="pf' + key + 'Leap"' + (leap ? ' checked' : '') + ' /><label for="pf' + key + 'Leap">음력 윤달</label></div>' +
       '<div class="field"><label>태어난 시간</label><select id="pf' + key + 'H">' + hourOpts + '</select></div>' +
       '</div>';
   }
@@ -1397,6 +1543,8 @@
     openSheet('정밀 궁합 · 두 사람', compatFormHTML(pa, pb));
     let gA = pa && pa.gender ? pa.gender : 'male';
     let gB = pb && pb.gender ? pb.gender : 'female';
+    let cA = pa && pa.calendar === 'lunar' ? 'lunar' : 'solar';
+    let cB = pb && pb.calendar === 'lunar' ? 'lunar' : 'solar';
     const bindSeg = (key, set) => {
       const el = $('#pf' + key + 'Gender'); if (!el) return;
       el.addEventListener('click', e => {
@@ -1407,6 +1555,18 @@
     };
     bindSeg('A', v => { gA = v; });
     bindSeg('B', v => { gB = v; });
+    const bindCal = (key, set) => {
+      const el = $('#pf' + key + 'Cal'); if (!el) return;
+      el.addEventListener('click', e => {
+        const b = e.target.closest('button[data-c]'); if (!b) return;
+        set(b.dataset.c);
+        $$('#pf' + key + 'Cal button').forEach(x => x.classList.toggle('is-on', x === b));
+        $('#pf' + key + 'CalLabel').textContent = '(' + (b.dataset.c === 'lunar' ? '음력' : '양력') + ')';
+        $('#pf' + key + 'LeapWrap').hidden = b.dataset.c !== 'lunar';
+      });
+    };
+    bindCal('A', v => { cA = v; });
+    bindCal('B', v => { cB = v; });
     const solo = $('#cpSolo');
     if (solo) solo.addEventListener('click', () => {
       closeSheet();
@@ -1418,6 +1578,8 @@
       const read = key => ({
         name: $('#pf' + key + 'Name').value.trim(),
         gender: key === 'A' ? gA : gB,
+        calendar: key === 'A' ? cA : cB,
+        leap: ((key === 'A' ? cA : cB) === 'lunar') && !!$('#pf' + key + 'Leap').checked,
         year: +$('#pf' + key + 'Y').value, month: +$('#pf' + key + 'M').value,
         day: +$('#pf' + key + 'D').value,
         hour: $('#pf' + key + 'H').value === '' ? null : +$('#pf' + key + 'H').value,
@@ -1425,6 +1587,7 @@
       });
       const a = read('A'), b = read('B');
       for (const p of [a, b]) {
+        if (p.calendar === 'lunar') continue;
         const dt = new Date(p.year, p.month - 1, p.day);
         if (dt.getMonth() + 1 !== p.month || dt.getDate() !== p.day) {
           $('#cpNote').textContent = '존재하지 않는 날짜가 섞여 있어요. 두 사람의 생년월일을 다시 확인해 주세요.';
@@ -1434,7 +1597,7 @@
       }
       let ca, cb;
       try { ca = E.buildChart(a); cb = E.buildChart(b); }
-      catch (err) { $('#cpNote').textContent = '글자를 세다가 문제가 생겼어요: ' + err.message; return; }
+      catch (err) { $('#cpNote').textContent = '날짜를 세다가 문제가 생겼어요: ' + err.message; return; }
       store.set(K_PARTNER, b);
       if (!state.profile) { state.profile = a; store.set(K_PROFILE, a); renderTodayWidget(); }
       closeSheet();
@@ -1454,7 +1617,7 @@
   function cpRow(chart, who) {
     const p = chart.pillars;
     return '<div class="cp-row">' +
-      '<div class="cp-who"><b>' + esc(chart.input.name || who) + '</b><span>' + (chart.input.gender === 'female' ? '여' : '남') + ' · ' + chart.input.year + '.' + pad(chart.input.month) + '.' + pad(chart.input.day) + '</span><span>' + esc(P.timeLabel(chart).split(' ')[0]) + '</span></div>' +
+      '<div class="cp-who"><b>' + esc(chart.input.name || who) + '</b><span>' + (chart.input.gender === 'female' ? '여' : '남') + ' · ' + esc(birthLabel(chart.input)) + '</span><span>' + esc(P.timeLabel(chart).split(' ')[0]) + '</span></div>' +
       cpCell('년', p.year) + cpCell('월', p.month) + cpCell('일', p.day, true) + cpCell('시', p.hour) + '</div>';
   }
 
@@ -1468,7 +1631,7 @@
     if (t['형']) chips.push('형 ' + t['형']);
     if ((t['파'] || 0) + (t['해'] || 0)) chips.push('파·해 ' + (t['파'] + t['해']));
 
-    const head = '<div class="cp-top">' +
+    const head = compatBannerHTML(A.input, B.input) + '<div class="cp-top">' +
       '<div class="cp-top-txt"><b>정밀 궁합 · 두 사람의 여덟 글자</b>' +
       '<span>' + esc(res.names.a) + ' ' + A.pillars.day.hanja + ' · ' + esc(res.names.b) + ' ' + B.pillars.day.hanja + '</span></div></div>' +
       '<div class="cp-scorebox"><div class="score-ring cp-ring" style="--v:' + res.score + '"><b>' + res.score + '<small>점</small></b></div>' +
@@ -1512,7 +1675,7 @@
       payWrapHTML({ kind: 'compat', price: 29900, list: 59000, label: '두 사람의 심층 궁합 전체 열기', desc: '일간·일지·16글자 관계 · 속궁합 · 결혼 시기 · 다툼과 화해의 달 · 처방전', inner: body }) +
       '<div class="rp-actions"><button class="btn-ghost" id="cpClose">닫기</button><button class="btn-ghost" id="cpAgain">상대 바꿔 보기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="cpSave">보관함 저장</button></div>' +
       disclaimerHTML() +
-      '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 두 사람의 생년월일시로 세운 사주팔자를 마주 놓고 본 풀이입니다.<br />' + esc(D.BRAND.footer) + '</div>';
+      '<div class="rp-note">' + esc((A.input.calendar === 'lunar' || B.input.calendar === 'lunar') ? '음력 생일은 양력으로 변환해 계산 · KST(UTC+9)' : D.REPORT.solarNote) + ' · 두 사람의 생년월일시로 세운 사주팔자를 마주 놓고 본 풀이입니다.<br />' + esc(D.BRAND.footer) + '</div>';
   }
 
   function compatSheet(A, B) {
@@ -1521,6 +1684,7 @@
     openSheet(title, compatHTML(res));
     bindPay($('#sheetBody'), 'compat');
     bindPdf($('#sheetBody'), 'compat');
+    bindProfileEdit($('#sheetBody'), () => openCompatForm({}));
     const cl = $('#cpClose'); if (cl) cl.addEventListener('click', closeSheet);
     const ag = $('#cpAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openCompatForm({}); });
     const sv = $('#cpSave');
@@ -1541,8 +1705,7 @@
   function openDaeun(chart) {
     const go = c => daeunSheet(c);
     if (chart) { go(chart); return; }
-    if (!state.profile) { openBirthForm({ title: '대운 · 생년월일 확인', onDone: go }); return; }
-    go(E.buildChart(state.profile));
+    openBirthForm({ title: '대운 · 생년월일 확인', onDone: go, quick: true });
   }
 
   function daeunRow(x, cur) {
@@ -1556,11 +1719,11 @@
 
   function daeunHTML(c, d) {
     const dm = c.dayMaster;
-    const head = '<div class="du-top">' +
+    const head = profileBannerHTML(c) + '<div class="du-top">' +
       '<div><b>' + esc(c.input.name || '나의') + ' 대운</b><span>' + c.ganji + ' · ' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간 · ' + esc(c.strengthKo) + '</span></div>' +
       '<em>' + d.dirText + ' · 대운수 ' + d.su.text + '</em></div>' +
       pdfBarHTML() +
-      '<p class="rp-voice">' + esc(d.open) + '</p>';
+      '<p class="rp-voice">' + esc(personOpen(c, d.open)) + '</p>';
 
     const free = '<div class="y27-free"><span class="y27-free-kicker">무료 맛보기 · 10년마다 바뀌는 큰 물길</span>' +
       '<div class="du-table">' +
@@ -1595,7 +1758,7 @@
       payWrapHTML({ kind: 'daeun', price: 24900, list: 49000, label: '10년 대운 전체 풀이 열기', desc: '대운 8개의 재물·커리어·인생 전략 · 지금 대운의 의미 · 대운을 쓰는 순서', inner: body }) +
       '<div class="rp-actions"><button class="btn-ghost" id="duClose">닫기</button><button class="btn-ghost" id="duAgain">내 정보 수정</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="duSave">보관함 저장</button></div>' +
       disclaimerHTML() +
-      '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 대운수는 출생 시각에서 절입까지의 날수를 3일=1년으로 셈했습니다.<br />' + esc(D.BRAND.footer) + '</div>';
+      '<div class="rp-note">' + esc(calendarNote(c.input)) + ' · 대운수는 출생 시각에서 절입까지의 날수를 3일=1년으로 셈했습니다.<br />' + esc(D.BRAND.footer) + '</div>';
   }
 
   function daeunSheet(chart) {
@@ -1605,8 +1768,9 @@
     openSheet('10년 대운 · ' + (c.input.name || '나의') + ' 인생 흐름', daeunHTML(c, d));
     bindPay($('#sheetBody'), 'daeun');
     bindPdf($('#sheetBody'), 'daeun');
+    bindProfileEdit($('#sheetBody'), next => daeunSheet(next), c);
     const cl = $('#duClose'); if (cl) cl.addEventListener('click', closeSheet);
-    const ag = $('#duAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openBirthForm({ title: '내 정보 수정' }); });
+    const ag = $('#duAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openBirthForm({ title: '내 정보 수정', onDone: n => daeunSheet(n) }); });
     const sv = $('#duSave');
     if (sv) sv.addEventListener('click', () => {
       saveHistory({
@@ -1624,8 +1788,7 @@
   function openGilil(chart) {
     const go = c => gililSheet(c);
     if (chart) { go(chart); return; }
-    if (!state.profile) { openBirthForm({ title: '2027 길일 · 생년월일 확인', onDone: go }); return; }
-    go(E.buildChart(state.profile));
+    openBirthForm({ title: '2027 길일 · 생년월일 확인', onDone: go, quick: true });
   }
 
   function glWhy(day, chart, key) {
@@ -1665,11 +1828,11 @@
 
   function gililHTML(c, g) {
     const dm = c.dayMaster;
-    const head = '<div class="du-top">' +
-      '<div><b>2027 정미년 · 나만의 길일</b><span>' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간 · 일지 ' + c.pillars.day.hanja + '(' + c.pillars.day.animal + ') · 용신 ' + c.yongsin.elem + '</span></div>' +
+    const head = profileBannerHTML(c) + '<div class="du-top">' +
+      '<div><b>2027 정미년 · ' + esc((c.input.name || '나')) + '님의 길일</b><span>' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간 · 일지 ' + c.pillars.day.hanja + '(' + c.pillars.day.animal + ') · 용신 ' + c.yongsin.elem + '</span></div>' +
       '<em>계약 · 이직 · 이사</em></div>' +
       pdfBarHTML() +
-      '<p class="rp-voice">' + esc(g.open) + '</p>';
+      '<p class="rp-voice">' + esc(personOpen(c, g.open)) + '</p>';
 
     const free = '<div class="y27-free"><span class="y27-free-kicker">무료 맛보기 · 12개월 길일 달력</span>' +
       glMonthCards(g) +
@@ -1706,7 +1869,7 @@
       payWrapHTML({ kind: 'gilil', price: 14900, list: 29000, label: '2027 길일 전체 열기', desc: '목적별 추천일과 이유 · 피할 날 · 달마다의 길일 · 도장 찍을 때의 팁', inner: body }) +
       '<div class="rp-actions"><button class="btn-ghost" id="glClose">닫기</button><button class="btn-ghost" id="glAgain">내 정보 수정</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="glSave">보관함 저장</button></div>' +
       disclaimerHTML() +
-      '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 2027년 일진은 60갑자 순환으로 계산했습니다.<br />' + esc(D.BRAND.footer) + '</div>';
+      '<div class="rp-note">' + esc(calendarNote(c.input)) + ' · 2027년 일진은 60갑자 순환으로 계산했습니다.<br />' + esc(D.BRAND.footer) + '</div>';
   }
 
   function gililSheet(chart) {
@@ -1716,8 +1879,9 @@
     openSheet('2027 길일 · 계약·이직·이사', gililHTML(c, g));
     bindPay($('#sheetBody'), 'gilil');
     bindPdf($('#sheetBody'), 'gilil');
+    bindProfileEdit($('#sheetBody'), next => gililSheet(next), c);
     const cl = $('#glClose'); if (cl) cl.addEventListener('click', closeSheet);
-    const ag = $('#glAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openBirthForm({ title: '내 정보 수정' }); });
+    const ag = $('#glAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openBirthForm({ title: '내 정보 수정', onDone: n => gililSheet(n) }); });
     const sv = $('#glSave');
     if (sv) sv.addEventListener('click', () => {
       saveHistory({

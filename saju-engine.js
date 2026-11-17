@@ -129,6 +129,171 @@
     return null;
   }
 
+  /* ---------- 음력 ↔ 양력 (한국 음력 · KST 기준) ----------
+     · 삭(朔)이 드는 날이 그 달 1일
+     · 동지(황경 270°)가 든 달이 11월
+     · 열세 달이 드는 해에서 중기(中氣)가 없는 첫 달이 윤달
+     삭 시각은 Meeus, Astronomical Algorithms 49장으로 계산합니다. */
+  const SIZI_NAMES = ['자시', '축시', '인시', '묘시', '진시', '사시', '오시', '미시', '신시', '유시', '술시', '해시'];
+  const KST_OFF = 9 / 24;
+  const MAJOR_TERMS = [
+    [270, 12, 21], [300, 1, 20], [330, 2, 19], [0, 3, 20], [30, 4, 20], [60, 5, 21],
+    [90, 6, 21], [120, 7, 22], [150, 8, 23], [180, 9, 23], [210, 10, 23], [240, 11, 22]
+  ];
+  const LUNAR_CACHE = { m11: {}, term: {}, cycle: {}, year: {} };
+
+  function newMoonJD(k) {
+    const T = k / 1236.85;
+    const T2 = T * T, T3 = T2 * T, T4 = T3 * T;
+    let jde = 2451550.09766 + 29.530588861 * k + 0.00015437 * T2 - 0.000000150 * T3 + 0.00000000073 * T4;
+    const E = 1 - 0.002516 * T - 0.0000074 * T2;
+    const rad = Math.PI / 180;
+    const M = (2.5534 + 29.10535670 * k - 0.0000014 * T2 - 0.00000011 * T3) * rad;
+    const Mp = (201.5643 + 385.81693528 * k + 0.0107582 * T2 + 0.00001238 * T3 - 0.000000058 * T4) * rad;
+    const F = (160.7108 + 390.67050284 * k - 0.0016118 * T2 - 0.00000227 * T3 + 0.000000011 * T4) * rad;
+    const Om = (124.7746 - 1.56375588 * k + 0.0020672 * T2 + 0.00000215 * T3) * rad;
+    const s = Math.sin;
+    jde += -0.40720 * s(Mp) + 0.17241 * E * s(M) + 0.01608 * s(2 * Mp) + 0.01039 * s(2 * F)
+      + 0.00739 * E * s(Mp - M) - 0.00514 * E * s(Mp + M) + 0.00208 * E * E * s(2 * M)
+      - 0.00111 * s(Mp - 2 * F) - 0.00057 * s(Mp + 2 * F) + 0.00056 * E * s(2 * Mp + M)
+      - 0.00042 * s(3 * Mp) + 0.00042 * E * s(M + 2 * F) + 0.00038 * E * s(M - 2 * F)
+      - 0.00024 * E * s(2 * Mp - M) - 0.00017 * s(Om) - 0.00007 * s(Mp + 2 * M)
+      + 0.00004 * s(2 * Mp - 2 * F) + 0.00004 * s(3 * M) + 0.00003 * s(Mp + M - 2 * F)
+      + 0.00003 * s(2 * Mp + 2 * F) - 0.00003 * s(Mp + M + 2 * F) + 0.00003 * s(Mp - M + 2 * F)
+      - 0.00002 * s(Mp - M - 2 * F) - 0.00002 * s(3 * Mp + M) + 0.00002 * s(4 * Mp);
+    return jde;
+  }
+
+  function kstJDN(jd) { const o = jdToDate(jd + KST_OFF); return jdn(o.y, o.m, o.d); }
+
+  function winterSolsticeJDN(year) {
+    const jd = findTermJD(270, toJD(year, 12, 21, 0) - KST_OFF, 6);
+    if (jd == null) return null;
+    return kstJDN(jd);
+  }
+
+  // 그 해 11월(동짓달) 초하루 — 동지가 든 날이나 그 직전의 삭일
+  function lunarMonth11Start(year) {
+    if (LUNAR_CACHE.m11[year] != null) return LUNAR_CACHE.m11[year];
+    const sj = winterSolsticeJDN(year);
+    if (sj == null) return null;
+    const k0 = Math.floor((toJD(year, 12, 10, 0) - 2451550.09766) / 29.530588861);
+    let best = null;
+    for (let k = k0 - 2; k <= k0 + 2; k++) {
+      const s = kstJDN(newMoonJD(k));
+      if (s <= sj && (best == null || s > best)) best = s;
+    }
+    LUNAR_CACHE.m11[year] = best;
+    return best;
+  }
+
+  // 그 해의 중기(中氣) 12개 — 양력 날짜(JDN)
+  function majorTermJDNs(year) {
+    if (LUNAR_CACHE.term[year]) return LUNAR_CACHE.term[year];
+    const out = [];
+    MAJOR_TERMS.forEach(t => {
+      const jd = findTermJD(t[0], toJD(year, t[1], t[2], 0) - KST_OFF, 6);
+      if (jd != null) out.push(kstJDN(jd));
+    });
+    LUNAR_CACHE.term[year] = out;
+    return out;
+  }
+
+  // 11월(동짓달)부터 다음 해 11월 전까지의 달 목록 — 12개 또는 13개(윤달 포함)
+  function solarMonthCycle(year) {
+    if (LUNAR_CACHE.cycle[year]) return LUNAR_CACHE.cycle[year];
+    const s1 = lunarMonth11Start(year), s2 = lunarMonth11Start(year + 1);
+    if (s1 == null || s2 == null || s2 <= s1) return [];
+    const k0 = Math.floor((toJD(year, 12, 1, 0) - 2451550.09766) / 29.530588861) - 1;
+    const starts = [];
+    for (let k = k0; k < k0 + 26; k++) {
+      const s = kstJDN(newMoonJD(k));
+      if (s >= s1 && s < s2 && starts.indexOf(s) < 0) starts.push(s);
+      if (s >= s2) break;
+    }
+    starts.sort((a, b) => a - b);
+    const n = starts.length;
+    const terms = majorTermJDNs(year).concat(majorTermJDNs(year + 1));
+    let leapIdx = -1;
+    if (n === 13) {
+      for (let i = 1; i < n; i++) {
+        const end = (i + 1 < n) ? starts[i + 1] : s2;
+        const has = terms.some(t => t >= starts[i] && t < end);
+        if (!has) { leapIdx = i; break; }
+      }
+    }
+    const out = [];
+    let num = 11;
+    for (let i = 0; i < n; i++) {
+      const leap = (i === leapIdx);
+      if (i > 0 && !leap) num = (num === 12) ? 1 : num + 1;
+      out.push({ num: num, leap: leap, start: starts[i], end: (i + 1 < n) ? starts[i + 1] : s2 });
+    }
+    LUNAR_CACHE.cycle[year] = out;
+    return out;
+  }
+
+  // 음력 (년)의 달 목록 — 1월부터 12월(윤달 포함하면 13개)
+  function lunarYearMonths(ly) {
+    if (LUNAR_CACHE.year[ly]) return LUNAR_CACHE.year[ly];
+    const a = solarMonthCycle(ly - 1), b = solarMonthCycle(ly);
+    const firstOf = arr => {
+      for (let i = 0; i < arr.length; i++) if (arr[i].num === 1 && !arr[i].leap) return i;
+      return -1;
+    };
+    const i1 = firstOf(a), i2 = firstOf(b);
+    if (i1 < 0 || i2 < 0) return [];
+    const out = a.slice(i1).concat(b.slice(0, i2));
+    LUNAR_CACHE.year[ly] = out;
+    return out;
+  }
+
+  function lunarLeapMonths(ly) {
+    return lunarYearMonths(ly).filter(m => m.leap).map(m => m.num);
+  }
+
+  // 음력 날짜 → 양력 날짜. 그 달·그 날이 없으면 Error
+  function lunarToSolar(ly, lm, ld, leap) {
+    const Y = +ly, M = +lm, D = +ld;
+    if (!(Y > 1800 && Y < 2200) || !(M >= 1 && M <= 12) || !(D >= 1 && D <= 30)) throw new Error('음력 날짜 범위를 확인해 주세요');
+    const months = lunarYearMonths(Y);
+    if (!months.length) throw new Error('음력을 계산할 수 없는 해입니다');
+    let found = null;
+    months.forEach(m => { if (m.num === M && !!m.leap === !!leap) found = m; });
+    if (!found) throw new Error('음력 ' + Y + '년 ' + M + '월' + (leap ? '(윤달)' : '') + '은 없는 달입니다');
+    const j = found.start + (D - 1);
+    if (j >= found.end) throw new Error('음력 ' + M + '월에는 ' + D + '일이 없습니다');
+    const o = jdnToYmd(j);
+    return { y: o.y, m: o.m, d: o.d };
+  }
+
+  function solarToLunar(y, m, d) {
+    const j = jdn(+y, +m, +d);
+    for (let t = 0; t < 2; t++) {
+      const ly = +y - t;
+      const months = lunarYearMonths(ly);
+      for (let i = 0; i < months.length; i++) {
+        const mm = months[i];
+        if (j >= mm.start && j < mm.end) return { y: ly, m: mm.num, d: j - mm.start + 1, leap: mm.leap };
+      }
+    }
+    throw new Error('음력으로 바꿀 수 없는 날짜입니다');
+  }
+
+  // JDN → 양력 (음력 계산 전용, JD 역산)
+  function jdnToYmd(j) {
+    const a = j + 32044;
+    const b = Math.floor((4 * a + 3) / 146097);
+    const c = a - Math.floor(146097 * b / 4);
+    const d = Math.floor((4 * c + 3) / 1461);
+    const e = c - Math.floor(1461 * d / 4);
+    const m = Math.floor((5 * e + 2) / 153);
+    const day = e - Math.floor((153 * m + 2) / 5) + 1;
+    const month = m + 3 - 12 * Math.floor(m / 10);
+    const year = 100 * b + d - 4800 + Math.floor(m / 10);
+    return { y: year, m: month, d: day };
+  }
+
   /* ---------- 오행 · 십신 ---------- */
   function relation(meEl, otherEl) {
     if (meEl === otherEl) return '비겁';
@@ -208,7 +373,14 @@
 
   /* ---------- 사주 구성 ---------- */
   function buildChart(input) {
-    const y = +input.year, m = +input.month, d = +input.day;
+    /* 양력·음력 입력을 모두 받아 계산은 양력으로 합니다.
+       input.calendar === 'lunar' 이면 실제 음력→양력 변환을 거칩니다. */
+    const calendar = (input.calendar === 'lunar' || input.solar === false) ? 'lunar' : 'solar';
+    const leapIn = calendar === 'lunar' && !!input.leap;
+    const birthYear = +input.year, birthMonth = +input.month, birthDay = +input.day;
+    let solar = { y: birthYear, m: birthMonth, d: birthDay };
+    if (calendar === 'lunar') solar = lunarToSolar(birthYear, birthMonth, birthDay, leapIn);
+    const y = solar.y, m = solar.m, d = solar.d;
     const hasTime = input.hour !== null && input.hour !== undefined && input.hour !== '';
     const hour = hasTime ? +input.hour : null;
     const minute = input.minute ? +input.minute : 0;
@@ -390,10 +562,15 @@
       input: {
         name: input.name || '',
         gender: input.gender || '',
-        year: y, month: m, day: d,
+        calendar: calendar,
+        leap: leapIn,
+        year: birthYear, month: birthMonth, day: birthDay,
+        solarYear: y, solarMonth: m, solarDay: d,
         hour: hour, minute: minute, hasTime: hasTime,
-        solar: input.solar !== false
+        solar: calendar === 'solar'
       },
+      sizi: hasTime ? { index: hourBranch, name: SIZI_NAMES[hourBranch], range: timeRange } : null,
+      calendar: calendar,
       pillars: P,
       ganji: P.year.hanja + ' ' + P.month.hanja + ' ' + P.day.hanja + (P.hour ? ' ' + P.hour.hanja : ''),
       ganjiKo: P.year.ko + ' ' + P.month.ko + ' ' + P.day.ko + (P.hour ? ' ' + P.hour.ko : ''),
@@ -833,6 +1010,7 @@
     STEMS, STEMS_KO, BRANCHES, BRANCHES_KO, ELEMENTS, ELEMENTS_HANJA, ELEMENT_COLOR,
     TEN_GODS, STAGES, TERMS, MONTH_NAMES, MONTH_NAMES_KO, GOD_GROUP, LUCKY, HOUR_RANGE, SINSAL,
     jdn, toJD, sunLongitude, jdToDate, findTermJD, formatTermTime,
+    newMoonJD, jdnToYmd, lunarToSolar, solarToLunar, lunarLeapMonths, lunarYearMonths, SIZI_NAMES,
     buildChart, getToday, describeDay, todayReading, tenGod, relation, stageOf, hash,
     deepRead, moneyLeaks, josa, ELEM_DEEP, GOD_SIT, STAGE_DEEP, REL_SIT, LOVE_SIT,
     stemElem: s => ELEMENTS[STEM_ELEM[s]],
@@ -872,6 +1050,21 @@
     check('2001-02-23 월지 십이신살(寅)', c5.sinsal.month, '겁살');
     check('2001-02-23 일지 십이신살(巳)', c5.sinsal.day, '지살');
     check('2001-02-23 월덕귀인', c5.gwisin.woldeok.char, '丙');
+    // 음력 변환 (한국천문연구원 음양력 기준과 대조한 값)
+    const l1 = lunarToSolar(1995, 8, 15, false);
+    check('음력 1995-08-15 → 양력', l1.y + '-' + l1.m + '-' + l1.d, '1995-9-9');
+    const l2 = lunarToSolar(2026, 1, 1, false);
+    check('음력 2026-01-01 → 양력(설날)', l2.y + '-' + l2.m + '-' + l2.d, '2026-2-17');
+    const l3 = lunarToSolar(2027, 8, 15, false);
+    check('음력 2027-08-15 → 양력(추석)', l3.y + '-' + l3.m + '-' + l3.d, '2027-9-15');
+    const l4 = lunarToSolar(2025, 6, 1, true);
+    check('음력 2025 윤6-01 → 양력', l4.y + '-' + l4.m + '-' + l4.d, '2025-7-25');
+    check('2025 윤달', lunarLeapMonths(2025).join(','), '6');
+    check('2027 윤달 없음', lunarLeapMonths(2027).length, 0);
+    const lr = solarToLunar(1995, 9, 9);
+    check('양력 1995-09-09 → 음력', lr.m + '-' + lr.d, '8-15');
+    const c6 = buildChart({ year: 1995, month: 8, day: 15, hour: 12, calendar: 'lunar' });
+    check('음력 1995-08-15 건 사주(양력 9/9과 동일)', c6.pillars.day.hanja, buildChart({ year: 1995, month: 9, day: 9, hour: 12 }).pillars.day.hanja);
     return out;
   };
 
