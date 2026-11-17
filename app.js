@@ -19,7 +19,8 @@
   };
   const K_PROFILE = 'wolha_profile_v1';
   const K_HISTORY = 'wolha_history_v1';
-  const K_TRIAL = 'wolha_trial_v1';
+  /* 열람 코드로 해제된 상태 (구 '체험판' 키와 분리 — 체험판 해제는 구매가 아니므로 승계하지 않는다) */
+  const K_UNLOCK = 'wolha_unlock_v1';
 
   /* ---------------- 생년월일 표기 도우미 ---------------- */
   const SIZI_NAMES = ['자시', '축시', '인시', '묘시', '진시', '사시', '오시', '미시', '신시', '유시', '술시', '해시'];
@@ -101,7 +102,7 @@
     view: 'home',
     profile: normalizeProfile(store.get(K_PROFILE, null)),
     history: store.get(K_HISTORY, []),
-    unlocked: store.get(K_TRIAL, {}),
+    unlocked: store.get(K_UNLOCK, {}),
     askChar: D.CHARACTERS[0].id,
     askTopic: null,
     heroTimer: null,
@@ -652,7 +653,7 @@
 
   function unlockAll() {
     PAID_KINDS.forEach(k => { state.unlocked[k] = true; });
-    store.set(K_TRIAL, state.unlocked);
+    store.set(K_UNLOCK, state.unlocked);
   }
 
   function payCardHTML(o) {
