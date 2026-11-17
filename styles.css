@@ -1299,6 +1299,40 @@ body::before {
 .pay-c-desc { margin: 0; font-size: 11px; line-height: 1.65; color: #C7C0B2; }
 .pay-c-price { display: flex; align-items: baseline; gap: 7px; margin: 1px 0; }
 .pay-c-price b { font-family: var(--serif); font-size: 21px; letter-spacing: -.01em; color: var(--gold-lt); }
+
+/* 3티어 선택 카드 — 단일가(정가 취소선·할인율 없음), 선택 시 골드 테두리 */
+.pay-tiers { display: flex; flex-direction: column; gap: 6px; width: 100%; margin: 4px 0 8px; text-align: left; }
+.pay-tier {
+  display: flex; align-items: flex-start; gap: 8px; width: 100%; padding: 10px 11px;
+  border-radius: 12px; cursor: pointer; text-align: left;
+  border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .04);
+  color: #D9D2C2; font-family: var(--sans);
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.pay-tier:hover { border-color: rgba(212, 175, 55, .42); }
+.pay-tier.is-on {
+  border-color: rgba(212, 175, 55, .92);
+  background: linear-gradient(180deg, rgba(212, 175, 55, .17), rgba(212, 175, 55, .05));
+  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, .26), 0 10px 24px -18px rgba(212, 175, 55, .8);
+}
+.pt-radio {
+  flex: 0 0 auto; margin-top: 3px; width: 13px; height: 13px; border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, .3); position: relative;
+}
+.pay-tier.is-on .pt-radio { border-color: var(--gold-lt); }
+.pay-tier.is-on .pt-radio::after { content: ''; position: absolute; inset: 2.5px; border-radius: 50%; background: var(--gold-lt); }
+.pt-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.pt-badge {
+  align-self: flex-start; font-size: 8.5px; line-height: 1.6; letter-spacing: .01em;
+  padding: 1px 6px; border-radius: 999px; font-weight: 700; color: #1B1608;
+  background: linear-gradient(180deg, #F6E3A6, #D4AF37);
+}
+.pt-name { font-family: var(--serif); font-size: 11.5px; line-height: 1.45; color: #EFE6D2; font-weight: 500; }
+.pt-desc { font-size: 9.8px; line-height: 1.55; color: #A9A394; }
+.pt-price { flex: 0 0 auto; padding-left: 4px; font-family: var(--serif); font-size: 12px; line-height: 1.5; color: var(--gold-lt); white-space: nowrap; }
+.pay-tier.is-on .pt-name { color: #FFF7DF; }
+.pay-tier.is-on .pt-desc { color: #C6BEAC; }
+.pay-tier:focus-visible { outline: 2px solid rgba(212, 175, 55, .8); outline-offset: 2px; }
 .pay-c-note { font-size: 10px; line-height: 1.7; color: #BDB6A6; }
 .pay-c-note b { color: var(--gold-lt); font-weight: 500; }
 .pay-unlock { margin-top: 2px; }

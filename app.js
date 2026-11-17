@@ -891,20 +891,60 @@
     const scope = KIND_SCOPE[kind] || kind;
     return String(links[kind] || links[scope] || '').trim();
   }
-  const NO_LINK_NOTE = '현재 2027 신년운세(6,900원) 결제만 먼저 열려 있습니다 · 열람 코드가 있으시면 아래에 입력해 주세요';
+
+  /* ---------------- 3티어 상품 (래피드 3종과 1:1 — 단일가, 정가 취소선·할인율 표기 없음) ---------------- */
+  const PAY_TIERS = [
+    { id: 't1', name: '연화선녀의 속마음 & 도화살 심층 비책', desc: '특정 1개 고민(연애/재물/이직) 심층 분석', price: 5900, badge: '' },
+    { id: 't2', name: '2027 정미년 12개월 월별 대운 종합 리포트', desc: '2027년 1월~12월 월별 운세 흐름 + 재물/애정/건강 총망라', price: 14900, badge: '⭐ BEST 추천' },
+    { id: 't3', name: '월하사주 평생 원국 풀이 + 맞춤 사주 요약 카드', desc: '초년·중년·말년 평생 대운 분석 + 고화질 요약 카드', price: 29000, badge: '👑 PREMIUM' }
+  ];
+  const PAY_TIER_DEFAULT = 't2';
+  function payTierById(id) {
+    for (let i = 0; i < PAY_TIERS.length; i++) if (PAY_TIERS[i].id === id) return PAY_TIERS[i];
+    return null;
+  }
+  function latpeedTierLinks() {
+    const c = window.WOLHA_LATPEED || {};
+    return (c.tiers && typeof c.tiers === 'object') ? c.tiers : {};
+  }
+  function latpeedLinkForTier(tierId) {
+    const t = latpeedTierLinks();
+    return String(t[tierId] || '').trim();
+  }
+  const NO_LINK_NOTE = '래피드 결제 링크 연결 전입니다 · 받으신 열람 코드를 아래에 입력해 주세요';
+
+  function payTiersHTML() {
+    return '<div class="pay-tiers" role="radiogroup" aria-label="리포트 선택">' +
+      PAY_TIERS.map(function (t, i) {
+        const on = t.id === PAY_TIER_DEFAULT;
+        return '<button type="button" class="pay-tier' + (on ? ' is-on' : '') + '" role="radio" aria-checked="' + (on ? 'true' : 'false') + '" data-tier="' + t.id + '"' +
+          (on ? '' : ' tabindex="-1"') + '>' +
+          '<span class="pt-radio" aria-hidden="true"></span>' +
+          '<span class="pt-main">' +
+          (t.badge ? '<span class="pt-badge">' + t.badge + '</span>' : '') +
+          '<b class="pt-name">' + t.name + '</b>' +
+          '<span class="pt-desc">' + t.desc + '</span>' +
+          '</span>' +
+          '<span class="pt-price">' + won(t.price) + '원</span>' +
+          '</button>';
+      }).join('') +
+      '</div>';
+  }
 
   function payCardHTML(o) {
-    return '<div class="pay-card">' +
+    const d = payTierById(PAY_TIER_DEFAULT);
+    return '<div class="pay-card" data-tier="' + d.id + '">' +
       '<span class="pay-kicker">여기서부터 심층 풀이</span>' +
       '<b class="pay-c-title">' + o.label + '</b>' +
       '<p class="pay-c-desc">' + o.desc + '</p>' +
+      payTiersHTML() +
       '<ul class="pay-benefits">' +
       '<li><i>✓</i>내 사주 맞춤 심층 풀이 전체 열람</li>' +
       '<li><i>✓</i>소장용 PDF 파일 저장</li>' +
       '<li><i>✓</i>보관함 다시 보기 지원</li>' +
       '</ul>' +
-      '<div class="pay-c-price"><b>' + won(o.price) + '원</b></div>' +
-      '<button type="button" class="btn-gold wide pay-latpeed">래피드에서 결제하고 열람 코드 받기</button>' +
+      '<div class="pay-c-price"><b>' + won(d.price) + '원</b></div>' +
+      '<button type="button" class="btn-gold wide pay-latpeed">' + won(d.price) + '원으로 열람 코드 받기 (래피드)</button>' +
       '<div class="pay-code-row">' +
       '<input type="text" class="pay-code-input" inputmode="text" autocomplete="off" spellcheck="false" aria-label="열람 코드" placeholder="받으신 열람 코드를 입력하세요" />' +
       '<button type="button" class="pay-code-go">열람</button>' +
@@ -932,8 +972,9 @@
     const inner = open
       ? (typeof o.inner === 'function' ? o.inner() : (o.inner || ''))
       : lockedTeaserHTML(o);
+    const d = payTierById(PAY_TIER_DEFAULT);
     return '<div class="pay-wrap' + (open ? ' is-open' : ' is-locked') + '" data-pay="' + o.kind +
-      '" data-price="' + (o.price || 0) + '" data-label="' + esc(o.label || '') + '">' +
+      '" data-price="' + d.price + '" data-tier="' + d.id + '" data-label="' + esc(o.label || '') + '">' +
       '<div class="pay-body">' + inner + '</div>' +
       (open ? '' : payCardHTML(o)) +
       '</div>';
@@ -963,8 +1004,39 @@
     const wrap = root.querySelector('.pay-wrap');
     if (!wrap || wrap.classList.contains('is-open')) { show(); return; }
 
-    const meta = () => ({ content_kind: kind, content_label: wrap.dataset.label || '', value: +wrap.dataset.price || 0 });
+    const meta = () => ({ content_kind: kind, content_label: wrap.dataset.label || '', tier: wrap.dataset.tier || PAY_TIER_DEFAULT, value: +wrap.dataset.price || 0 });
     const codeIn = wrap.querySelector('.pay-code-input');
+
+    /* 3티어 선택 — 선택한 티어의 가격·CTA 문구·래피드 결제 링크가 함께 바뀐다 */
+    const tierBtns = $$('.pay-tier', wrap);
+    const priceEl = wrap.querySelector('.pay-c-price b');
+    const ctaBtn = wrap.querySelector('.pay-latpeed');
+    const selectTier = (id, silent) => {
+      const t = payTierById(id) || payTierById(PAY_TIER_DEFAULT);
+      tierBtns.forEach(b => {
+        const on = b.dataset.tier === t.id;
+        b.classList.toggle('is-on', on);
+        b.setAttribute('aria-checked', on ? 'true' : 'false');
+        if (on) b.removeAttribute('tabindex'); else b.setAttribute('tabindex', '-1');
+      });
+      wrap.dataset.tier = t.id;
+      wrap.dataset.price = t.price;
+      const card = wrap.querySelector('.pay-card');
+      if (card) card.dataset.tier = t.id;
+      if (priceEl) priceEl.textContent = won(t.price) + '원';
+      if (ctaBtn) ctaBtn.textContent = won(t.price) + '원으로 열람 코드 받기 (래피드)';
+      if (!silent) trackEvent('select_tier', { content_kind: kind, tier: t.id, value: t.price });
+    };
+    tierBtns.forEach(b => b.addEventListener('click', () => selectTier(b.dataset.tier)));
+    tierBtns.forEach((b, i) => b.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      const step = (e.key === 'ArrowDown' || e.key === 'ArrowRight') ? 1 : -1;
+      const next = PAY_TIERS[(i + step + PAY_TIERS.length) % PAY_TIERS.length];
+      selectTier(next.id);
+      const nb = tierBtns.filter(x => x.dataset.tier === next.id)[0];
+      if (nb) nb.focus();
+    }));
 
     const openCard = () => {
       /* 유료 본문은 잠금이 풀린 순간에만 계산해 넣는다 (재렌더) */
@@ -1002,10 +1074,11 @@
 
     const go = wrap.querySelector('.pay-latpeed');
     if (go) go.addEventListener('click', () => {
-      const link = latpeedLinkFor(kind);
+      const tierId = wrap.dataset.tier || PAY_TIER_DEFAULT;
+      const link = latpeedLinkForTier(tierId);
       trackEvent('click_latpeed', Object.assign(meta(), { has_link: !!link }));
       if (link) { window.open(link, '_blank', 'noopener'); return; }
-      /* 이 상품은 아직 전용 결제 상품이 없다 — 가격이 다른 상품으로 보내지 않고 안내만 한다 */
+      /* 이 티어는 아직 래피드 상품이 없다 — 가격이 다른 상품으로 보내지 않고 안내만 한다 */
       showToast(NO_LINK_NOTE);
       if (codeIn) { codeIn.focus(); try { codeIn.scrollIntoView({ block: 'center' }); } catch (e) { } }
     });
