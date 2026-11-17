@@ -372,8 +372,8 @@
     const dirText = forward ? '순행(順行)' : '역행(逆行)';
     const dirWhy = (yang ? '양(陽)' : '음(陰)') + '의 해에 태어난 ' + (gender === 'female' ? '여성' : '남성') + '이라 대운이 ' + (forward ? '앞으로' : '뒤로') + ' 흐릅니다';
 
-    /* 대운수 — 절입까지의 날수 3일=1년 */
-    const bY = input.year, bM = input.month, bD = input.day;
+    /* 대운수 — 절입까지의 날수 3일=1년. 음력 입력도 양력 생일로 셈한다 */
+    const bY = input.solarYear || input.year, bM = input.solarMonth || input.month, bD = input.solarDay || input.day;
     const bH = (input.hour === null || input.hour === undefined || input.hour === '') ? 12 : +input.hour;
     const bMi = +input.minute || 0;
     const birth = new Date(Date.UTC(bY, bM - 1, bD, bH, bMi));
