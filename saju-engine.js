@@ -1137,7 +1137,7 @@
     /* 받쳐 주는 자리가 하나도 없을 수 있다 — 빈 자리를 문장으로 메운다 */
     const supLine = sup.length
       ? '여덟 글자에서 나를 받쳐 주는 쪽인 ' + plain('비겁') + '·' + plain('인성') + '은 ' + top(sup) + ', 나를 쓰는 쪽은 ' + top(drain) + '입니다.'
-      : '여덟 글자에 나를 받쳐 주는 자리인 ' + plain('비겁') + '·' + plain('인성') + '가 하나도 없고, 나를 쓰는 쪽은 ' + top(drain) + '입니다.';
+      : '여덟 글자에 나를 받쳐 주는 자리인 ' + plain('비겁') + '·' + plain('인성') + '이 하나도 없고, 나를 쓰는 쪽은 ' + top(drain) + '입니다.';
     const nature = [
       plain('일간') + ' ' + dm.hanja + '(' + dm.ko + ') ' + dm.elem + ' — ' + ELEM_DEEP[dm.elem].name + '의 기운으로 태어났습니다. ' + supLine + ' 이 배치로 기운은 ' + plain(chart.strengthKo) + ' ' + chart.strengthRatio + '%입니다. ' + strengthBody +
       ' 월지 ' + chart.pillars.month.branchName + '(' + chart.pillars.month.branchKo + ')의 자리는 ' + chart.stages.month + ' — ' + STAGE_DEEP[chart.stages.month] + '.',
