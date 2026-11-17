@@ -306,12 +306,28 @@
     let paused = false;
     track.addEventListener('pointerdown', () => { paused = true; });
     track.addEventListener('pointerup', () => { paused = false; });
-    state.heroTimer = setInterval(() => {
-      if (paused || state.view !== 'home') return;
+    const startTimer = () => {
+      clearInterval(state.heroTimer);
+      state.heroTimer = setInterval(() => {
+        if (paused || state.view !== 'home') return;
+        const w = track.scrollWidth / D.CHARACTERS.length;
+        const next = track.scrollLeft + w >= track.scrollWidth - 10 ? 0 : track.scrollLeft + w;
+        track.scrollTo({ left: next, behavior: 'smooth' });
+      }, 4600);
+    };
+    startTimer();
+
+    /* 좌우 화살표 — 카드 한 장씩 부드럽게 넘긴다 (자동 넘김 타이머도 초기화) */
+    const step = dir => {
       const w = track.scrollWidth / D.CHARACTERS.length;
-      const next = track.scrollLeft + w >= track.scrollWidth - 10 ? 0 : track.scrollLeft + w;
+      const max = Math.max(0, track.scrollWidth - track.clientWidth);
+      const next = Math.max(0, Math.min(max, track.scrollLeft + dir * w));
       track.scrollTo({ left: next, behavior: 'smooth' });
-    }, 4600);
+      startTimer();
+    };
+    const prevBtn = $('#heroPrev'), nextBtn = $('#heroNext');
+    if (prevBtn) prevBtn.addEventListener('click', () => step(-1));
+    if (nextBtn) nextBtn.addEventListener('click', () => step(1));
 
     track.addEventListener('click', e => {
       const s = e.target.closest('.hero-slide');
@@ -638,7 +654,7 @@
       ? '<button type="button" class="btn-ghost wide" id="bfQuick">저장된 정보(' + esc((saved.name || '이름 없음') + ' · ' + birthLabel(saved)) + ')로 바로 보기</button>'
       : '';
     return '<form class="form-grid" id="birthForm" autocomplete="off">' +
-      '<div class="field"><label for="bfName">이름 또는 별명</label><input id="bfName" maxlength="12" placeholder="예) 승현" value="' + esc(p && p.name || '') + '" /></div>' +
+      '<div class="field"><label for="bfName">이름 또는 별명</label><input id="bfName" maxlength="12" placeholder="예) 홍길동" value="' + esc(p && p.name || '') + '" /></div>' +
       '<div class="field"><label>성별</label><div class="seg" id="bfGender">' +
       '<button type="button" data-g="male"' + (!p || p.gender === 'male' ? ' class="is-on"' : '') + '>남성</button>' +
       '<button type="button" data-g="female"' + (p && p.gender === 'female' ? ' class="is-on"' : '') + '>여성</button></div></div>' +
@@ -1358,6 +1374,96 @@
         category: f.cat, charId: f.charId, type: 'free',
         title: '무료 사주 · ' + f.label
       });
+    });
+  }
+
+  /* ---------------- 이용 후기 (방문자 직접 작성) ----------------
+     표시광고법: 가짜 리뷰·허위 별점·조작된 후기 수를 만들지 않는다.
+     실제 입력된 후기만 이 기기(localStorage)에 저장해 그대로 보여 준다. */
+  const K_REVIEWS = 'wolha_reviews_v1';
+  const REVIEW_MAX = 80;
+
+  function reviewList() {
+    const v = store.get(K_REVIEWS, []);
+    if (!Array.isArray(v)) return [];
+    return v.filter(r => r && typeof r.rating === 'number' && r.rating >= 1 && r.rating <= 5 && r.text);
+  }
+
+  function starRow(n) {
+    let out = '';
+    for (let i = 1; i <= 5; i++) out += '<i class="' + (i <= n ? 'on' : '') + '">★</i>';
+    return '<span class="rv-stars" role="img" aria-label="별점 ' + n + '점">' + out + '</span>';
+  }
+
+  function renderReviews() {
+    const wrap = $('#reviewWrap');
+    if (!wrap) return;
+    const list = reviewList();
+    const avg = list.length ? list.reduce((s, r) => s + r.rating, 0) / list.length : 0;
+    const stat = $('#reviewStat');
+    if (stat) stat.textContent = list.length ? '등록 ' + list.length + '개 · 평균 ' + avg.toFixed(1) + '점' : '방문자 작성';
+
+    const stars = [1, 2, 3, 4, 5].map(i =>
+      '<button type="button" class="rv-star" role="radio" aria-checked="false" data-star="' + i + '" aria-label="별점 ' + i + '점">★</button>').join('');
+    const listHTML = list.length
+      ? '<ul class="rv-list">' + list.map(r =>
+        '<li class="rv-item">' +
+        '<div class="rv-item-top"><b>' + esc(r.nick || '익명') + '</b>' + starRow(r.rating) +
+        (r.dateLabel ? '<i>' + esc(r.dateLabel) + '</i>' : '') + '</div>' +
+        '<p>' + esc(r.text) + '</p></li>').join('') + '</ul>'
+      : '<div class="rv-empty">아직 등록된 후기가 없습니다. 첫 후기를 남겨 주세요.</div>';
+
+    wrap.innerHTML =
+      '<form class="rv-form" id="rvForm" autocomplete="off">' +
+      '<div class="rv-rate-row">' +
+      '<span class="rv-lbl">별점</span>' +
+      '<div class="rv-rate" id="rvRate" role="radiogroup" aria-label="별점 선택">' + stars + '</div>' +
+      '<span class="rv-hint" id="rvRateHint">별을 눌러 주세요</span>' +
+      '</div>' +
+      '<input class="rv-input" id="rvNick" maxlength="12" placeholder="닉네임 (예) 달빛여우)" aria-label="닉네임" />' +
+      '<input class="rv-input" id="rvText" maxlength="' + REVIEW_MAX + '" placeholder="한 줄 후기 — 어느 부분이 좋았는지 적어 주세요" aria-label="한 줄 후기" />' +
+      '<div class="rv-form-foot">' +
+      '<span class="rv-note">직접 이용하신 분의 후기만 올립니다. 별점과 후기 수를 조작하지 않습니다.</span>' +
+      '<button class="btn-gold" type="submit">후기 남기기</button>' +
+      '</div>' +
+      '</form>' +
+      listHTML;
+
+    let rating = 0;
+    const rate = $('#rvRate');
+    if (rate) rate.addEventListener('click', e => {
+      const b = e.target.closest('[data-star]'); if (!b) return;
+      rating = +b.dataset.star;
+      $$('[data-star]', rate).forEach(x => {
+        x.classList.toggle('on', +x.dataset.star <= rating);
+        x.setAttribute('aria-checked', String(+x.dataset.star === rating));
+      });
+      const hint = $('#rvRateHint');
+      hint.textContent = rating + '점';
+      hint.classList.add('is-on');
+    });
+
+    const form = $('#rvForm');
+    if (!form) return;
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = $('#rvText').value.trim();
+      const nick = $('#rvNick').value.trim();
+      if (!rating) { showToast('별점을 먼저 선택해 주세요'); return; }
+      if (!text) { showToast('한 줄 후기를 적어 주세요'); $('#rvText').focus(); return; }
+      const now = new Date();
+      const next = [{
+        id: 'v' + Date.now().toString(36),
+        rating: rating,
+        nick: nick.slice(0, 12) || '익명',
+        text: text.slice(0, REVIEW_MAX),
+        dateLabel: now.getFullYear() + '.' + pad(now.getMonth() + 1) + '.' + pad(now.getDate()),
+        at: now.toISOString()
+      }].concat(reviewList()).slice(0, 60);
+      store.set(K_REVIEWS, next);
+      renderReviews();
+      showToast('후기를 남겨 주셔서 고맙습니다');
+      trackEvent('write_review', { rating: rating });
     });
   }
 
@@ -2422,7 +2528,7 @@
     /* 구 단일 코드 시절의 해제 상태는 지운다 (wolha_unlock_scopes_v1 만 유효) */
     try { localStorage.removeItem('wolha_unlock_v1'); } catch (e) { }
 
-    renderHero(); renderTopics(); renderY2027(); renderPlus(); renderHomeChips(); renderRanking(); renderMasters(); renderTodayWidget(); renderFreeGrid();
+    renderHero(); renderTopics(); renderY2027(); renderPlus(); renderHomeChips(); renderRanking(); renderMasters(); renderTodayWidget(); renderFreeGrid(); renderReviews();
     renderAskChars(); bindMisc(); applyUnlockQuery();
     if (E.selfTest) {
       const bad = E.selfTest().filter(l => l.startsWith('FAIL'));

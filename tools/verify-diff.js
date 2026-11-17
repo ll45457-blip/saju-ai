@@ -7,7 +7,7 @@ var E = window.SajuEngine, P = window.SAJU_PLUS, Y27 = window.SAJU_2027, RX = wi
 var people = [
   { name: '김민수', gender: 'male', year: 1995, month: 8, day: 15, hour: 12, minute: 0 },
   { name: '박서연', gender: 'female', year: 2002, month: 11, day: 3, hour: 0, minute: 30 },
-  { name: '이승현', gender: 'male', year: 2001, month: 2, day: 23, hour: 8, minute: 0 }
+  { name: '최지우', gender: 'female', year: 2001, month: 2, day: 23, hour: 8, minute: 0 }
 ];
 var CATS = ['love', 'reunion', 'heart', 'money', 'work', 'exam', 'health', 'fate'];
 
