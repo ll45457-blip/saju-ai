@@ -23,7 +23,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=20261117r" />
+<link rel="stylesheet" href="styles.css?v=20261117s" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%230A0B10'/%3E%3Cpath d='M20 6a11 11 0 1 0 6 14A12 12 0 0 1 20 6z' fill='%23D4AF37'/%3E%3C/svg%3E" />
 </head>
 <body>
@@ -126,11 +126,6 @@
           <div class="free-grid" id="freeGrid"></div>
         </div>
 
-        <footer class="app-foot">
-          <p class="foot-brand" data-brand>월하사주</p>
-          <p class="foot-line" id="footLine"></p>
-          <p class="foot-note" id="footNote"></p>
-        </footer>
       </section>
 
       <!-- ===== 오늘의 운세 ===== -->
@@ -183,6 +178,29 @@
         </div>
       </section>
 
+      <!-- ===== 사업자 정보 · 법적 고지 푸터 ===== -->
+      <footer class="site-foot" id="siteFoot">
+        <p class="foot-brand" data-brand>월하사주</p>
+        <p class="foot-line" id="footLine"></p>
+        <p class="foot-note" id="footNote"></p>
+        <p class="foot-disclaim" id="footDisclaim"></p>
+        <nav class="foot-links" aria-label="약관 및 정책">
+          <button type="button" data-legal="terms">이용약관</button>
+          <i aria-hidden="true">·</i>
+          <button type="button" data-legal="refund">환불규정</button>
+          <i aria-hidden="true">·</i>
+          <button type="button" data-legal="privacy">개인정보처리방침</button>
+        </nav>
+        <dl class="biz-info">
+          <div><dt>상호</dt><dd>[상호명]</dd></div>
+          <div><dt>대표</dt><dd>[대표자명]</dd></div>
+          <div><dt>사업자등록번호</dt><dd>[사업자등록번호]</dd></div>
+          <div><dt>통신판매업 신고</dt><dd>[통신판매업 신고번호]</dd></div>
+          <div><dt>사업자 주소</dt><dd>[사업장 주소]</dd></div>
+          <div><dt>고객센터</dt><dd>[고객센터 이메일/연락처]</dd></div>
+        </dl>
+        <p class="foot-copy" id="footCopy"></p>
+      </footer>
     </main>
 
     <!-- ===== 탭바 ===== -->
@@ -223,10 +241,14 @@
 
 <noscript><p class="noscript">이 서비스는 자바스크립트가 필요합니다.</p></noscript>
 
-<script src="data.js?v=20261117r"></script>
-<script src="saju-engine.js?v=20261117r"></script>
-<script src="saju-2027.js?v=20261117r"></script>
-<script src="saju-plus.js?v=20261117r"></script>
-<script src="app.js?v=20261117r"></script>
+<script>
+  /* 방문자 추적 설정 — GA4 측정 ID(G-XXXXXXXXXX)를 넣으면 자동으로 계측이 시작됩니다. */
+  window.WOLHA_ANALYTICS = { ga4Id: '' };
+</script>
+<script src="data.js?v=20261117s"></script>
+<script src="saju-engine.js?v=20261117s"></script>
+<script src="saju-2027.js?v=20261117s"></script>
+<script src="saju-plus.js?v=20261117s"></script>
+<script src="app.js?v=20261117s"></script>
 </body>
 </html>

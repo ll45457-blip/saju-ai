@@ -1357,3 +1357,92 @@ body::before {
   .score-ring::before { background: #fff !important; }
   .score-ring b, .score-ring b small { color: #3B2E0B !important; }
 }
+
+/* ============================================================
+   사업자 정보 · 법적 고지 푸터
+   ============================================================ */
+.site-foot {
+  margin: 40px 16px 4px;
+  padding: 20px 0 4px;
+  border-top: 1px solid rgba(255, 255, 255, .07);
+}
+.site-foot .foot-brand {
+  margin: 0 0 6px; font-family: var(--serif); font-size: 12px;
+  letter-spacing: .16em; color: var(--gold-dp);
+}
+.site-foot .foot-line { margin: 0 0 8px; font-size: 11px; color: var(--ink-3); line-height: 1.7; }
+.site-foot .foot-note { margin: 0 0 10px; font-size: 10px; color: #57534C; line-height: 1.7; }
+.foot-disclaim {
+  margin: 0 0 14px; padding: 9px 11px;
+  border-left: 2px solid rgba(212, 175, 55, .35);
+  background: rgba(255, 255, 255, .025);
+  border-radius: 0 8px 8px 0;
+  font-size: 10px; line-height: 1.75; color: #8A867E;
+}
+.foot-links {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  margin: 0 0 14px;
+}
+.foot-links button {
+  padding: 0; border: 0; background: none; cursor: pointer;
+  font-family: var(--sans); font-size: 10.5px; letter-spacing: .02em;
+  color: var(--ink-2); text-decoration: underline; text-decoration-color: rgba(212, 175, 55, .28);
+  text-underline-offset: 3px;
+}
+.foot-links button:hover { color: var(--gold-lt); }
+.foot-links i { font-style: normal; font-size: 10px; color: #3B3831; }
+.biz-info {
+  margin: 0 0 12px; padding: 0;
+  display: grid; gap: 3px 10px;
+  font-size: 9.5px; line-height: 1.6; color: #5E5A52;
+}
+.biz-info div { display: flex; gap: 7px; }
+.biz-info dt { flex: 0 0 auto; min-width: 74px; color: #6B665C; letter-spacing: .02em; }
+.biz-info dd { margin: 0; color: #57534C; word-break: break-all; }
+.foot-copy { margin: 0; font-size: 9px; letter-spacing: .04em; color: #423F39; }
+
+/* ============================================================
+   이용약관 · 환불규정 · 개인정보처리방침 모달
+   ============================================================ */
+.legal-doc { padding-bottom: 6px; }
+.legal-h {
+  margin: 22px 0 8px; padding: 0;
+  font-family: var(--serif); font-size: 12.5px; font-weight: 700;
+  letter-spacing: .02em; color: var(--gold-lt);
+}
+.legal-h:first-child { margin-top: 2px; }
+.legal-p { margin: 0 0 10px; font-size: 11px; line-height: 1.85; color: var(--ink-2); }
+.legal-p b { color: #EFE2C0; font-weight: 600; }
+.legal-small { font-size: 10px; color: #6B665C; }
+.legal-callout {
+  margin: 2px 0 16px; padding: 11px 13px;
+  border: 1px solid rgba(212, 175, 55, .28);
+  border-radius: 12px;
+  background: rgba(212, 175, 55, .07);
+  font-size: 11px; line-height: 1.75; color: #D9CFB6;
+}
+.legal-callout b { color: var(--gold-lt); font-weight: 600; }
+.legal-biz { margin-top: 4px; padding: 12px; border-radius: 12px; background: rgba(0, 0, 0, .28); }
+.legal-end {
+  margin: 20px 0 0; padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, .07);
+  font-size: 10px; color: #6B665C; text-align: right;
+}
+
+/* 결제 카드 사전 고지 · 리포트 면책 */
+.pay-c-legal {
+  margin-top: 2px; padding: 8px 10px;
+  border: 1px dashed rgba(212, 175, 55, .26); border-radius: 9px;
+  font-size: 9.5px; line-height: 1.65; color: #A9A294;
+  background: rgba(0, 0, 0, .22);
+}
+.rp-disclaimer {
+  margin: 18px 0 10px; padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, .07); border-radius: 10px;
+  background: rgba(255, 255, 255, .025);
+  font-size: 9.5px; line-height: 1.75; color: #7E7A72;
+}
+
+@media print {
+  .site-foot, .pay-c-legal { display: none !important; }
+}

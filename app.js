@@ -21,6 +21,48 @@
   const K_HISTORY = 'wolha_history_v1';
   const K_TRIAL = 'wolha_trial_v1';
 
+  /* ---------------- 방문자 추적 (GA4) ----------------
+     index.html 의 window.WOLHA_ANALYTICS.ga4Id 에 측정 ID(G-XXXXXXXXXX)만 넣으면
+     gtag.js 가 자동 로드되고, 그 전까지 쌓인 이벤트가 한꺼번에 전송됩니다. */
+  const AN = window.WOLHA_ANALYTICS = window.WOLHA_ANALYTICS || { ga4Id: '' };
+  AN.queue = AN.queue || [];
+  let gaReady = false;
+
+  function trackEvent(name, params) {
+    if (!name) return;
+    const p = params || {};
+    try {
+      if (gaReady && typeof window.gtag === 'function') window.gtag('event', name, p);
+      else {
+        AN.queue.push({ name: name, params: p, at: Date.now() });
+        if (AN.queue.length > 100) AN.queue.shift();
+        if (typeof console !== 'undefined') console.debug('[월하사주] ' + name, p, '(GA4 미설정 · 버퍼 보관)');
+      }
+    } catch (e) { /* 계측 실패가 화면 동작을 막지 않게 한다 */ }
+  }
+  window.trackEvent = trackEvent;
+
+  function initAnalytics() {
+    const id = String(AN.ga4Id || '').trim();
+    window.dataLayer = window.dataLayer || [];
+    if (!window.gtag) window.gtag = function () { window.dataLayer.push(arguments); };
+    if (!id) return;                                   // 측정 ID가 없으면 조용히 버퍼 모드로 동작
+    if (!/^G-[A-Z0-9]{4,}$/i.test(id)) {
+      console.warn('[월하사주] GA4 측정 ID 형식이 올바르지 않습니다: ' + id);
+      return;
+    }
+    const s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(id);
+    document.head.appendChild(s);
+    window.gtag('js', new Date());
+    window.gtag('config', id, { send_page_view: true });
+    gaReady = true;
+    const pending = AN.queue.splice(0);
+    pending.forEach(e => { try { window.gtag('event', e.name, e.params || {}); } catch (err) { } });
+    console.info('[월하사주] GA4 연결됨: ' + id + ' (대기 이벤트 ' + pending.length + '건 전송)');
+  }
+
   const state = {
     view: 'home',
     profile: store.get(K_PROFILE, null),
@@ -218,7 +260,7 @@
     const html =
       '<div class="prod-hero"><img src="' + c.img + '" alt="' + esc(c.name) + '" />' +
       '<div class="ph-txt"><b>' + esc(c.name) + ' <small style="font-size:10px;letter-spacing:.2em;color:var(--ink-3)">' + esc(c.hanja) + '</small></b>' +
-      '<span>' + esc(c.role) + ' · ⭐ ' + c.rating + ' · 리뷰 ' + won(c.reviews) + '</span></div></div>' +
+      '<span>' + esc(c.role) + ' · ' + esc(c.fields.slice(0, 2).join(' · ')) + '</span></div></div>' +
       '<div class="prod-price"><b>' + won(c.price) + '원</b><s>' + won(c.listPrice) + '원</s>' + (off ? '<em>' + off + '% 할인</em>' : '') + '</div>' +
       '<p class="prod-desc">' + esc(c.intro) + '</p>' +
       '<ul class="prod-list">' + c.strengths.map(s => '<li>' + esc(s) + '</li>').join('') + '</ul>' +
@@ -514,12 +556,14 @@
       '<div class="pay-c-price"><s>' + won(o.list) + '원</s><b>' + won(o.price) + '원</b>' + (off > 0 ? '<em>' + off + '% 할인</em>' : '') + '</div>' +
       '<button type="button" class="btn-gold wide pay-unlock">지금은 체험판 무료 해제하기</button>' +
       '<span class="pay-c-note">결제 없이 이 기기에서 바로 열립니다<br />해제 후 <b>📄 PDF 저장 · 인쇄</b>까지</span>' +
+      '<span class="pay-c-legal">디지털 콘텐츠 특성상 잠금 해제(열람) 후에는 단순 변심 환불이 어렵습니다 · 무료 맛보기 확인 후 이용해 주세요.</span>' +
       '</div>';
   }
 
   function payWrapHTML(o) {
     const open = !!state.unlocked[o.kind];
-    return '<div class="pay-wrap' + (open ? ' is-open' : ' is-locked') + '" data-pay="' + o.kind + '">' +
+    return '<div class="pay-wrap' + (open ? ' is-open' : ' is-locked') + '" data-pay="' + o.kind +
+      '" data-price="' + (o.price || 0) + '" data-list="' + (o.list || 0) + '" data-label="' + esc(o.label || '') + '">' +
       '<div class="pay-body">' + o.inner + '</div>' +
       (open ? '' : payCardHTML(o)) +
       '</div>';
@@ -536,7 +580,14 @@
     if (wrap.classList.contains('is-open')) { show(); return; }
     const un = wrap.querySelector('.pay-unlock');
     if (!un) { show(); return; }
+    const meta = () => ({
+      content_kind: kind,
+      content_label: wrap.dataset.label || '',
+      value: +wrap.dataset.price || 0,
+      list_value: +wrap.dataset.list || 0
+    });
     un.addEventListener('click', () => {
+      trackEvent('click_unlock', meta());
       state.unlocked[kind] = true;
       store.set(K_TRIAL, state.unlocked);
       wrap.classList.remove('is-locked');
@@ -544,12 +595,20 @@
       const card = wrap.querySelector('.pay-card');
       if (card) card.remove();
       show();
+      trackEvent('unlock_trial', meta());
       showToast('체험판이 열렸어요 · 전체 풀이와 PDF 저장을 쓰실 수 있습니다');
     });
   }
 
-  function bindPdf(root) {
-    $$('[data-pdf]', root).forEach(b => b.addEventListener('click', () => window.print()));
+  function bindPdf(root, kind) {
+    $$('[data-pdf]', root).forEach(b => b.addEventListener('click', () => {
+      trackEvent('print_pdf', { content_kind: kind || 'report' });
+      window.print();
+    }));
+  }
+
+  function disclaimerHTML() {
+    return '<div class="rp-disclaimer">' + esc(D.REPORT.disclaimer) + '</div>';
   }
 
   /* ---------------- 리포트 생성 ---------------- */
@@ -568,8 +627,13 @@
     const html = reportHTML({ chart: chart, char: c, question: o.question, category: o.category, today: today, typeLabel: o.typeLabel });
 
     openSheet(c.name + '의 리포트', html, null);
+    trackEvent('view_report', {
+      content_kind: 'report', char_id: c.id, char_name: c.name,
+      category: o.category || 'fate', report_type: o.typeLabel || '질문즉답',
+      value: c.price || 0
+    });
     bindPay($('#sheetBody'), 'report');
-    bindPdf($('#sheetBody'));
+    bindPdf($('#sheetBody'), 'report');
     const goto = $('#rpTo2027');
     if (goto) goto.addEventListener('click', () => { closeSheet(); y2027Open('newyear', chart); });
 
@@ -775,6 +839,7 @@
       '<div class="rp-cta"><b>2027 정미년, 내 12개월은?</b><span>2027년 월운표와 좋은 달·조심할 달을 같은 사주로 이어서 풀어 드립니다.</span><button class="btn-gold wide" id="rpTo2027">2027 정미년 12개월 신년운세 →</button></div>' +
 
       '<div class="rp-actions"><button class="btn-ghost" id="rpClose">닫기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="rpSave">보관함 저장</button></div>' +
+      disclaimerHTML() +
       '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · ' + esc(D.REPORT.noTimeNote) + '<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
   }
 
@@ -912,6 +977,12 @@
 
   /* ---------------- 무료 6종 / 기타 이벤트 ---------------- */
   function bindMisc() {
+    document.addEventListener('click', e => {
+      const l = e.target.closest('[data-legal]');
+      if (!l) return;
+      e.preventDefault();
+      openLegal(l.dataset.legal);
+    });
     $('#btnSearch').addEventListener('click', openSearch);
     $('#btnMenu').addEventListener('click', openMenu);
     $('#askInput').addEventListener('input', e => { $('#askCount').textContent = e.target.value.length + ' / 300'; });
@@ -958,7 +1029,7 @@
     const y = Y27.build(chart2);
     openSheet(item.title, y2027HTML(item, chart2, y));
     bindPay($('#sheetBody'), item.id);
-    bindPdf($('#sheetBody'));
+    bindPdf($('#sheetBody'), item.id);
     const cl = $('#y27Close'); if (cl) cl.addEventListener('click', closeSheet);
     const hm = $('#y27Home');
     if (hm) hm.addEventListener('click', () => {
@@ -1240,6 +1311,7 @@
       }) : body) +
       '<div class="rp-title"><span>행운 포인트</span></div>' + y27Lucky(chart) +
       '<div class="rp-actions"><button class="btn-ghost" id="y27Close">닫기</button><button class="btn-ghost" id="y27Home">2027 전체 보기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="y27Save">보관함 저장</button></div>' +
+      disclaimerHTML() +
       '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 2027년 월운은 24절기 절입 기준입니다.<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
   }
 
@@ -1318,6 +1390,7 @@
   }
 
   function openCompatForm(opts) {
+    trackEvent('open_compat', { content_kind: 'compat' });
     opts = opts || {};
     const pa = state.profile || null;
     const pb = store.get(K_PARTNER, null);
@@ -1438,6 +1511,7 @@
     return head + free +
       payWrapHTML({ kind: 'compat', price: 29900, list: 59000, label: '두 사람의 심층 궁합 전체 열기', desc: '일간·일지·16글자 관계 · 속궁합 · 결혼 시기 · 다툼과 화해의 달 · 처방전', inner: body }) +
       '<div class="rp-actions"><button class="btn-ghost" id="cpClose">닫기</button><button class="btn-ghost" id="cpAgain">상대 바꿔 보기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="cpSave">보관함 저장</button></div>' +
+      disclaimerHTML() +
       '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 두 사람의 생년월일시로 세운 사주팔자를 마주 놓고 본 풀이입니다.<br />' + esc(D.BRAND.footer) + '</div>';
   }
 
@@ -1446,7 +1520,7 @@
     const title = '정밀 궁합 · ' + (A.input.name || '나') + ' · ' + (B.input.name || '상대');
     openSheet(title, compatHTML(res));
     bindPay($('#sheetBody'), 'compat');
-    bindPdf($('#sheetBody'));
+    bindPdf($('#sheetBody'), 'compat');
     const cl = $('#cpClose'); if (cl) cl.addEventListener('click', closeSheet);
     const ag = $('#cpAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openCompatForm({}); });
     const sv = $('#cpSave');
@@ -1520,15 +1594,17 @@
     return head + free +
       payWrapHTML({ kind: 'daeun', price: 24900, list: 49000, label: '10년 대운 전체 풀이 열기', desc: '대운 8개의 재물·커리어·인생 전략 · 지금 대운의 의미 · 대운을 쓰는 순서', inner: body }) +
       '<div class="rp-actions"><button class="btn-ghost" id="duClose">닫기</button><button class="btn-ghost" id="duAgain">내 정보 수정</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="duSave">보관함 저장</button></div>' +
+      disclaimerHTML() +
       '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 대운수는 출생 시각에서 절입까지의 날수를 3일=1년으로 셈했습니다.<br />' + esc(D.BRAND.footer) + '</div>';
   }
 
   function daeunSheet(chart) {
     const c = ensureChart(chart);
     const d = P.buildDaeun(c);
+    trackEvent('open_daeun', { content_kind: 'daeun' });
     openSheet('10년 대운 · ' + (c.input.name || '나의') + ' 인생 흐름', daeunHTML(c, d));
     bindPay($('#sheetBody'), 'daeun');
-    bindPdf($('#sheetBody'));
+    bindPdf($('#sheetBody'), 'daeun');
     const cl = $('#duClose'); if (cl) cl.addEventListener('click', closeSheet);
     const ag = $('#duAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openBirthForm({ title: '내 정보 수정' }); });
     const sv = $('#duSave');
@@ -1629,15 +1705,17 @@
     return head + free +
       payWrapHTML({ kind: 'gilil', price: 14900, list: 29000, label: '2027 길일 전체 열기', desc: '목적별 추천일과 이유 · 피할 날 · 달마다의 길일 · 도장 찍을 때의 팁', inner: body }) +
       '<div class="rp-actions"><button class="btn-ghost" id="glClose">닫기</button><button class="btn-ghost" id="glAgain">내 정보 수정</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="glSave">보관함 저장</button></div>' +
+      disclaimerHTML() +
       '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 2027년 일진은 60갑자 순환으로 계산했습니다.<br />' + esc(D.BRAND.footer) + '</div>';
   }
 
   function gililSheet(chart) {
     const c = ensureChart(chart);
     const g = P.buildGilil(c, 2027);
+    trackEvent('open_gilil', { content_kind: 'gilil' });
     openSheet('2027 길일 · 계약·이직·이사', gililHTML(c, g));
     bindPay($('#sheetBody'), 'gilil');
-    bindPdf($('#sheetBody'));
+    bindPdf($('#sheetBody'), 'gilil');
     const cl = $('#glClose'); if (cl) cl.addEventListener('click', closeSheet);
     const ag = $('#glAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openBirthForm({ title: '내 정보 수정' }); });
     const sv = $('#glSave');
@@ -1653,6 +1731,186 @@
     });
   }
 
+
+  /* ---------------- 법적 고지: 이용약관 · 환불규정 · 개인정보처리방침 ---------------- */
+  const BIZ = {
+    name: '[상호명]',
+    ceo: '[대표자명]',
+    regNo: '[사업자등록번호]',
+    mailNo: '[통신판매업 신고번호]',
+    addr: '[사업장 주소]',
+    contact: '[고객센터 이메일/연락처]',
+    effective: '2026년 11월 17일'
+  };
+
+  function bizInfoHTML() {
+    return '<dl class="biz-info legal-biz">' +
+      '<div><dt>상호</dt><dd>' + esc(BIZ.name) + '</dd></div>' +
+      '<div><dt>대표</dt><dd>' + esc(BIZ.ceo) + '</dd></div>' +
+      '<div><dt>사업자등록번호</dt><dd>' + esc(BIZ.regNo) + '</dd></div>' +
+      '<div><dt>통신판매업 신고</dt><dd>' + esc(BIZ.mailNo) + '</dd></div>' +
+      '<div><dt>사업장 주소</dt><dd>' + esc(BIZ.addr) + '</dd></div>' +
+      '<div><dt>고객센터</dt><dd>' + esc(BIZ.contact) + '</dd></div>' +
+      '</dl>';
+  }
+
+  const LEGAL = {
+    terms: {
+      title: '이용약관',
+      body: function () {
+        return '' +
+          '<h4 class="legal-h">제1조 (목적)</h4>' +
+          '<p class="legal-p">이 약관은 월하사주(이하 “회사”)가 운영하는 웹사이트(이하 “사이트”)에서 제공하는 명리학 기반 디지털 운세 콘텐츠 서비스(이하 “서비스”)의 이용과 관련하여 회사와 이용자 간의 권리·의무 및 책임 사항을 정하는 것을 목적으로 합니다.</p>' +
+
+          '<h4 class="legal-h">제2조 (용어의 정의)</h4>' +
+          '<p class="legal-p">1. “서비스”란 생년월일시를 바탕으로 사주팔자·오행·십신·대운·월운·궁합·길일 등을 해석하여 제공하는 디지털 콘텐츠를 말합니다.<br />' +
+          '2. “이용자”란 사이트에 접속하여 서비스를 이용하는 자를 말합니다.<br />' +
+          '3. “유료 콘텐츠”란 회사가 정한 대가를 받고 제공하는 심층 리포트를 말하며, “잠금 해제”란 결제 후 해당 콘텐츠의 열람 권한이 부여되는 것을 말합니다.</p>' +
+
+          '<h4 class="legal-h">제3조 (약관의 게시와 개정)</h4>' +
+          '<p class="legal-p">1. 회사는 이 약관을 사이트 하단에 게시합니다.<br />' +
+          '2. 회사는 필요한 경우 약관을 개정할 수 있으며, 개정 시 시행일과 주요 변경 내용을 시행일 7일 전(이용자에게 불리하거나 중대한 변경은 30일 전)에 공지합니다.<br />' +
+          '3. 공지된 시행일 이후 서비스를 계속 이용하는 경우 개정 약관에 동의한 것으로 봅니다.</p>' +
+
+          '<h4 class="legal-h">제4조 (서비스의 내용)</h4>' +
+          '<p class="legal-p">1. 회사는 만세력 기반 사주풀이, 오늘의 운세, 2027 정미년 월운, 2인 정밀 궁합, 10년 대운, 계약·이직·이사 길일 등의 콘텐츠를 제공합니다.<br />' +
+          '2. 서비스는 전통 명리학 이론에 근거한 해석으로, 오락과 자기 이해를 돕기 위한 참고 자료입니다.<br />' +
+          '3. 회사는 서비스의 전부 또는 일부를 무료로 제공할 수 있으며, 무료로 공개되는 범위(맛보기)는 사전 고지 후 변경될 수 있습니다.</p>' +
+
+          '<h4 class="legal-h">제5조 (이용계약의 성립과 결제)</h4>' +
+          '<p class="legal-p">1. 이용계약은 이용자가 유료 콘텐츠를 선택하고 회사가 정한 결제를 완료한 때 성립합니다.<br />' +
+          '2. 결제 수단과 금액은 결제 화면에 표시된 내용에 따릅니다.<br />' +
+          '3. 회사는 결제 전에 유료 콘텐츠의 주요 내용, 가격, 환불 기준을 표시합니다.</p>' +
+
+          '<h4 class="legal-h">제6조 (서비스 이용의 제한)</h4>' +
+          '<p class="legal-p">1. 회사는 시스템 점검·교체, 통신 장애, 천재지변 등 부득이한 사유로 서비스를 일시 중단할 수 있습니다.<br />' +
+          '2. 다음 각 호의 행위가 확인되면 회사는 서비스 이용을 제한하거나 콘텐츠 제공을 중단할 수 있습니다. ① 콘텐츠를 무단으로 복제·배포·판매·대여하는 행위 ② 자동화된 수단으로 대량 수집하는 행위 ③ 역설계·변조 ④ 타인의 권리를 침해하는 행위 ⑤ 법령에 위반되는 행위<br />' +
+          '3. 이용자가 입력한 생년월일시가 사실과 다르면 결과의 정확성을 보장할 수 없으며, 이로 인한 불이익은 이용자에게 귀속됩니다.</p>' +
+
+          '<h4 class="legal-h">제7조 (지식재산권)</h4>' +
+          '<p class="legal-p">1. 사이트와 서비스에 포함된 텍스트·이미지·디자인·해석 문장·계산 로직 등 일체의 저작물에 대한 저작권과 지식재산권은 회사에 귀속합니다.<br />' +
+          '2. 이용자는 서비스를 개인적·비상업적 열람 목적으로만 이용할 수 있으며, 회사의 사전 서면 동의 없이 복제·전송·배포·출판·2차적 저작물 작성·상업적 이용을 할 수 없습니다.<br />' +
+          '3. 제2항을 위반한 경우 회사는 민·형사상 조치를 취할 수 있습니다.</p>' +
+
+          '<h4 class="legal-h">제8조 (이용자의 의무)</h4>' +
+          '<p class="legal-p">1. 이용자는 본인 또는 정당한 동의를 받은 사람의 정보만 입력하여야 하며, 타인의 정보를 무단으로 입력하여서는 안 됩니다.<br />' +
+          '2. 이용자는 서비스의 정상적인 운영을 방해하는 행위를 하여서는 안 됩니다.</p>' +
+
+          '<h4 class="legal-h">제9조 (면책사항)</h4>' +
+          '<p class="legal-p">1. 서비스의 풀이는 전통 명리학 이론을 바탕으로 제공하는 참고용 정보이며, 미래의 결과를 보장하지 않습니다.<br />' +
+          '2. 서비스는 의료·법률·투자·세무·재무 등 전문적 조언을 대체하지 않으며, 건강·법률·금전에 관한 결정은 해당 분야의 전문가와 상담하시기 바랍니다.<br />' +
+          '3. 이용자가 서비스의 내용을 근거로 한 판단과 그 결과에 대한 책임은 이용자에게 있습니다.<br />' +
+          '4. 회사는 천재지변·통신 장애·이용자의 기기 및 브라우저 환경·제3자 서비스(글꼴·통계 도구 등)의 장애로 인한 손해에 대해 책임을 지지 않습니다.</p>' +
+
+          '<h4 class="legal-h">제10조 (손해배상)</h4>' +
+          '<p class="legal-p">1. 회사의 고의 또는 과실로 이용자에게 손해가 발생한 경우 회사는 통상의 손해 범위에서 배상합니다. 다만 회사가 예측할 수 없었던 특별 손해는 배상하지 않습니다.<br />' +
+          '2. 회사는 무료로 제공하는 부분에 대하여 회사의 고의 또는 중대한 과실이 없는 한 책임을 지지 않습니다.</p>' +
+
+          '<h4 class="legal-h">제11조 (분쟁의 해결 및 관할)</h4>' +
+          '<p class="legal-p">1. 이 약관 및 서비스 이용과 관련한 분쟁은 대한민국 법률을 준거법으로 합니다.<br />' +
+          '2. 분쟁이 발생한 경우 당사자는 상호 협의로 해결하도록 노력하며, 협의가 이루어지지 않을 경우 민사소송법이 정한 관할 법원에 제기합니다.<br />' +
+          '3. 소비자와의 분쟁은 「소비자기본법」에 따른 소비자분쟁조정위원회 등에 조정을 신청할 수 있습니다.</p>' +
+
+          '<h4 class="legal-h">제12조 (사업자 정보)</h4>' +
+          bizInfoHTML() +
+          '<p class="legal-p legal-small">사업자 등록 전 표기이며, 등록 완료 후 위 정보가 채워집니다.</p>';
+      }
+    },
+
+    refund: {
+      title: '환불규정',
+      body: function () {
+        return '' +
+          '<div class="legal-callout">디지털 콘텐츠 특성상 <b>잠금 해제(열람) 후에는 단순 변심 환불이 어렵습니다.</b> 무료 맛보기를 먼저 확인해 주세요.</div>' +
+
+          '<h4 class="legal-h">1. 무료 맛보기(시험 사용) 제공</h4>' +
+          '<p class="legal-p">회사는 결제 전에 사주팔자·오행·음양·십신 등 리포트의 앞부분을 무료로 공개합니다. 이용자는 맛보기와 상품 설명을 충분히 확인한 뒤 결제 여부를 결정할 수 있습니다.<br />' +
+          '현재 서비스의 심층 리포트는 결제 없이 열리는 <b>체험판</b>으로 제공되며, 실제 결제가 발생하지 않습니다. 유료 판매를 개시하는 경우에도 아래 기준을 동일하게 적용합니다.</p>' +
+
+          '<h4 class="legal-h">2. 청약철회 및 전액 환불 (열람 전)</h4>' +
+          '<p class="legal-p">이용자는 결제일로부터 <b>7일 이내</b>에 청약철회를 할 수 있습니다. 콘텐츠를 열람(잠금 해제)하지 않은 상태라면 <b>전액 환불</b>합니다. (「전자상거래 등에서의 소비자보호에 관한 법률」 제17조 제1항)</p>' +
+
+          '<h4 class="legal-h">3. 청약철회의 제한 (열람 개시 후)</h4>' +
+          '<p class="legal-p">본 서비스의 유료 콘텐츠는 이용자의 선택에 따라 즉시 제공이 개시되는 디지털 콘텐츠입니다. 따라서 <b>잠금 해제(열람 개시) 이후에는 단순 변심에 의한 청약철회 및 환불이 제한</b>됩니다. (같은 법 제17조 제2항 제5호)<br />' +
+          '회사는 결제 화면에 이 사실을 명확히 고지하고, 이용자가 이를 확인한 뒤 결제가 진행되도록 합니다.</p>' +
+
+          '<h4 class="legal-h">4. 전액 환불 사유 (회사 귀책)</h4>' +
+          '<p class="legal-p">다음의 경우에는 열람 여부와 관계없이 전액 환불합니다.<br />' +
+          '① 시스템 장애·오류로 콘텐츠가 제공되지 않거나 열람이 불가능한 경우<br />' +
+          '② 중복 결제 ③ 결제 금액의 착오<br />' +
+          '④ 표시·광고한 내용과 실제 제공된 콘텐츠가 다른 경우<br />' +
+          '⑤ 그 밖에 회사의 귀책 사유로 정상적인 이용이 불가능한 경우<br />' +
+          '제4호의 경우 이용자는 콘텐츠를 공급받은 날부터 3개월 이내, 그 사실을 안 날 또는 알 수 있었던 날부터 30일 이내에 청약철회를 할 수 있습니다. (같은 법 제17조 제3항)</p>' +
+
+          '<h4 class="legal-h">5. 환불의 절차와 기간</h4>' +
+          '<p class="legal-p">1. 환불은 고객센터(' + esc(BIZ.contact) + ')로 결제일·결제수단·사유를 알려 신청합니다.<br />' +
+          '2. 회사는 신청을 받은 날부터 3영업일 이내에 접수 사실을 알리고, 3영업일 이내에 결제 수단과 같은 방법으로 환불합니다. 카드 결제는 카드사 취소 절차에 따라 반영 시점이 달라질 수 있습니다.<br />' +
+          '3. 이용자가 제공한 정보가 사실과 달라 콘텐츠가 잘못 제공된 경우, 회사는 정정된 정보로 콘텐츠를 다시 제공할 수 있습니다.</p>' +
+
+          '<h4 class="legal-h">6. 환불이 제한되는 경우</h4>' +
+          '<p class="legal-p">1. 잠금 해제(열람) 후 단순 변심<br />' +
+          '2. 콘텐츠를 무단으로 복제·배포한 경우<br />' +
+          '3. 이용자의 기기·브라우저 설정 문제로 열람이 되지 않는다고 주장하나 회사가 정상 제공을 확인한 경우 (다만 회사의 안내로 해결되지 않으면 전액 환불합니다)</p>' +
+
+          '<h4 class="legal-h">7. 사업자 정보</h4>' +
+          bizInfoHTML();
+      }
+    },
+
+    privacy: {
+      title: '개인정보처리방침',
+      body: function () {
+        return '' +
+          '<h4 class="legal-h">1. 수집하는 개인정보 항목</h4>' +
+          '<p class="legal-p">필수: 이름 또는 별명, 성별, 생년월일(양력), 출생시간(모르는 경우 선택하지 않을 수 있음)<br />' +
+          '자동 수집: 아래 6항의 방문 통계 외에는 없습니다.</p>' +
+
+          '<h4 class="legal-h">2. 수집 방법과 보관 위치</h4>' +
+          '<p class="legal-p">이용자가 사주 정보 입력 화면에서 직접 입력한 정보는 <b>이용자의 브라우저 저장소(localStorage)에만 저장</b>됩니다.<br />' +
+          '현재 버전은 입력 정보를 <b>회사의 서버로 전송하거나 저장하지 않으며</b>, 회사는 해당 정보를 열람할 수 없습니다.</p>' +
+
+          '<h4 class="legal-h">3. 이용 목적</h4>' +
+          '<p class="legal-p">사주팔자 계산과 리포트 생성, 보관함(내가 본 사주) 표시, 기기에서의 재열람.</p>' +
+
+          '<h4 class="legal-h">4. 보유 기간과 파기</h4>' +
+          '<p class="legal-p">기기에 저장된 정보는 이용자가 보관함에서 삭제하거나 브라우저의 사이트 데이터 삭제 기능으로 지우면 즉시 파기됩니다.<br />' +
+          '회사가 별도로 보관하는 개인정보가 없으므로, 파기할 서버 기록은 존재하지 않습니다.</p>' +
+
+          '<h4 class="legal-h">5. 개인정보의 제3자 제공</h4>' +
+          '<p class="legal-p">회사는 이용자의 개인정보를 제3자에게 제공하지 않습니다. 다만 향후 서버 저장·결제 기능을 도입하는 경우 결제대행사 등에 결제 처리를 위한 최소한의 정보를 위탁할 수 있으며, 그 전에 본 방침을 갱신하여 사전에 고지하고 필요한 동의를 받습니다.</p>' +
+
+          '<h4 class="legal-h">6. 방문 통계(웹 분석 도구)</h4>' +
+          '<p class="legal-p">회사는 서비스 개선을 위해 Google Analytics 4(GA4)를 사용할 수 있습니다. GA4가 설정된 경우 쿠키를 기반으로 방문 페이지·체류 시간·유입 경로·기기 및 브라우저 정보·대략적인 접속 지역이 Google에 수집됩니다. IP 주소는 Google의 정책에 따라 익명 처리됩니다.<br />' +
+          '수집된 통계는 개인을 식별하지 않는 형태로 이용되며, <b>사주 입력값(이름·생년월일·출생시간)은 분석 도구로 전송하지 않습니다.</b><br />' +
+          '거부 방법: 브라우저에서 쿠키를 차단하거나 Google Analytics 차단 브라우저 부가기능을 설치하면 수집을 거부할 수 있습니다. 쿠키를 차단해도 리포트 열람 등 핵심 기능은 이용할 수 있습니다.<br />' +
+          '방문 통계가 설정되지 않은 상태에서는 쿠키 기반 분석이 이루어지지 않습니다.</p>' +
+
+          '<h4 class="legal-h">7. 이용자의 권리</h4>' +
+          '<p class="legal-p">이용자는 언제든지 자신의 정보를 조회·정정·삭제할 수 있습니다. 기기에 저장된 정보는 ‘내 사주 등록·수정’ 메뉴에서 수정하거나 브라우저 설정에서 삭제할 수 있습니다.<br />' +
+          '회사가 서버로 정보를 수집하지 않는 현재 버전에서는 회사에 대한 열람·삭제 요구의 대상이 없습니다.</p>' +
+
+          '<h4 class="legal-h">8. 안전성 확보 조치</h4>' +
+          '<p class="legal-p">HTTPS 통신, 서버 미전송 구조, 기기 단위 저장을 통해 정보를 보호합니다.</p>' +
+
+          '<h4 class="legal-h">9. 개인정보 보호책임자</h4>' +
+          '<p class="legal-p">성명: [성명] · 연락처: ' + esc(BIZ.contact) + ' (사업자 등록 후 기재)</p>' +
+
+          '<h4 class="legal-h">10. 방침의 변경</h4>' +
+          '<p class="legal-p">본 방침이 변경되는 경우 시행일 7일 전에 사이트에 공지하며, 중요한 변경은 30일 전에 공지합니다. 서버 저장·결제 기능을 도입하는 경우 본 방침을 갱신합니다.</p>' +
+
+          '<h4 class="legal-h">11. 사업자 정보</h4>' +
+          bizInfoHTML();
+      }
+    }
+  };
+
+  function openLegal(key) {
+    const doc = LEGAL[key];
+    if (!doc) return;
+    openSheet(doc.title, '<div class="legal-doc">' + doc.body() +
+      '<p class="legal-end">시행일 ' + BIZ.effective + '</p></div>');
+  }
+
   /* ---------------- 시작 ---------------- */
   function init() {
     const B = D.BRAND;
@@ -1661,6 +1919,10 @@
     document.title = B.name + ' · ' + B.tagline;
     $('#footLine').textContent = B.tagline + ' — ' + B.intro;
     $('#footNote').textContent = '© ' + new Date().getFullYear() + ' ' + B.name + ' ' + B.version + ' · ' + B.footer;
+    const fd = $('#footDisclaim'); if (fd) fd.textContent = D.REPORT.disclaimer;
+    const fc = $('#footCopy'); if (fc) fc.textContent = B.name + '는 명리학 전통 해석을 바탕으로 한 참고용 콘텐츠입니다. 청소년 이용 시 보호자의 지도를 받으시기 바랍니다.';
+
+    initAnalytics();
 
     renderHero(); renderTopics(); renderY2027(); renderPlus(); renderHomeChips(); renderRanking(); renderMasters(); renderTodayWidget(); renderFreeGrid();
     renderAskChars(); bindMisc();
