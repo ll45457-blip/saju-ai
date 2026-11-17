@@ -372,7 +372,7 @@
     }
     const c = E.buildChart(p);
     target.innerHTML = '<div class="arch-profile">' +
-      '<div class="rp-id"><b>' + esc(p.name || '익명의 발견자') + '</b><span>' + (p.gender === 'female' ? '여성' : '남성') + ' · ' + p.year + '.' + pad(p.month) + '.' + pad(p.day) + (p.hasTime ? ' ' + pad(p.hour) + ':' + pad(p.minute || 0) : ' · 시간 모름') + '</span></div>' +
+      '<div class="rp-id"><b>' + esc(p.name || '익명의 발견자') + '</b><span>' + (p.gender === 'female' ? '여성' : '남성') + ' · ' + p.year + '.' + pad(p.month) + '.' + pad(p.day) + (p.hour != null && p.hour !== '' ? ' ' + pad(p.hour) + ':' + pad(p.minute || 0) : ' · 시간 모름') + '</span></div>' +
       '<div class="preview-mini">' + c.pillars.year.hanja + ' ' + c.pillars.month.hanja + ' <b style="color:var(--gold-lt)">' + c.pillars.day.hanja + '</b>' + (c.pillars.hour ? ' ' + c.pillars.hour.hanja : '') +
       '<small>' + c.ganjiKo + (c.pillars.hour ? '' : ' · 시주 제외') + '</small></div>' +
       '<div class="stat-row" style="margin-top:10px">' +
@@ -412,7 +412,7 @@
 
   function birthFormHTML(p) {
     const y = p ? p.year : 1995, m = p ? p.month : 1, d = p ? p.day : 1;
-    let hourOpts = '<option value="">태어난 시간 모름</option>' + SIZI.map(s => '<option value="' + s.v + '">' + s.l + '</option>').join('');
+    let hourOpts = '<option value=""' + (!p || p.hour == null ? ' selected' : '') + '>태어난 시간 모름</option>' + SIZI.map(s => '<option value="' + s.v + '"' + (p && +p.hour === s.v ? ' selected' : '') + '>' + s.l + '</option>').join('');
     return '<form class="form-grid" id="birthForm" autocomplete="off">' +
       '<div class="field"><label for="bfName">이름 또는 별명</label><input id="bfName" maxlength="12" placeholder="예) 승현" value="' + esc(p && p.name || '') + '" /></div>' +
       '<div class="field"><label>성별</label><div class="seg" id="bfGender">' +
