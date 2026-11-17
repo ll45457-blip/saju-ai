@@ -495,9 +495,16 @@
   }
 
   /* ---------------- 리포트 생성 ---------------- */
+  function ensureChart(chart) {
+    if (!chart) return chart;
+    if (chart.sinsal && chart.gwisin && chart.yinyang && chart.stages) return chart;
+    if (chart.input) { try { return E.buildChart(chart.input); } catch (e) { return chart; } }
+    return chart;
+  }
+
   function openReportSheet(o) {
     const c = charById(o.charId);
-    const chart = o.chart;
+    const chart = ensureChart(o.chart);
     const today = o.reading ? o.reading.today : null;
     const html = reportHTML({ chart: chart, char: c, question: o.question, category: o.category, today: today, typeLabel: o.typeLabel });
 
@@ -846,8 +853,9 @@
   function y2027Sheet(kind, chart, opts) {
     opts = opts || {};
     const item = D.Y2027.items.find(x => x.id === kind); if (!item) return;
-    const y = Y27.build(chart);
-    openSheet(item.title, y2027HTML(item, chart, y));
+    const chart2 = ensureChart(chart);
+    const y = Y27.build(chart2);
+    openSheet(item.title, y2027HTML(item, chart2, y));
     const cl = $('#y27Close'); if (cl) cl.addEventListener('click', closeSheet);
     const hm = $('#y27Home');
     if (hm) hm.addEventListener('click', () => {
@@ -887,12 +895,15 @@
   }
 
   function y27Picks(y) {
-    return '<div class="y27-picks">' +
-      y.good.map(m => '<div class="y27-pick good"><b>' + m.no + '월</b><span>' + m.hanja + ' · ' + m.god + '</span><em>' + m.tag + ' ' + m.score + '</em><p>' + esc(m.action) + '에 힘을 싣기 좋은 달</p></div>').join('') +
-      y.warn.map(m => {
+    const block = (list, cls, cap) => !list.length ? '' : '<div class="y27-pick-group"><span class="y27-pick-cap">' + cap + '</span><div class="y27-picks">' +
+      list.map(m => {
         const neg = m.relYear.concat(m.relMine).filter(r => ['충', '형', '파', '해'].indexOf(r) >= 0)[0];
-        return '<div class="y27-pick bad"><b>' + m.no + '월</b><span>' + m.hanja + ' · ' + m.god + '</span><em>' + m.tag + ' ' + m.score + '</em><p>' + esc(neg || m.god) + ' — 방어가 필요한 달</p></div>';
-      }).join('') + '</div>';
+        return '<div class="y27-pick ' + cls + '"><b>' + m.no + '월 <small>' + m.hanja + '</small></b><span>' + m.god + ' · ' + m.stage + '</span>' +
+          '<em>' + m.tag + ' ' + m.score + '</em><p>' + esc(cls === 'good' ? m.action + '에 힘을 싣기 좋은 달' : (neg ? neg + ' — 방어가 필요한 달' : m.god + ' — 힘이 빠지는 달')) + '</p></div>';
+      }).join('') + '</div></div>';
+    return '<div class="y27-pick-wrap">' +
+      block(y.good, 'good', '좋은 달') +
+      block(y.warn, 'bad', '조심할 달') + '</div>';
   }
 
   function y27Lines(arr) {
@@ -970,7 +981,7 @@
         '<div class="rp-title"><span>상반기 1~6월 실전 풀이</span></div>' + y27Half(y.half1, '상반기') +
         '<div class="rp-title"><span>하반기 7~12월 실전 풀이</span></div>' + y27Half(y.half2, '하반기') +
         '<div class="rp-title"><span>내 사주와 未토</span></div>' + y27YearRel(y) +
-        '<div class="rp-title"><span>행운 포인트</span></div>' + y27Lucky(chart) +
+        '<div class="rp-title"><span>행운 포인트</span></div>' + y27Lucky(y.chart) +
         y27Share('내 2027 최고의 달은 ‘' + y.good[0].no + '월’, 조심할 달은 ‘' + y.warn[0].no + '월’',
           dm.ko + dm.elem + ' 일간 · 정미년 未토와 ' + (y.yearHits.length ? y.yearHits[0].rel.join('·') : '별다른 작용 없음') + ' · 좋은 달 ' + y.good.map(m => m.no + '월').join('·'));
     }
