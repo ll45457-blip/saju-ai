@@ -469,6 +469,7 @@
       if ($('#bfRemember').checked) {
         state.profile = input; store.set(K_PROFILE, input);
         renderTodayWidget(); renderAskProfile();
+        if ($('#archiveProfile')) renderArchive();
       }
       closeSheet();
       if (opts.onDone) opts.onDone(chart);
@@ -954,7 +955,7 @@
     const head = '<div class="y27-head">' +
       '<span class="y27-seal">2027<b>丁未</b></span>' +
       '<div class="y27-head-txt"><b>' + item.icon + ' ' + esc(item.title) + '</b>' +
-      '<span>' + dm.hanja + '(' + dm.ko + ') ' + dm.elem + ' 일간 · ' + chart.pillars.year.hanja + ' ' +
+      '<span>' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간 · ' + chart.pillars.year.hanja + ' ' +
       chart.pillars.month.hanja + ' ' + chart.pillars.day.hanja + (chart.pillars.hour ? ' ' + chart.pillars.hour.hanja : '') + '</span>' +
       '<em class="y27-tag">' + (item.price ? won(item.price) + '원' : '무료') + ' · ' + esc(item.badge) + '</em></div></div>' +
       '<p class="rp-lead">2027 정미년의 천간 <b>丁(음화)</b>과 지지 <b>未(음토)</b>가 내 사주와 만나면, 천간은 내게 <b>' + y.yearGod + '</b>의 자리가 됩니다. ' +
@@ -971,7 +972,7 @@
         '<div class="rp-title"><span>내 사주와 未토</span></div>' + y27YearRel(y) +
         '<div class="rp-title"><span>행운 포인트</span></div>' + y27Lucky(chart) +
         y27Share('내 2027 최고의 달은 ‘' + y.good[0].no + '월’, 조심할 달은 ‘' + y.warn[0].no + '월’',
-          dm.ko + ' ' + dm.elem + ' 일간 · 정미년 未토와 ' + (y.yearHits.length ? y.yearHits[0].rel.join('·') : '별다른 작용 없음') + ' · 좋은 달 ' + y.good.map(m => m.no + '월').join('·'));
+          dm.ko + dm.elem + ' 일간 · 정미년 未토와 ' + (y.yearHits.length ? y.yearHits[0].rel.join('·') : '별다른 작용 없음') + ' · 좋은 달 ' + y.good.map(m => m.no + '월').join('·'));
     }
 
     if (item.kind === 'samjae') {
