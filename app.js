@@ -60,6 +60,7 @@
   function openSheet(title, html, onClose) {
     $('#sheetTitle').textContent = title;
     $('#sheetBody').innerHTML = html;
+    $('#sheetBody').onclick = null;
     $('#sheet').hidden = false; $('#dim').hidden = false;
     $('#sheetBody').scrollTop = 0;
     document.body.style.overflow = 'hidden';
@@ -241,7 +242,7 @@
       '<div class="th-date">' + t.dateStr + ' ' + t.weekday + '요일</div>' +
       '<div class="th-ganji">' + t.pillar.hanja + '</div>' +
       '<div class="th-sub">' + t.pillar.ko + '일 · ' + esc(ELEMENTS_HANJA_LABEL(r.element)) + '의 날</div>' +
-      '<div class="th-term">절기 ' + esc(t.termName) + (t.termStart ? ' · ' + esc(t.termName) + ' ' + E.formatTermTime(t.termStart) : '') + ' · 태양 황경 ' + t.termLong + '°</div>' +
+      '<div class="th-term">절기 ' + esc(t.termName) + (t.termStart ? ' · ' + esc(t.termName) + ' ' + E.formatTermTime(t.termStart) + ' (근사)' : '') + ' · 태양 황경 ' + t.termLong + '°</div>' +
       '<div class="score-ring th-score" style="--v:' + r.total + '"><b>' + r.total + '<small>점</small></b></div>' +
       '</div>' +
       '<div class="block"><div class="rp-title"><span>오늘의 총운 ' + r.total + '점</span></div>' +
@@ -291,7 +292,7 @@
     if (!state.profile) {
       wrap.innerHTML = '<div class="today-hero"><div class="th-date">' + t.dateStr + ' ' + t.weekday + '요일</div>' +
         '<div class="th-ganji">' + t.pillar.hanja + '</div><div class="th-sub">' + t.pillar.ko + '일</div>' +
-        '<div class="th-term">절기 ' + esc(t.termName) + ' · 태양 황경 ' + t.termLong + '°</div></div>' +
+        '<div class="th-term">절기 ' + esc(t.termName) + (t.termStart ? ' · ' + esc(t.termName) + ' ' + E.formatTermTime(t.termStart) + ' (근사)' : '') + '</div></div>' +
         '<div class="arch-empty" style="margin-top:16px">생년월일을 등록하면<br /><b>오늘의 일진이 내 사주와 만나는 자리</b>까지 계산해 드려요.<br /><button class="btn-gold" id="todayGoProfile">생년월일 입력하기</button></div>';
       $('#todayGoProfile').addEventListener('click', () => openBirthForm({ title: '오늘의 운세', onDone: () => showView('today') }));
       return;

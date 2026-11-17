@@ -100,12 +100,12 @@
 
   function norm180(x) { return ((x + 540) % 360) - 180; }
 
-  // 목표 황경에 태양이 도달하는 순간(UT JD)을 찾는다
+  // 목표 황경에 태양이 도달하는 순간(UT JD)을 찾는다 — 전후 w일을 훑는다
   function findTermJD(targetLong, approxJD, windowDays) {
     const w = windowDays || 40;
     const f = jd => norm180(sunLongitude(jd) - targetLong);
     let a = approxJD - w, fa = f(a);
-    for (let i = 1; i <= w * 2; i++) {
+    for (let i = 1; i <= w * 4; i++) {
       const b = a + 0.5, fb = f(b);
       if (fa <= 0 && fb > 0) {
         let lo = a, hi = b;
