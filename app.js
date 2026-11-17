@@ -2292,11 +2292,16 @@
       { id: 'daeun', icon: '🧭', tag: '평생 흐름', title: '10년 대운', sub: '내 인생 전성기 · 조심할 10년' },
       { id: 'gilil', icon: '📅', tag: '2027', title: '계약·이직·이사 길일', sub: '도장 찍을 날과 피할 날' }
     ];
-    box.innerHTML = cards.map(c => '<button class="plus-card" data-plus="' + c.id + '">' +
-      '<span class="plus-icon">' + c.icon + '</span>' +
-      '<span class="plus-tag">' + c.tag + '</span>' +
-      '<span class="plus-title">' + c.title + '</span>' +
-      '<span class="plus-sub">' + c.sub + '</span></button>').join('');
+    box.innerHTML = cards.map(c => {
+      /* 이 리포트를 실제로 여는 티어 금액 — 결제 카드 기본값과 같은 값이 입구에 보인다 */
+      const t = coveringTierFor(c.id);
+      return '<button class="plus-card" data-plus="' + c.id + '">' +
+        '<span class="plus-icon">' + c.icon + '</span>' +
+        '<span class="plus-tag">' + c.tag + '</span>' +
+        '<span class="plus-title">' + c.title + '</span>' +
+        '<span class="plus-sub">' + c.sub + '</span>' +
+        '<span class="plus-price">' + won(t.price) + '원' + (t.id === 't3' ? ' 전체 열람' : '') + '</span></button>';
+    }).join('');
     box.addEventListener('click', e => {
       const b = e.target.closest('[data-plus]'); if (!b) return;
       if (b.dataset.plus === 'compat') openCompatForm({});
