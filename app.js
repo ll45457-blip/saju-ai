@@ -219,7 +219,7 @@
         '<span class="rank-no">' + (i + 1) + '</span>' +
         '<img class="rank-avatar" src="' + c.img + '" alt="" loading="lazy" />' +
         '<span class="rank-main"><span class="rank-q">' + esc(r.q) + '</span>' +
-        '<span class="rank-meta"><b>' + won(r.count) + '명이 확인</b><span class="rank-trend">' + r.trend + '</span></span></span>' +
+        '<span class="rank-meta"><b>' + esc(c.name) + '</b><span class="rank-trend">' + esc(c.fields[0]) + '</span></span></span>' +
         '</li>';
     }).join('');
     $('#rankingList').addEventListener('click', e => {
