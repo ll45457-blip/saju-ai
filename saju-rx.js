@@ -315,7 +315,7 @@ window.SAJU_RX = (function () {
       ]
     },
     fate: {
-      label: '인생 흐름·질문', yx: 'act',
+      label: '인생 흐름', yx: 'act',
       ans: [
         function (f) { return '여덟 글자를 세워 보면 ' + f.ganji + '(' + f.ganjiKo + ')에 일간 ' + f.dmKey + ', ' + f.strong + ', 용신 ' + f.yong + '입니다. ' + f.dm.img + '의 결은 ' + f.dm.gift + '이고, 반대로 ' + f.dm.shadow + '. 지금의 고민은 이 결이 세상과 부딪히는 자리에서 생깁니다.'; },
         function (f) { return '질문의 답은 이 사주의 중심 ' + f.dom + '(' + f.domN + '개)과 얇은 ' + f.lack + '(' + f.lackN + '개) 사이에 있습니다. ' + GMAIN[f.dom].read + '. ' + GLACK[f.lack].read + '. 그래서 ' + GMAIN[f.dom].act + '. 그리고 ' + GLACK[f.lack].act + ' — 두 가지를 함께 가져가야 합니다.'; }
@@ -323,13 +323,13 @@ window.SAJU_RX = (function () {
       god: function (f) { return '일지 ' + f.dayB + '에 앉은 ' + f.dayG + '이 답의 형식을 정합니다. ' + f.jg.read + '. ' + f.jg.act + '. 여기에 ' + SAL[f.sal].read + '. 여기에 ' + SAL[f.sal].act + '.'; },
       verdict: function (f) { return '정리하면 이 사주의 답은 오행 ' + f.yong + '(' + HANJA[f.yong] + ')를 채우는 선택입니다. ' + YONG[f.yong].act + '. ' + (f.daeun ? '지금은 ' + f.daeun.hanja + ' ' + f.daeun.stemGod + ' 대운(' + f.daeun.ageFrom + '~' + f.daeun.ageTo + '세) 안이라, 이 선택이 다음 10년의 방향을 정합니다.' : '아직 첫 대운 전이라 부모와 환경의 그릇이 먼저 작동하는 시기입니다.'); },
       step: [
-        function (f) { return '이번 달 안에 ' + YONG[f.yong].act + ' 이걸 21일만 반복해 보세요. 용신 ' + E.josa(f.yong, '이', '가') + ' ' + f.pct[f.yong] + '%인 이 사주는 그 반복이 판단의 바닥을 바꿉니다'; },
+        function (f) { return '이번 달 안에 ' + YONG[f.yong].act + '. 이걸 21일만 반복해 보세요. 용신 ' + E.josa(f.yong, '이', '가') + ' ' + f.pct[f.yong] + '%인 이 사주는 그 반복이 판단의 바닥을 바꿉니다'; },
         function (f) { return f.dm.body + '. ' + f.dayG + '이 일지에 앉은 사주라 이 한 습관이 결정의 속도를 바꿉니다'; },
         function (f) { return f.lackT.act + '. ' + f.lack + '이 ' + f.lackN + '개로 얇은 이 사주가 가장 먼저 채워야 할 자리입니다'; }
       ],
       cau: [
         function (f) { return f.dm.shadow + ' — 이 결이 결정적인 순간에 나오면 그 판은 되돌리기 어렵습니다'; },
-        function (f) { return '가장 두터운 ' + f.dom + ' ' + f.domN + '개를 믿고 밀면 ' + f.lack + '이 얇은 자리에서 일이 새어 나갑니다. ' + f.lackT.read; }
+        function (f) { return '가장 많은 ' + f.dom + ' ' + f.domN + '개를 믿고 밀면 ' + f.lack + '이 얇은 자리에서 일이 새어 나갑니다. ' + f.lackT.read; }
       ]
     }
   };
@@ -375,7 +375,7 @@ window.SAJU_RX = (function () {
       var hit = y.months.filter(function (m) { return gods.indexOf(m.god) >= 0 || gods.indexOf(m.branchGod) >= 0; });
       var yMon = y.months.filter(function (m) { return m.stemElem === f.yong || m.branchElem === f.yong; });
       var openList = hit.length ? hit.map(function (m) { return m.no + '월(' + m.hanja + ')'; }).join(' · ') : '뚜렷하지 않음';
-      items.push('2027 정미년 ' + E.plain('월운') + '에서 ' + t.label + '의 문이 열리는 달은 ' + openList + '입니다. 이 사주의 일지 ' + E.josaHan(f.dayB + '(' + f.dayBk + ')', f.dayBk, '은', '는') + ' 2027년 未토와 ' + relLabel(f) + ' 관계입니다. 그중 ' + (y.good[0].no) + '월(' + y.good[0].hanja + ')이 흐름 점수 ' + y.good[0].score + '점으로 가장 높습니다.');
+      items.push('2027 정미년 ' + E.plain('월운') + '에서 ' + t.label + '의 문이 열리는 달은 ' + (hit.length ? openList + '입니다.' : '뚜렷하지 않습니다.') + ' 이 사주의 일지 ' + E.josaHan(f.dayB + '(' + f.dayBk + ')', f.dayBk, '은', '는') + ' 2027년 未토와 ' + relLabel(f) + ' 관계입니다. 그중 ' + (y.good[0].no) + '월(' + y.good[0].hanja + ')이 흐름 점수 ' + y.good[0].score + '점으로 가장 높습니다.');
       items.push('용신 ' + E.josa(f.yong, '이', '가') + ' 들어오는 달은 ' + (yMon.length ? yMon.map(function (m) { return m.no + '월'; }).join(' · ') : '없음') + '이고, 피해야 할 달은 ' + y.warn.map(function (m) { return m.no + '월'; }).join(' · ') + '입니다. ' + f.dmKey + ' 사주는 이 달들에 큰 결정을 몰아 두고, 나머지 달은 ' + (f.strongKey === 'weak' ? '체력과 사람을 정비하는 데' : '검토와 정리에') + ' 쓰면 됩니다.');
     } else {
       items.push('시기는 이 사주의 월지 ' + f.monB + '(' + f.monG + ')가 움직이는 절기를 기준으로 잡습니다. 다음 절입은 ' + (f.chart.month.nextAt ? (f.chart.month.nextAt.m + '월 ' + f.chart.month.nextAt.d + '일') : '확인 필요') + '입니다.');
@@ -405,7 +405,7 @@ window.SAJU_RX = (function () {
     var f = asF(chart);
     var t = TOPIC[cat] || TOPIC.fate;
     var out = [];
-    out.push('가장 두터운 ' + f.dom + ' ' + f.domN + '개의 그늘 — ' + f.domT.risk + '. ' + t.label + '에서 이 습관이 나오면 판이 한 번 뒤집힙니다.');
+    out.push('가장 많은 ' + f.dom + ' ' + f.domN + '개의 그늘 — ' + f.domT.risk + '. ' + t.label + '에서 이 습관이 나오면 판이 한 번 뒤집힙니다.');
     out.push(E.josa(f.strongEl, '이', '가') + ' ' + f.pct[f.strongEl] + '%로 넘쳐 ' + E.ELEM_DEEP[f.strongEl].over + '. 이 사주의 과열은 ' + E.ELEM_DEEP[f.strongEl].organ + '에서 먼저 신호를 보냅니다.');
     out.push('이 사주의 ' + f.sal + '은 ' + SAL[f.sal].risk + ' 쪽으로 작용합니다. ' + (f.salHits[0] ? f.salHits[0].where : '사주') + '에 걸려 있으니 ' + SAL[f.sal].act + '.');
     out.push(pick(t.cau, seed(f.chart, 'cau' + cat))(f) + '.');
