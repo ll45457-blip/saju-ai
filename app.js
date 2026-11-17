@@ -686,7 +686,7 @@
     const coreHTML = '<p class="rp-lead">여기서부터는 앞에서 짚은 것들을 겹쳐서 보겠습니다. ' + esc(catCopy.label) + '에 대한 답은 이렇게 정리됩니다.</p>' +
       '<p class="rp-para"><strong>' + esc(c.name) + '의 읽기</strong> — ' + esc(catCopy.via[dominantGodGroup(chart)]) + '</p>' +
       '<p class="rp-para">' + esc(c.categoryLine[cat] || c.categoryLine.fate) + '</p>' +
-      '<p class="rp-para">이 사주의 결을 겹쳐 보면 ' + esc(catCopy.label) + '의 답은 이렇게 정리됩니다. 중심 기운은 ' + chart.yongsin.elem + '(용신)이고 ' + esc(dx.style) + '에 가까운 사주이니, 이 문제도 ' + (dx.style.indexOf('조직') >= 0 ? '조직 안에서 자리를 넓히는 방식' : dx.style.indexOf('사업') >= 0 || dx.style.indexOf('제작') >= 0 ? '내가 만든 것과 이름을 걸고 나가는 방식' : '내 판단과 몸을 앞세우는 방식') + '으로 풀어야 결과가 남습니다. ' + esc(catCopy.timing[0]) + '</p>';
+      '<p class="rp-para">정리하면, 중심 기운은 ' + chart.yongsin.elem + '(용신)이고 ' + esc(dx.style) + '에 가까운 사주이니, 이 문제도 ' + (dx.style.indexOf('조직') >= 0 ? '조직 안에서 자리를 넓히는 방식' : dx.style.indexOf('사업') >= 0 || dx.style.indexOf('제작') >= 0 ? '내가 만든 것과 이름을 걸고 나가는 방식' : '내 판단과 몸을 앞세우는 방식') + '으로 풀어야 결과가 남습니다. ' + esc(catCopy.timing[0]) + '</p>';
 
     const timingHTML = '<ul class="rp-list">' + catCopy.timing.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>' +
       '<p class="rp-para">시기를 정할 때는 감이 아니라 달력으로 정하세요. 2027 정미년의 좋은 달과 조심할 달은 아래 2027 리포트에서 달 단위로 짚어 드립니다.</p>';
