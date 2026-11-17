@@ -19,8 +19,9 @@
   };
   const K_PROFILE = 'wolha_profile_v1';
   const K_HISTORY = 'wolha_history_v1';
-  /* 열람 코드로 해제된 상태 (구 '체험판' 키와 분리 — 체험판 해제는 구매가 아니므로 승계하지 않는다) */
-  const K_UNLOCK = 'wolha_unlock_v1';
+  /* 열람 코드로 해제된 스코프 목록 — 상품별·구매자별 고유 코드 시대의 새 키.
+     구 단일 코드 시절 키(wolha_unlock_v1)는 승계하지 않는다(공통 코드가 노출돼 있었으므로 구매 근거가 없다). */
+  const K_SCOPES = 'wolha_unlock_scopes_v1';
 
   /* ---------------- 생년월일 표기 도우미 ---------------- */
   const SIZI_NAMES = ['자시', '축시', '인시', '묘시', '진시', '사시', '오시', '미시', '신시', '유시', '술시', '해시'];
@@ -102,7 +103,7 @@
     view: 'home',
     profile: normalizeProfile(store.get(K_PROFILE, null)),
     history: store.get(K_HISTORY, []),
-    unlocked: store.get(K_UNLOCK, {}),
+    unlocked: store.get(K_SCOPES, []),   // 해제된 스코프 배열 (예: ['y2027','report'] / ['all'])
     askChar: D.CHARACTERS[0].id,
     askTopic: null,
     heroTimer: null,
@@ -639,25 +640,111 @@
     openReportSheet({ chart: chart, reading: reading, question: p.question, category: p.category, charId: p.charId, title: p.title, typeLabel: p.type === 'free' ? '무료' : '질문즉답' });
   }
 
-  /* ---------------- 유료 잠금 퍼널 (맛보기 → 블러 잠금 → 래피드 결제 · 열람 코드 → PDF) ---------------- */
-  const PAID_KINDS = ['report', 'compat', 'daeun', 'gilil', 'newyear', 'samjae', 'calendar', 'reunion'];
+  /* ============================================================
+     열람 코드 엔진 — 상품별·구매자별 고유 코드 (체크섬 검증)
+     형식: {상품접두어}-{본문 4자리}-{체크섬 2자리}   예) WL27-A9K2-4F
+     - 입력은 대소문자·공백·하이픈을 유연하게 정규화한다 (wl27 a9k2 4f → WL27A9K24F)
+     - 본문·체크섬은 혼동 문자(I·O·0·1)를 뺀 32자 알파벳만 쓴다
+     - 체크섬 = FNV-1a(고정 솔트 | 접두어 | 본문) → 32×32 = 2자리
+       → 본문 한 글자만 바꿔도 통과하지 못한다(임의 문자열·오타 차단)
+     ============================================================ */
+  const CODE_SALT = 'WOLHA-2027-MOON-9F3KQ7X2-V1';
+  const CODE_ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  /* 상품 접두어 → 해제 스코프 */
+  const CODE_PRODUCTS = {
+    WL27: { scope: 'y2027', name: '2027 정미년 12개월 신년운세' },
+    WLCP: { scope: 'compat', name: '2인 정밀 궁합 · 결혼 · 재회' },
+    WLDU: { scope: 'daeun', name: '10년 대운 흐름 & 전성기' },
+    WLGL: { scope: 'gilil', name: '2027 나만의 길일' },
+    WLRP: { scope: 'report', name: '기본 심층 리포트 · 삼재 · 재물 · 재회' },
+    WLALL: { scope: 'all', name: '전체 패스' }
+  };
+  /* 콘텐츠 종류 → 스코프 (2027 특별관의 삼재·재물·재회는 기본 리포트 패스에 묶는다) */
+  const KIND_SCOPE = {
+    report: 'report', samjae: 'report', calendar: 'report', reunion: 'report',
+    newyear: 'y2027', compat: 'compat', daeun: 'daeun', gilil: 'gilil'
+  };
+  const SCOPE_NAMES = {
+    y2027: '2027 정미년 12개월 신년운세',
+    compat: '2인 정밀 궁합 · 결혼 · 재회',
+    daeun: '10년 대운 흐름 & 전성기',
+    gilil: '2027 나만의 길일',
+    report: '기본 심층 리포트 · 삼재 · 재물 · 재회',
+    all: '전체 패스'
+  };
+  const CODE_PREFIXES = Object.keys(CODE_PRODUCTS);
 
+  function fnv1a(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      /* h *= 16777619 (32bit) */
+      h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+    }
+    return h >>> 0;
+  }
+
+  function codeCheck(prefix, body) {
+    const h = fnv1a(CODE_SALT + '|' + prefix + '|' + body);
+    const n = h % (CODE_ALPHA.length * CODE_ALPHA.length);
+    return CODE_ALPHA[Math.floor(n / CODE_ALPHA.length)] + CODE_ALPHA[n % CODE_ALPHA.length];
+  }
+
+  /* 대소문자·공백·하이픈·전각 문자를 모두 걷어낸다 */
+  function normalizeCode(raw) {
+    return String(raw == null ? '' : raw).replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+  }
+
+  /* {ok:true, prefix, scope, name, code} | {ok:false, reason:'format'|'checksum'} */
+  function parseCode(raw) {
+    const v = normalizeCode(raw);
+    if (!v) return { ok: false, reason: 'format' };
+    let pre = '';
+    for (let i = 0; i < CODE_PREFIXES.length; i++) {
+      const p = CODE_PREFIXES[i];
+      if (v.indexOf(p) === 0 && p.length > pre.length) pre = p;
+    }
+    if (!pre) return { ok: false, reason: 'format' };
+    const rest = v.slice(pre.length);
+    if (rest.length !== 6) return { ok: false, reason: 'format' };
+    for (let i = 0; i < rest.length; i++) {
+      if (CODE_ALPHA.indexOf(rest[i]) < 0) return { ok: false, reason: 'format' };
+    }
+    const body = rest.slice(0, 4), chk = rest.slice(4);
+    if (codeCheck(pre, body) !== chk) return { ok: false, reason: 'checksum' };
+    const pr = CODE_PRODUCTS[pre];
+    return { ok: true, prefix: pre, scope: pr.scope, name: pr.name, code: pre + '-' + body + '-' + chk };
+  }
+
+  /* ---------------- 해제 스코프 저장소 ---------------- */
+  function scopeList() { return Array.isArray(state.unlocked) ? state.unlocked : (state.unlocked = []); }
+
+  /* 콘텐츠 종류(kind) 또는 스코프 이름으로 열람 가능 여부 */
+  function isUnlocked(kindOrScope) {
+    const s = KIND_SCOPE[kindOrScope] || kindOrScope;
+    const list = scopeList();
+    return list.indexOf('all') >= 0 || list.indexOf(s) >= 0;
+  }
+
+  function grantScope(scope) {
+    if (!scope) return;
+    const list = scopeList();
+    if (list.indexOf(scope) < 0) list.push(scope);
+    store.set(K_SCOPES, list);
+  }
+
+  function grantAll() {
+    state.unlocked = ['all'];
+    store.set(K_SCOPES, state.unlocked);
+  }
+
+  /* ---------------- 유료 잠금 퍼널 (맛보기 → 블러 잠금 → 래피드 결제 · 열람 코드 → PDF) ---------------- */
   function latpeedConf() {
     const c = window.WOLHA_LATPEED || {};
-    return { url: (c.url || '').trim(), code: (c.code || 'WOLHA2027').trim(), trialOpen: !!c.trialOpen };
-  }
-
-  function shownCodes(line) {
-    return (line || '').replace(/\s+/g, '').toUpperCase();
-  }
-
-  function unlockAll() {
-    PAID_KINDS.forEach(k => { state.unlocked[k] = true; });
-    store.set(K_UNLOCK, state.unlocked);
+    return { url: (c.url || '').trim(), trialOpen: !!c.trialOpen };
   }
 
   function payCardHTML(o) {
-    const L = latpeedConf();
     return '<div class="pay-card">' +
       '<span class="pay-kicker">여기서부터 심층 풀이</span>' +
       '<b class="pay-c-title">' + o.label + '</b>' +
@@ -670,17 +757,17 @@
       '<div class="pay-c-price"><b>' + won(o.price) + '원</b></div>' +
       '<button type="button" class="btn-gold wide pay-latpeed">래피드에서 결제하고 열람 코드 받기</button>' +
       '<div class="pay-code-row">' +
-      '<input type="text" class="pay-code-input" inputmode="text" autocomplete="off" spellcheck="false" aria-label="열람 코드" placeholder="열람 코드 입력 (예: ' + esc(L.code) + ')" />' +
+      '<input type="text" class="pay-code-input" inputmode="text" autocomplete="off" spellcheck="false" aria-label="열람 코드" placeholder="받으신 열람 코드를 입력하세요" />' +
       '<button type="button" class="pay-code-go">열람</button>' +
       '</div>' +
       '<span class="pay-c-note">결제 후 받으신 <b>열람 코드</b>를 입력하면 바로 열립니다</span>' +
       '<span class="pay-c-legal">디지털 콘텐츠 특성상 잠금 해제(열람) 후에는 단순 변심 환불이 어렵습니다 · 무료 맛보기 확인 후 이용해 주세요.</span>' +
-      (L.trialOpen ? '<button type="button" class="pay-trial">체험판으로 먼저 열어 보기</button>' : '') +
+      (latpeedConf().trialOpen ? '<button type="button" class="pay-trial">체험판으로 먼저 열어 보기</button>' : '') +
       '</div>';
   }
 
   function payWrapHTML(o) {
-    const open = !!state.unlocked[o.kind];
+    const open = isUnlocked(o.kind);
     return '<div class="pay-wrap' + (open ? ' is-open' : ' is-locked') + '" data-pay="' + o.kind +
       '" data-price="' + (o.price || 0) + '" data-label="' + esc(o.label || '') + '">' +
       '<div class="pay-body">' + o.inner + '</div>' +
@@ -710,14 +797,25 @@
     };
 
     const tryCode = () => {
-      const v = shownCodes(codeIn.value);
-      if (!v) { showToast('받으신 열람 코드를 입력해 주세요'); codeIn.focus(); return; }
-      if (v === shownCodes(L.code)) {
-        unlockAll(); openCard();
-        trackEvent('unlock_code', meta());
-        showToast('열람 코드가 확인되었어요 · 전체 풀이와 PDF 파일 저장을 쓰실 수 있습니다');
+      if (!normalizeCode(codeIn.value)) { showToast('받으신 열람 코드를 입력해 주세요'); codeIn.focus(); return; }
+      const r = parseCode(codeIn.value);
+      if (!r.ok) {
+        trackEvent('unlock_code_fail', { content_kind: kind, reason: r.reason });
+        showToast(r.reason === 'checksum'
+          ? '열람 코드가 맞지 않습니다. 코드를 다시 확인해 주세요'
+          : '코드 형식이 맞지 않습니다. 받으신 코드를 그대로 입력해 주세요');
+        codeIn.select();
+        return;
+      }
+      /* 유효한 코드 — 해당 상품 스코프를 이 기기에 저장한다 */
+      grantScope(r.scope);
+      if (isUnlocked(kind)) {
+        openCard();
+        trackEvent('unlock_code', Object.assign(meta(), { scope: r.scope, prefix: r.prefix }));
+        showToast('열람 코드가 확인되었어요 · ' + r.name + ' 열람과 PDF 저장이 열렸습니다');
       } else {
-        showToast('열람 코드가 맞지 않습니다. 코드를 다시 확인해 주세요');
+        trackEvent('unlock_code_other_product', Object.assign(meta(), { scope: r.scope, prefix: r.prefix }));
+        showToast('이 코드는 ' + r.name + ' 전용 코드입니다 · 그 상품에서 열어 주세요');
         codeIn.select();
       }
     };
@@ -737,23 +835,24 @@
     const tr = wrap.querySelector('.pay-trial');
     if (tr) tr.addEventListener('click', () => {
       trackEvent('unlock_trial', meta());
-      unlockAll(); openCard();
+      grantAll(); openCard();
       showToast('체험판이 열렸어요 · 전체 풀이와 PDF 파일 저장을 쓰실 수 있습니다');
     });
   }
 
-  /* 받은 링크(?unlock=코드)로 들어오면 이 기기 잠금을 바로 해제 */
+  /* 받은 링크(?unlock=코드)로 들어오면 그 상품만 바로 열어 둔다 */
   function applyUnlockQuery() {
     const m = /[?&]unlock=([^&]*)/.exec(location.search || '');
     if (!m) return;
-    const L = latpeedConf();
     let v = '';
     try { v = decodeURIComponent(m[1]); } catch (e) { v = m[1]; }
-    if (v && shownCodes(v) === shownCodes(L.code)) {
-      unlockAll();
-      $$('[data-pdf]').forEach(b => { b.hidden = false; });
-      showToast('열람 코드가 확인되었어요 · 전체 풀이를 보실 수 있습니다');
-    } else {
+    const r = parseCode(v);
+    if (r.ok) {
+      grantScope(r.scope);
+      trackEvent('unlock_link', { scope: r.scope, prefix: r.prefix });
+      showToast('열람 코드가 확인되었어요 · ' + r.name + ' 열람이 열렸습니다');
+    } else if (normalizeCode(v)) {
+      trackEvent('unlock_link_fail', { reason: r.reason });
       showToast('열람 코드가 맞지 않습니다. 코드를 다시 확인해 주세요');
     }
     try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) { }
@@ -2157,6 +2256,9 @@
 
     initAnalytics();
 
+    /* 구 단일 코드 시절의 해제 상태는 지운다 (wolha_unlock_scopes_v1 만 유효) */
+    try { localStorage.removeItem('wolha_unlock_v1'); } catch (e) { }
+
     renderHero(); renderTopics(); renderY2027(); renderPlus(); renderHomeChips(); renderRanking(); renderMasters(); renderTodayWidget(); renderFreeGrid();
     renderAskChars(); bindMisc(); applyUnlockQuery();
     if (E.selfTest) {
@@ -2165,12 +2267,19 @@
     }
   }
 
+  /* ---- 열람 코드 엔진 노출 (코드 리스트 생성기·검증 스크립트가 같은 알고리즘을 쓰도록) ---- */
+  window.WOLHA_CODES = {
+    SALT: CODE_SALT, ALPHA: CODE_ALPHA, PRODUCTS: CODE_PRODUCTS,
+    KIND_SCOPE: KIND_SCOPE, SCOPE_NAMES: SCOPE_NAMES,
+    fnv1a: fnv1a, check: codeCheck, normalize: normalizeCode, parse: parseCode
+  };
+
   /* ---- 검증용: DOM 없이 리포트 문자열을 생성할 수 있게 노출 (node/quickjs 테스트) ---- */
   if (window.__WOLHA_TEST__) {
     window.WOLHA_APP = {
       reportHTML: reportHTML, y2027HTML: y2027HTML, compatHTML: compatHTML,
       daeunHTML: daeunHTML, gililHTML: gililHTML, todayHTML: todayHTML,
-      charById: charById
+      charById: charById, isUnlocked: isUnlocked, parseCode: parseCode
     };
     return;
   }
