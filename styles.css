@@ -1061,6 +1061,7 @@ body::before {
    ============================================================ */
 @media print {
   @page { size: A4; margin: 12mm 11mm; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   html, body { background: #fff !important; color: #17150F !important; }
   body::before { display: none !important; }
   .topbar, .tabbar, .dim, .toast, .sheet-grip, .sheet-head, .app-foot,
@@ -1085,10 +1086,14 @@ body::before {
     overflow: visible !important; -webkit-mask-image: none !important; mask-image: none !important;
   }
   .pay-wrap.is-locked .pay-body { filter: blur(5px) !important; max-height: 300px !important; overflow: hidden !important; }
-  .rp-top, .y27-head, .y27-free, .rp-question, .rp-title, .rp-para, .rp-lead,
-  .y27-line, .y27-half, .y27-table, .y27-pick, .mini-item, .lucky-item, .pl,
+  .rp-question, .rp-title, .rp-para, .rp-lead,
+  .y27-line, .y27-half, .y27-pick, .mini-item, .lucky-item, .pl,
   .el-card, .rp-caution, .y27-samjae, .y27-leak, .y27-guin-item, .y27-sal-card { break-inside: avoid; }
-  .rp-para, .rp-lead, .rp-list li, .y27-line p, .y27-line-head b, .y27-line-head span { color: #1b1a17 !important; }
+  .rp-top, .y27-head, .y27-free { break-inside: auto; }
+  .sheet-body, .sheet-body * { color: #1b1a17 !important; }
+  .elem-bar i, .c-bar i, .gbar i { background: #9C7A22 !important; }
+  .yy-bar i { background: linear-gradient(90deg, #E8735F, #B63A2F) !important; }
+  .yy-bar b { color: #fff !important; }
   .rp-title span, .y27-half-head b, .pay-c-title { color: #6E510E !important; }
   .rp-title::after { background: linear-gradient(90deg, rgba(0, 0, 0, .2), transparent) !important; }
   .rp-para strong, .rp-lead .em, .lucky-item b, .stat b, .mini-pl b { color: #3B2E0B !important; }
