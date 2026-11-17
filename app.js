@@ -683,7 +683,7 @@
       '<p class="rp-para">' + esc(C.strength[chart.strength]) + ' ' + esc(chart.yongsin.reason) + '. 그래서 <strong>' + chart.yongsin.elem + '(' + E.ELEMENTS_HANJA[E.ELEMENTS.indexOf(chart.yongsin.elem)] + ')</strong> 오행이 도움이 되며, ' + esc(chart.yongsin.care) + '</p>';
 
     /* 질문 답 — 자세히 */
-    const coreHTML = '<p class="rp-lead">' + esc(catCopy.reflect) + '</p>' +
+    const coreHTML = '<p class="rp-lead">여기서부터는 앞에서 짚은 것들을 겹쳐서 보겠습니다. ' + esc(catCopy.label) + '에 대한 답은 이렇게 정리됩니다.</p>' +
       '<p class="rp-para"><strong>' + esc(c.name) + '의 읽기</strong> — ' + esc(catCopy.via[dominantGodGroup(chart)]) + '</p>' +
       '<p class="rp-para">' + esc(c.categoryLine[cat] || c.categoryLine.fate) + '</p>' +
       '<p class="rp-para">이 사주의 결을 겹쳐 보면 ' + esc(catCopy.label) + '의 답은 이렇게 정리됩니다. 중심 기운은 ' + chart.yongsin.elem + '(용신)이고 ' + esc(dx.style) + '에 가까운 사주이니, 이 문제도 ' + (dx.style.indexOf('조직') >= 0 ? '조직 안에서 자리를 넓히는 방식' : dx.style.indexOf('사업') >= 0 || dx.style.indexOf('제작') >= 0 ? '내가 만든 것과 이름을 걸고 나가는 방식' : '내 판단과 몸을 앞세우는 방식') + '으로 풀어야 결과가 남습니다. ' + esc(catCopy.timing[0]) + '</p>';
@@ -718,7 +718,8 @@
       (sec.voice ? '<p class="rp-voice">' + esc(sec.voice) + '</p>' : '');
 
     const paidInner =
-      '<div class="rp-title"><span>9. 오행의 결 — 넘치는 것과 비어 있는 것</span></div>' +
+      '<div class="rp-title"><span>9. 여덟 글자의 뼈대</span></div>' +
+      '<p class="rp-para">' + esc(dx.nature[0]) + '</p>' +
       '<p class="rp-para">' + esc(dx.nature[1]) + '</p>' +
       '<p class="rp-para">' + esc(dx.nature[2]) + '</p>' +
       '<div class="rp-title"><span>10. 재물 — 그릇과 돈의 습관</span></div>' + deepBlock(dx.money) +
@@ -749,7 +750,6 @@
       '<div class="rp-title"><span>6. 십이신살</span></div>' + sinsalHTML +
       '<div class="rp-title"><span>7. 귀인</span></div>' + gwisinHTML +
       '<div class="rp-title"><span>8. 타고난 결</span></div>' + natureHTML +
-      '<p class="rp-para">' + esc(dx.nature[0]) + '</p>' +
       '</div>' +
 
       '<div class="rp-title"><span>질문 요약</span></div>' +
