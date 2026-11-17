@@ -157,6 +157,114 @@
   $('#sheetClose').addEventListener('click', closeSheet);
   $('#dim').addEventListener('click', closeSheet);
 
+  /* ============================================================
+     풀이 진행 로딩 — 새 사주 결과를 열기 전 약 2.4초 단계 연출
+     · 결과지 안의 단순 탭 이동·열람 코드 해제에는 다시 뜨지 않는다
+     · loadBypass > 0 이면 연출 없이 바로 그린다 (보관함에서 다시 보기 등)
+     ============================================================ */
+  const LOAD_MS = 2400;
+  const LOAD_STEP_MS = LOAD_MS / 4;
+  let loadBypass = 0;
+  let loadCtl = null;
+
+  function loadMessages(name) {
+    const who = (name || '').trim();
+    return [
+      '생년월일시 절기 · 음양력 보정 중...',
+      '사주팔자 여덟 글자와 오행 분포 세우는 중...',
+      '십성 · 십이운성 · 귀인 · 용신 계산 중...',
+      who ? who + '님의 맞춤 풀이를 정리하고 있습니다...' : '맞춤 풀이를 정리하고 있습니다...'
+    ];
+  }
+
+  function chartName(chart) {
+    return ((chart && chart.input && chart.input.name) || (state.profile && state.profile.name) || '').trim();
+  }
+
+  function stopLoad() {
+    if (!loadCtl) return;
+    loadCtl.timers.forEach(clearTimeout);
+    if (loadCtl.raf) cancelAnimationFrame(loadCtl.raf);
+    loadCtl = null;
+  }
+
+  function startLoad(spec, done) {
+    const veil = $('#moonLoad');
+    if (!veil) { done(); return; }
+    stopLoad();
+
+    const who = spec.who || (D.BRAND && D.BRAND.name) || '월하사주';
+    const hanja = spec.hanja || ((D.BRAND && who === D.BRAND.name) ? (D.BRAND.hanja || '') : '');
+    $('#moonLoadWho').textContent = who;
+    $('#moonLoadHanja').textContent = hanja;
+    $('#moonLoadTitle').textContent = spec.title || '달빛 아래, 여덟 글자를 세웁니다';
+    $('#moonLoadSteps').innerHTML = loadMessages(spec.name).map((m, i) =>
+      '<li data-step="' + i + '"><i class="ml-dot"></i><span>' + esc(m) + '</span></li>').join('');
+
+    const bar = $('#moonLoadBar'), pct = $('#moonLoadPct'), wrap = $('#moonLoadBarWrap');
+    bar.style.width = '0%';
+    pct.textContent = '0%';
+    if (wrap) wrap.setAttribute('aria-valuenow', '0');
+
+    const ctl = { timers: [], raf: 0 };
+    loadCtl = ctl;
+    const items = $$('#moonLoadSteps li');
+    items.forEach(el => el.classList.remove('is-on', 'is-done'));
+    if (items[0]) items[0].classList.add('is-on');
+
+    /* 4단계 문구 전환 — 0 · 600 · 1200 · 1800ms */
+    items.forEach((el, i) => {
+      if (!i) return;
+      ctl.timers.push(setTimeout(() => {
+        items.forEach((x, j) => {
+          x.classList.toggle('is-on', j === i);
+          x.classList.toggle('is-done', j < i);
+        });
+      }, LOAD_STEP_MS * i));
+    });
+
+    /* 진행 바 */
+    const t0 = performance.now();
+    const frame = now => {
+      if (loadCtl !== ctl) return;
+      const p = Math.min(1, (now - t0) / LOAD_MS);
+      const v = Math.round(p * 100);
+      bar.style.width = (p * 100).toFixed(1) + '%';
+      pct.textContent = v + '%';
+      if (wrap) wrap.setAttribute('aria-valuenow', String(v));
+      if (p < 1) ctl.raf = requestAnimationFrame(frame);
+    };
+    ctl.raf = requestAnimationFrame(frame);
+
+    veil.hidden = false;
+    document.body.style.overflow = 'hidden';
+
+    ctl.timers.push(setTimeout(() => {
+      if (loadCtl !== ctl) return;
+      items.forEach(x => { x.classList.remove('is-on'); x.classList.add('is-done'); });
+      bar.style.width = '100%';
+      pct.textContent = '100%';
+      if (wrap) wrap.setAttribute('aria-valuenow', '100');
+      veil.hidden = true;
+      loadCtl = null;
+      done();
+      const sh = $('#sheet');
+      if (sh && sh.hidden) document.body.style.overflow = '';
+    }, LOAD_MS));
+  }
+
+  /* 로딩 없이 계산 결과를 바로 그린다 (재진입 방지 구간) */
+  function bypassLoad(run) {
+    loadBypass++;
+    try { return run(); } finally { loadBypass--; }
+  }
+
+  /* 새 사주 결과를 열 때는 한 번 로딩을 거친다 */
+  function withLoad(spec, run) {
+    if (loadBypass > 0) { run(); return; }
+    startLoad(spec, () => bypassLoad(run));
+  }
+
   /* ---------------- 라우팅 ---------------- */
   function showView(name) {
     state.view = name;
@@ -379,7 +487,14 @@
         '<div class="th-ganji">' + t.pillar.hanja + '</div><div class="th-sub">' + t.pillar.ko + '일</div>' +
         '<div class="th-term">절기 ' + esc(t.termName) + (t.termStart ? ' · ' + esc(t.termName) + ' ' + E.formatTermTime(t.termStart) + ' (근사)' : '') + '</div></div>' +
         '<div class="arch-empty" style="margin-top:16px">생년월일을 등록하면<br /><b>오늘의 일진이 내 사주와 만나는 자리</b>까지 읽어 드려요.<br /><button class="btn-gold" id="todayGoProfile">생년월일 입력하기</button></div>';
-      $('#todayGoProfile').addEventListener('click', () => openBirthForm({ title: '오늘의 운세', onDone: () => showView('today') }));
+      $('#todayGoProfile').addEventListener('click', () => openBirthForm({
+        title: '오늘의 운세',
+        onDone: chart => withLoad({
+          who: (D.BRAND && D.BRAND.name) || '월하사주', hanja: (D.BRAND && D.BRAND.hanja) || '',
+          name: chartName(chart),
+          title: '오늘의 일진과 내 글자를 맞춥니다'
+        }, () => showView('today'))
+      }));
       return;
     }
     const chart = E.buildChart(state.profile);
@@ -435,6 +550,11 @@
   }
 
   function reopenReport(h) {
+    /* 보관함에서 다시 여는 기록은 이미 계산된 결과라 로딩 연출을 건너뛴다 */
+    bypassLoad(() => reopenReportNow(h));
+  }
+
+  function reopenReportNow(h) {
     if (h.kind === 'compat' && h.partner) {
       try { compatSheet(E.buildChart(h.chart), E.buildChart(h.partner)); } catch (e) { showToast('이 기록을 다시 열 수 없어요'); }
       return;
@@ -927,6 +1047,15 @@
   }
 
   function openReportSheet(o) {
+    const c0 = charById(o && o.charId);
+    withLoad({
+      who: c0 && c0.name, hanja: c0 && c0.hanja,
+      name: chartName(o && o.chart),
+      title: '여덟 글자를 세워 풀이를 펼칩니다'
+    }, () => openReportSheetNow(o));
+  }
+
+  function openReportSheetNow(o) {
     const c = charById(o.charId);
     const chart = ensureChart(o.chart);
     const today = o.reading ? o.reading.today : null;
@@ -1328,6 +1457,16 @@
   }
 
   function y2027Sheet(kind, chart, opts) {
+    const item0 = D.Y2027.items.find(x => x.id === kind);
+    const c0 = item0 ? charById(item0.charId) : null;
+    withLoad({
+      who: c0 && c0.name, hanja: c0 && c0.hanja,
+      name: chartName(chart),
+      title: '정미년의 열두 달을 펼쳐 봅니다'
+    }, () => y2027SheetNow(kind, chart, opts));
+  }
+
+  function y2027SheetNow(kind, chart, opts) {
     opts = opts || {};
     const item = D.Y2027.items.find(x => x.id === kind); if (!item) return;
     const chart2 = ensureChart(chart);
@@ -1844,6 +1983,14 @@
   }
 
   function compatSheet(A, B) {
+    withLoad({
+      who: (D.BRAND && D.BRAND.name) || '월하사주', hanja: (D.BRAND && D.BRAND.hanja) || '',
+      name: (A && A.input && A.input.name) || '',
+      title: '두 사람의 열여섯 글자를 나란히 놓습니다'
+    }, () => compatSheetNow(A, B));
+  }
+
+  function compatSheetNow(A, B) {
     const res = P.buildCompat(A, B);
     const title = '정밀 궁합 · ' + (A.input.name || '나') + ' · ' + (B.input.name || '상대');
     openSheet(title, compatHTML(res));
@@ -1927,6 +2074,14 @@
   }
 
   function daeunSheet(chart) {
+    withLoad({
+      who: (D.BRAND && D.BRAND.name) || '월하사주', hanja: (D.BRAND && D.BRAND.hanja) || '',
+      name: chartName(chart),
+      title: '십 년의 흐름을 한 줄로 잇습니다'
+    }, () => daeunSheetNow(chart));
+  }
+
+  function daeunSheetNow(chart) {
     const c = ensureChart(chart);
     const d = P.buildDaeun(c);
     trackEvent('open_daeun', { content_kind: 'daeun' });
@@ -2040,6 +2195,14 @@
   }
 
   function gililSheet(chart) {
+    withLoad({
+      who: (D.BRAND && D.BRAND.name) || '월하사주', hanja: (D.BRAND && D.BRAND.hanja) || '',
+      name: chartName(chart),
+      title: '좋은 날의 문을 골라 엽니다'
+    }, () => gililSheetNow(chart));
+  }
+
+  function gililSheetNow(chart) {
     const c = ensureChart(chart);
     const g = P.buildGilil(c, 2027);
     trackEvent('open_gilil', { content_kind: 'gilil' });
