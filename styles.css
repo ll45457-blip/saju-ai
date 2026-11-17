@@ -1350,3 +1350,10 @@ body::before {
   .gl-pick, .du-card { break-inside: avoid; }
   .cp-row, .cp-table { break-inside: avoid; }
 }
+
+/* 인쇄: 점수 링이 검게 찍히지 않도록 */
+@media print {
+  .score-ring { background: conic-gradient(#C9A33C calc(var(--v) * 1%), #EDE8DE 0) !important; }
+  .score-ring::before { background: #fff !important; }
+  .score-ring b, .score-ring b small { color: #3B2E0B !important; }
+}
