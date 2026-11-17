@@ -19,11 +19,13 @@
   };
   const K_PROFILE = 'wolha_profile_v1';
   const K_HISTORY = 'wolha_history_v1';
+  const K_TRIAL = 'wolha_trial_v1';
 
   const state = {
     view: 'home',
     profile: store.get(K_PROFILE, null),
     history: store.get(K_HISTORY, []),
+    unlocked: store.get(K_TRIAL, {}),
     askChar: D.CHARACTERS[0].id,
     askTopic: null,
     heroTimer: null,
@@ -494,6 +496,54 @@
     openReportSheet({ chart: chart, reading: reading, question: p.question, category: p.category, charId: p.charId, title: p.title, typeLabel: p.type === 'free' ? '무료' : '질문즉답' });
   }
 
+  /* ---------------- 유료 잠금 퍼널 (맛보기 → 블러 잠금 → 체험판 해제 → PDF) ---------------- */
+  function payCardHTML(o) {
+    const off = o.list && o.price ? Math.round((1 - o.price / o.list) * 100) : 0;
+    return '<div class="pay-card">' +
+      '<span class="pay-kicker">여기서부터 심층 풀이</span>' +
+      '<b class="pay-c-title">' + o.label + '</b>' +
+      '<p class="pay-c-desc">' + o.desc + '</p>' +
+      '<div class="pay-c-price"><s>' + won(o.list) + '원</s><b>' + won(o.price) + '원</b>' + (off > 0 ? '<em>' + off + '% 할인</em>' : '') + '</div>' +
+      '<button type="button" class="btn-gold wide pay-unlock">지금은 체험판 무료 해제하기</button>' +
+      '<span class="pay-c-note">결제 없이 이 기기에서 바로 열립니다<br />해제 후 <b>📄 PDF 저장 · 인쇄</b>까지</span>' +
+      '</div>';
+  }
+
+  function payWrapHTML(o) {
+    const open = !!state.unlocked[o.kind];
+    return '<div class="pay-wrap' + (open ? ' is-open' : ' is-locked') + '" data-pay="' + o.kind + '">' +
+      '<div class="pay-body">' + o.inner + '</div>' +
+      (open ? '' : payCardHTML(o)) +
+      '</div>';
+  }
+
+  function pdfBarHTML() {
+    return '<div class="rp-toolbar"><button type="button" class="pdf-btn" data-pdf hidden>📄 PDF로 저장 / 인쇄하기</button></div>';
+  }
+
+  function bindPay(root, kind) {
+    const show = () => $$('[data-pdf]', root).forEach(b => { b.hidden = false; });
+    const wrap = root.querySelector('.pay-wrap');
+    if (!wrap) { show(); return; }
+    if (wrap.classList.contains('is-open')) { show(); return; }
+    const un = wrap.querySelector('.pay-unlock');
+    if (!un) { show(); return; }
+    un.addEventListener('click', () => {
+      state.unlocked[kind] = true;
+      store.set(K_TRIAL, state.unlocked);
+      wrap.classList.remove('is-locked');
+      wrap.classList.add('is-open');
+      const card = wrap.querySelector('.pay-card');
+      if (card) card.remove();
+      show();
+      showToast('체험판이 열렸어요 · 전체 풀이와 PDF 저장을 쓰실 수 있습니다');
+    });
+  }
+
+  function bindPdf(root) {
+    $$('[data-pdf]', root).forEach(b => b.addEventListener('click', () => window.print()));
+  }
+
   /* ---------------- 리포트 생성 ---------------- */
   function ensureChart(chart) {
     if (!chart) return chart;
@@ -509,6 +559,8 @@
     const html = reportHTML({ chart: chart, char: c, question: o.question, category: o.category, today: today, typeLabel: o.typeLabel });
 
     openSheet(c.name + '의 리포트', html, null);
+    bindPay($('#sheetBody'), 'report');
+    bindPdf($('#sheetBody'));
     const goto = $('#rpTo2027');
     if (goto) goto.addEventListener('click', () => { closeSheet(); y2027Open('newyear', chart); });
 
@@ -540,6 +592,7 @@
     const catCopy = C.category[cat] || C.category.fate;
     const reading = o.reading;
     const todayGod = reading ? D.COPY.todayGod[reading.god] : null;
+    const dx = E.deepRead(chart);
 
     /* 사주팔자 표 */
     const pillars = chart.pillars;
@@ -629,22 +682,26 @@
       '<p class="rp-para"><strong>' + esc(group.name) + '이 강한 구조</strong> — ' + esc(group.trait) + '</p>' +
       '<p class="rp-para">' + esc(C.strength[chart.strength]) + ' ' + esc(chart.yongsin.reason) + '. 그래서 <strong>' + chart.yongsin.elem + '(' + E.ELEMENTS_HANJA[E.ELEMENTS.indexOf(chart.yongsin.elem)] + ')</strong> 오행이 도움이 되며, ' + esc(chart.yongsin.care) + '</p>';
 
-    /* 질문 답 */
+    /* 질문 답 — 자세히 */
     const coreHTML = '<p class="rp-lead">' + esc(catCopy.reflect) + '</p>' +
       '<p class="rp-para"><strong>' + esc(c.name) + '의 읽기</strong> — ' + esc(catCopy.via[dominantGodGroup(chart)]) + '</p>' +
-      '<p class="rp-para">' + esc(c.categoryLine[cat] || c.categoryLine.fate) + '</p>';
+      '<p class="rp-para">' + esc(c.categoryLine[cat] || c.categoryLine.fate) + '</p>' +
+      '<p class="rp-para">이 사주의 결을 겹쳐 보면 ' + esc(catCopy.label) + '의 답은 이렇게 정리됩니다. 중심 기운은 ' + chart.yongsin.elem + '(용신)이고 ' + esc(dx.style) + '에 가까운 사주이니, 이 문제도 ' + (dx.style.indexOf('조직') >= 0 ? '조직 안에서 자리를 넓히는 방식' : dx.style.indexOf('사업') >= 0 || dx.style.indexOf('제작') >= 0 ? '내가 만든 것과 이름을 걸고 나가는 방식' : '내 판단과 몸을 앞세우는 방식') + '으로 풀어야 결과가 남습니다. ' + esc(catCopy.timing[0]) + '</p>';
 
-    /* 시기 */
-    const timingHTML = '<ul class="rp-list">' + catCopy.timing.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>';
+    const timingHTML = '<ul class="rp-list">' + catCopy.timing.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>' +
+      '<p class="rp-para">시기를 정할 때는 감이 아니라 달력으로 정하세요. 2027 정미년의 좋은 달과 조심할 달은 아래 2027 리포트에서 달 단위로 짚어 드립니다.</p>';
 
-    /* 지금 할 일 */
-    const adviceHTML = '<ul class="rp-list advice">' + catCopy.advice.map(a => '<li>' + esc(a) + '</li>').join('') + '</ul>';
+    const adviceHTML = '<ul class="rp-list advice">' +
+      catCopy.advice.map(a => '<li>' + esc(a) + '</li>').join('') +
+      dx.money.tips.slice(0, 2).map(a => '<li>' + esc(a) + '</li>').join('') +
+      '</ul>';
 
-    /* 조심 */
+    const leak = E.moneyLeaks(chart)[0];
     const cautionHTML = '<div class="rp-caution">' + esc(catCopy.caution) + '</div>' +
+      '<div class="rp-caution" style="margin-top:8px">돈과 사람에서 먼저 조심하세요 — ' + esc(leak.title) + '. ' + esc(leak.fix) + '</div>' +
       (reading ? '<div class="rp-caution" style="margin-top:8px">오늘은 <b>' + reading.god + '의 날</b> — ' + esc(todayGod.head) + '. ' + esc(reading.note) + '</div>' : '');
 
-    /* 행운 */
+    /* 행운 (무료 마무리) */
     const lk = chart.yongsin.elem;
     const L = E.LUCKY[lk];
     const luckyHTML = '<div class="lucky-grid">' +
@@ -656,14 +713,32 @@
       '<div class="lucky-item"><span>' + esc(c.name) + '의 한마디</span><b style="font-size:11px;line-height:1.5">' + esc(c.closing) + '</b></div>' +
       '</div>';
 
+    const deepBlock = sec => sec.paras.map(p => '<p class="rp-para">' + esc(p) + '</p>').join('') +
+      '<ul class="rp-list advice">' + sec.tips.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>';
+
+    const paidInner =
+      '<div class="rp-title"><span>9. 오행의 결 — 넘치는 것과 비어 있는 것</span></div>' +
+      '<p class="rp-para">' + esc(dx.nature[1]) + '</p>' +
+      '<p class="rp-para">' + esc(dx.nature[2]) + '</p>' +
+      '<div class="rp-title"><span>10. 재물 — 그릇과 돈의 습관</span></div>' + deepBlock(dx.money) +
+      '<div class="rp-title"><span>11. 일과 직장 — 어디서 힘이 나는가</span></div>' + deepBlock(dx.work) +
+      '<div class="rp-title"><span>12. 연애·관계 — 반복되는 패턴</span></div>' + deepBlock(dx.love) +
+      '<div class="rp-title"><span>13. 건강과 체력 — 약한 자리</span></div>' + deepBlock(dx.health) +
+      '<div class="rp-title"><span>14. 질문에 대한 답</span></div>' + coreHTML +
+      '<div class="rp-title"><span>15. 시기와 흐름</span></div>' + timingHTML +
+      '<div class="rp-title"><span>16. 지금 할 일</span></div>' + adviceHTML +
+      '<div class="rp-title"><span>17. 조심할 점</span></div>' + cautionHTML;
+
     return '' +
       '<div class="rp-top"><img class="rp-ava" src="' + c.img + '" alt="' + esc(c.name) + '" />' +
       '<div class="rp-who"><b>' + esc(c.name) + ' <small style="font-size:9px;letter-spacing:.2em;color:var(--ink-3)">' + esc(c.hanja) + '</small></b>' +
       '<span>' + esc(c.role) + ' · ' + chart.dayMaster.hanja + chart.dayMaster.elem + ' ' + chart.strengthKo + '</span></div>' +
       '<span class="rp-stamp">' + esc(D.BRAND.name) + ' 정통 만세력</span></div>' +
+      pdfBarHTML() +
 
       (o.question ? '<div class="rp-question"><b>질문</b>' + esc(o.question) + '</div>' : '') +
 
+      '<div class="y27-free"><span class="y27-free-kicker">무료 공개</span>' +
       '<div class="rp-title"><span>1. 사주팔자 · 만세력</span></div>' + pillarsHTML +
       '<div class="rp-title"><span>2. 오행 분포 · 음양</span></div>' + elemHTML +
       '<div class="rp-title"><span>3. 음양 비율</span></div>' + yinyangHTML +
@@ -672,14 +747,23 @@
       '<div class="rp-title"><span>6. 십이신살</span></div>' + sinsalHTML +
       '<div class="rp-title"><span>7. 귀인</span></div>' + gwisinHTML +
       '<div class="rp-title"><span>8. 타고난 결</span></div>' + natureHTML +
-      '<div class="rp-title"><span>9. 질문에 대한 답</span></div>' + coreHTML +
-      '<div class="rp-title"><span>10. 시기와 흐름</span></div>' + timingHTML +
-      '<div class="rp-title"><span>11. 지금 할 일</span></div>' + adviceHTML +
-      '<div class="rp-title"><span>12. 조심할 점</span></div>' + cautionHTML +
-      '<div class="rp-title"><span>13. 행운 포인트</span></div>' + luckyHTML +
+      '<p class="rp-para">' + esc(dx.nature[0]) + '</p>' +
+      '</div>' +
+
+      '<div class="rp-title"><span>질문 요약</span></div>' +
+      '<p class="rp-lead">' + esc(catCopy.reflect) + '</p>' +
+
+      payWrapHTML({
+        kind: 'report', price: c.price, list: c.listPrice,
+        label: esc(c.name) + ' 심층 리포트 전체 열기',
+        desc: '재물 · 직장 · 연애 · 건강 네 갈래의 심층 풀이, 질문에 대한 깊은 답, 시기별 행동 지침까지 — 이 사주로만 계산한 본문입니다.',
+        inner: paidInner
+      }) +
+
+      '<div class="rp-title"><span>18. 행운 포인트</span></div>' + luckyHTML +
       '<div class="rp-cta"><b>2027 정미년, 내 12개월은?</b><span>2027년 월운표와 좋은 달·조심할 달을 같은 사주로 바로 계산합니다.</span><button class="btn-gold wide" id="rpTo2027">2027 정미년 12개월 신년운세 →</button></div>' +
 
-      '<div class="rp-actions"><button class="btn-ghost" id="rpClose">닫기</button><button class="btn-gold" id="rpSave">보관함 저장</button></div>' +
+      '<div class="rp-actions"><button class="btn-ghost" id="rpClose">닫기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="rpSave">보관함 저장</button></div>' +
       '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · ' + esc(D.REPORT.noTimeNote) + '<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
   }
 
@@ -856,6 +940,8 @@
     const chart2 = ensureChart(chart);
     const y = Y27.build(chart2);
     openSheet(item.title, y2027HTML(item, chart2, y));
+    bindPay($('#sheetBody'), item.id);
+    bindPdf($('#sheetBody'));
     const cl = $('#y27Close'); if (cl) cl.addEventListener('click', closeSheet);
     const hm = $('#y27Home');
     if (hm) hm.addEventListener('click', () => {
@@ -876,7 +962,7 @@
     });
   }
 
-  /* ---- 2027 리포트 조각 ---- */
+  /* ---- 2027 리포트 조각 (유료 심층) ---- */
   function y27Row(m) {
     return '<div class="y27-tr ' + m.gradeKey + '">' +
       '<span class="c-no">' + m.no + '월</span>' +
@@ -895,25 +981,30 @@
   }
 
   function y27Picks(y) {
+    const card = (m, cls) => '<div class="y27-pick ' + cls + '">' +
+      '<b>' + m.no + '월 <small>' + m.hanja + '</small></b>' +
+      '<span>' + m.god + ' · ' + m.stage + ' · ' + (m.relYear.length ? m.relYear.join('·') : '충합 없음') + '</span>' +
+      '<em>' + m.tag + ' ' + m.score + '</em>' +
+      '<p>' + m.pick + '</p></div>';
     const block = (list, cls, cap) => !list.length ? '' : '<div class="y27-pick-group"><span class="y27-pick-cap">' + cap + '</span><div class="y27-picks">' +
-      list.map(m => {
-        const neg = m.relYear.concat(m.relMine).filter(r => ['충', '형', '파', '해'].indexOf(r) >= 0)[0];
-        return '<div class="y27-pick ' + cls + '"><b>' + m.no + '월 <small>' + m.hanja + '</small></b><span>' + m.god + ' · ' + m.stage + '</span>' +
-          '<em>' + m.tag + ' ' + m.score + '</em><p>' + esc(cls === 'good' ? m.action + '에 힘을 싣기 좋은 달' : (neg ? neg + ' — 방어가 필요한 달' : m.god + ' — 힘이 빠지는 달')) + '</p></div>';
-      }).join('') + '</div></div>';
+      list.map(m => card(m, cls)).join('') + '</div></div>';
     return '<div class="y27-pick-wrap">' +
-      block(y.good, 'good', '좋은 달') +
-      block(y.warn, 'bad', '조심할 달') + '</div>';
+      block(y.good, 'good', '좋은 달 — 밀어붙일 자리') +
+      block(y.warn, 'bad', '조심할 달 — 방어할 자리') + '</div>';
   }
 
   function y27Lines(arr) {
     return '<div class="y27-lines">' + arr.map(m =>
-      '<div class="y27-line ' + m.gradeKey + '"><p>' + m.line + '</p>' +
+      '<div class="y27-line ' + m.gradeKey + '">' +
+      '<div class="y27-line-head"><b>' + m.no + '월 <small>' + m.hanja + '</small></b>' +
+      '<span>' + m.god + ' · ' + m.stage + '</span><em class="y27-score">' + m.tag + ' ' + m.score + '</em></div>' +
+      (m.story || [m.line]).map(s => '<p>' + s + '</p>').join('') +
       '<p class="y27-fix">방어 · ' + esc(m.fix) + '</p></div>').join('') + '</div>';
   }
 
   function y27Half(h, label) {
     return '<div class="y27-half"><div class="y27-half-head"><b>' + label + '</b><span>평균 ' + h.avg + '점 · 최고 ' + h.best.no + '월 · 최저 ' + h.worst.no + '월</span></div>' +
+      (h.story ? h.story.map(p => '<p class="rp-para">' + p + '</p>').join('') : '') +
       y27Lines(h.arr) + '</div>';
   }
 
@@ -947,7 +1038,7 @@
     return '<div class="y27-table">' +
       '<div class="y27-tr th"><span>월</span><span>간지</span><span>십성</span><span>운성</span><span>관계</span><span>흐름</span></div>' +
       risk.map(y27Row).join('') + '</div>' +
-      '<div class="rp-caution" style="margin-top:8px">' + risk.slice(0, 2).map(m => m.no + '월 — ' + esc(m.fix)).join('<br />') + '</div>';
+      y27Lines(risk);
   }
 
   function y27Track(name, months, cls) {
@@ -959,18 +1050,68 @@
     return '<div class="y27-share"><b>' + title + '</b><p>' + sub + '</p><em>#월하사주 #2027정미년</em></div>';
   }
 
+  /* ---- 무료 맛보기: 만세력 미니 표 + 핵심 경고/기회 1~2문단 ---- */
+  function y27Mini(chart) {
+    const p = chart.pillars;
+    const cell = (label, pl) => '<div class="mini-pl' + (label === '일주' ? ' is-day' : '') + '"><span>' + label + '</span>' +
+      '<b class="' + ELCLS[pl.stemElem] + '">' + pl.stemName + '</b><b class="' + ELCLS[pl.branchElem] + '">' + pl.branchName + '</b></div>';
+    const yy = chart.yinyang;
+    return '<div class="y27-mini">' +
+      '<div class="mini-pls">' + cell('년주', p.year) + cell('월주', p.month) + cell('일주', p.day) +
+      (p.hour ? cell('시주', p.hour) : '<div class="mini-pl is-empty"><span>시주</span><b>·</b><b>·</b></div>') + '</div>' +
+      '<div class="y27-mini-row">' +
+      '<span>일간 <b>' + chart.dayMaster.hanja + ' ' + chart.dayMaster.elem + '</b></span>' +
+      '<span>형세 <b>' + chart.strengthKo + ' ' + chart.strengthRatio + '</b></span>' +
+      '<span>용신 <b>' + chart.yongsin.elem + '</b></span>' +
+      '<span>음양 <b>' + yy.yangPct + ':' + yy.yinPct + '</b></span>' +
+      '</div></div>';
+  }
+
+  function y27Preview(item, chart, y) {
+    const dm = chart.dayMaster;
+    const gs = E.GOD_SIT[y.yearGod];
+    const out = [];
+    out.push('<p class="rp-lead">2027 정미년의 하늘은 丁(음화), 땅은 未(음토)입니다. 내 일간 ' + dm.hanja + '(' + dm.ko + dm.elem + ')에게 올해 천간 丁은 ' + E.josa(y.yearGod, '은', '는') + ' 자리 — ' + gs.sit + '입니다. ' + y.yearRead.text + '</p>');
+    if (item.kind === 'newyear') {
+      out.push('<p class="rp-para">이 사주에서 2027년이 가장 힘을 주는 달은 <b>' + y.good[0].no + '월(' + y.good[0].hanja + ') ' + y.good[0].score + '점</b>입니다. ' + y.good[0].pick + ' 반대로 가장 조심할 달은 <b>' + y.warn[0].no + '월(' + y.warn[0].hanja + ') ' + y.warn[0].score + '점</b> — ' + y.warn[0].pick + '</p>');
+    } else if (item.kind === 'samjae') {
+      out.push('<p class="rp-para"><b>' + y.samjae.head + '</b>. ' + y.samjae.body.split('. ')[0] + '.</p>');
+    } else if (item.kind === 'calendar') {
+      out.push('<p class="rp-para">2027년 이 사주에서 재물의 달은 <b>' + (y.focus.money.months.join(' · ') || '해당 없음') + '</b>, 이직·직장의 달은 <b>' + (y.focus.job.months.join(' · ') || '해당 없음') + '</b>, 1인 사업·부업의 달은 <b>' + (y.focus.biz.months.join(' · ') || '해당 없음') + '</b>입니다. 달마다 왜 그런지, 무엇을 먼저 해야 하는지는 아래 심층 풀이에서 하나씩 짚습니다.</p>');
+    } else if (item.kind === 'reunion') {
+      out.push('<p class="rp-para">' + y.reunion.head + '. 연락의 문이 열리는 달은 <b>' + (y.reunion.open.join(' · ') || '없음') + '</b>, 부딪히기 쉬운 달은 <b>' + (y.reunion.rough.join(' · ') || '없음') + '</b>입니다. 아래에서는 그 사람의 속마음과 첫 연락의 문장을 함께 짚습니다.</p>');
+    }
+    return out.join('');
+  }
+
+  function y27PayDesc(kind) {
+    return {
+      newyear: '12개월 월운 전체 풀이 · 좋은 달과 조심할 달의 이유 · 상·하반기 실전 배치',
+      samjae: '내 지지별 충·형·파 판정 · 삼재 방어 3원칙 · 부딪히는 달 전체',
+      calendar: '재물·이직·1인 사업 세 트랙의 달별 심층 풀이와 움직일 시기',
+      reunion: '속마음 심층 · 연락이 오는 달의 이유 · 첫 연락 문장'
+    }[kind] || '심층 풀이 전체';
+  }
+
   function y2027HTML(item, chart, y) {
     const dm = chart.dayMaster;
     const heart = D.COPY.category.heart;
     const groupKey = dominantGodGroup(chart);
+    const paid = !!(item.price && item.price > 0);
     const head = '<div class="y27-head">' +
       '<span class="y27-seal">2027<b>丁未</b></span>' +
       '<div class="y27-head-txt"><b>' + item.icon + ' ' + esc(item.title) + '</b>' +
       '<span>' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간 · ' + chart.pillars.year.hanja + ' ' +
       chart.pillars.month.hanja + ' ' + chart.pillars.day.hanja + (chart.pillars.hour ? ' ' + chart.pillars.hour.hanja : '') + '</span>' +
       '<em class="y27-tag">' + (item.price ? won(item.price) + '원' : '무료') + ' · ' + esc(item.badge) + '</em></div></div>' +
+      pdfBarHTML();
+
+    const preview = paid
+      ? '<div class="y27-free"><span class="y27-free-kicker">무료 맛보기 · 내 사주로 계산</span>' +
+      y27Mini(chart) + y27Preview(item, chart, y) + '</div>'
+      : '<div class="y27-free"><span class="y27-free-kicker">전체 무료 공개</span>' + y27Mini(chart) + '</div>' +
       '<p class="rp-lead">2027 정미년의 천간 <b>丁(음화)</b>과 지지 <b>未(음토)</b>가 내 사주와 만나면, 천간은 내게 <b>' + y.yearGod + '</b>의 자리가 됩니다. ' +
-      '아래는 실제 만세력으로 계산한 12개월 월운입니다.</p>';
+      '아래는 실제 만세력으로 계산한 2027년 풀이입니다.</p>';
 
     let body = '';
 
@@ -981,7 +1122,6 @@
         '<div class="rp-title"><span>상반기 1~6월 실전 풀이</span></div>' + y27Half(y.half1, '상반기') +
         '<div class="rp-title"><span>하반기 7~12월 실전 풀이</span></div>' + y27Half(y.half2, '하반기') +
         '<div class="rp-title"><span>내 사주와 未토</span></div>' + y27YearRel(y) +
-        '<div class="rp-title"><span>행운 포인트</span></div>' + y27Lucky(y.chart) +
         y27Share('내 2027 최고의 달은 ‘' + y.good[0].no + '월’, 조심할 달은 ‘' + y.warn[0].no + '월’',
           dm.ko + dm.elem + ' 일간 · 정미년 未토와 ' + (y.yearHits.length ? y.yearHits[0].rel.join('·') : '별다른 작용 없음') + ' · 좋은 달 ' + y.good.map(m => m.no + '월').join('·'));
     }
@@ -1001,13 +1141,15 @@
     }
 
     if (item.kind === 'moneyleak') {
+      const dm2 = chart.dayMaster;
       body =
         '<div class="rp-title"><span>돈 새는 구멍 ' + y.leaks.length + '곳</span></div>' +
         '<div class="y27-leaks">' + y.leaks.map((l, i) => '<div class="y27-leak"><span class="lv">' + (i + 1) + '순위</span><b>' + esc(l.title) + '</b><em>' + esc(l.why) + '</em><p>' + esc(l.fix) + '</p></div>').join('') + '</div>' +
         '<div class="rp-title"><span>돈이 들어오는 길</span></div>' +
-        '<p class="rp-para">이 사주는 <b>' + chart.dayMaster.elem + ' 일간 · ' + chart.strengthKo + '</b> 구조로, 재물은 ' +
+        '<p class="rp-para">이 사주는 <b>' + dm2.elem + ' 일간 · ' + chart.strengthKo + '</b> 구조로, 재물은 ' +
         (chart.godGroups.재성 >= 2 ? '재성 ' + chart.godGroups.재성 + '개로 직접 들어오는 길이 있습니다. 벌이의 그릇은 충분하니 지키는 장치가 관건입니다.' : chart.godGroups.재성 === 1 ? '재성 1개로 길이 하나입니다. 그 하나를 넓히는 데 집중해야 합니다.' : '재성이 비어 있어 직접 벌이보다 기술·콘텐츠(식상)로 우회해 들어옵니다.') +
         '</p>' +
+        '<p class="rp-para">' + esc(E.deepRead(chart).money.paras[1]) + '</p>' +
         '<div class="rp-title"><span>귀인 띠</span></div>' +
         '<div class="y27-guin">' + y.guin.list.map(g => '<div class="y27-guin-item ' + (g.here ? 'on' : '') + '"><b>' + g.animal + '</b><span>' + g.char + '</span><em>' + (g.here ? '내 사주에 있음 — 가장 가까운 귀인' : '이 띠의 사람·달이 도움') + '</em></div>').join('') + '</div>' +
         '<p class="rp-para">' + esc(y.guin.note) + ' 2027년에 부딪히기 쉬운 띠는 <b>' + esc(y.guin.avoidAnimal) + '(' + y.guin.avoidChar + ')</b>입니다. 큰 결정을 함께할 때는 한 번 더 확인하세요.</p>' +
@@ -1051,19 +1193,21 @@
     }
 
     if (item.kind === 'reunion') {
+      const dx2 = E.deepRead(chart);
       body =
         '<div class="rp-title"><span>2027 인연의 문</span></div>' +
         '<div class="y27-samjae ' + (y.reunion.yearOpen ? 'on' : 'off') + '"><b>' + esc(y.reunion.head) + '</b><p>' +
         '내 일지 <b>' + chart.pillars.day.hanja + '(' + chart.pillars.day.animal + ')</b>과 2027년 未토는 ' + (y.reunion.yearOpen ? '육합' : y.reunion.yearRough ? '충' : '특별한 합·충이 없는') + ' 관계입니다. ' +
         (y.reunion.yearOpen ? '합은 묶이는 자리라, 끊긴 인연이 다시 이어지기 좋은 해입니다.' : y.reunion.yearRough ? '충은 부딪히는 자리라, 미련이 정리되고 새 사람이 들어오는 해입니다.' : '그래서 2027년의 재회는 해의 기운보다 달의 타이밍이 결정합니다.') + '</p></div>' +
-        '<div class="rp-title"><span>속마음 읽기</span></div>' +
+        '<div class="rp-title"><span>속마음 읽기 — 이 사주가 사랑할 때</span></div>' +
         '<p class="rp-lead">' + esc(heart.reflect) + '</p>' +
+        dx2.love.paras.map(p => '<p class="rp-para">' + esc(p) + '</p>').join('') +
         '<p class="rp-para"><strong>' + esc(groupKey) + ' 구조</strong> — ' + esc(heart.via[groupKey] || '') + '</p>' +
         '<div class="rp-title"><span>연락이 올 달 · 마찰 달</span></div>' +
         '<div class="y27-track open"><span>인연의 문이 열리는 달</span><div class="y27-chips">' + (y.reunion.open.length ? y.reunion.open.map(mo => '<i>' + mo + '월</i>').join('') : '<i class="none">해당 달 없음</i>') + '</div></div>' +
         '<div class="y27-track bad"><span>부딪히기 쉬운 달</span><div class="y27-chips">' + (y.reunion.rough.length ? y.reunion.rough.map(mo => '<i>' + mo + '월</i>').join('') : '<i class="none">해당 달 없음</i>') + '</div></div>' +
         (y.reunion.open.length ? y27Lines(y.months.filter(m => y.reunion.open.indexOf(m.no) >= 0)) : '') +
-        '<div class="rp-title"><span>첫 연락 문장</span></div>' +
+        '<div class="rp-title"><span>첫 연락의 문장</span></div>' +
         '<ul class="rp-list advice"><li>“요즘 어떻게 지내? 문득 생각나서.” — 용건 없이 안부만. 답이 오면 두 번째 대화로 넘어가세요.</li>' +
         '<li>“전에 네가 좋아하던 ○○, 아직 하니?” — 그 사람의 취향을 기억한 한 문장이 가장 안전합니다.</li>' +
         '<li>“급한 건 아니야. 시간 될 때 답 줘.” — 문을 열어 두는 문장이 재회 확률을 높입니다.</li></ul>' +
@@ -1071,8 +1215,13 @@
         y27Share(y.reunion.head, '내 일지 ' + chart.pillars.day.hanja + ' · 2027년에 문이 열리는 달 ' + (y.reunion.open.join('·') || '없음'));
     }
 
-    return head + body +
-      '<div class="rp-actions"><button class="btn-ghost" id="y27Close">닫기</button><button class="btn-ghost" id="y27Home">2027 전체 보기</button><button class="btn-gold" id="y27Save">보관함 저장</button></div>' +
+    return head + preview +
+      (paid ? payWrapHTML({
+        kind: item.id, price: item.price, list: item.list,
+        label: esc(item.title) + ' 전체 열기', desc: y27PayDesc(item.kind), inner: body
+      }) : body) +
+      '<div class="rp-title"><span>행운 포인트</span></div>' + y27Lucky(chart) +
+      '<div class="rp-actions"><button class="btn-ghost" id="y27Close">닫기</button><button class="btn-ghost" id="y27Home">2027 전체 보기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="y27Save">보관함 저장</button></div>' +
       '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 2027년 월운은 24절기 절입 기준입니다.<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
   }
 

@@ -963,3 +963,151 @@ body::before {
 .y27-pick-group { display: flex; flex-direction: column; gap: 6px; }
 .y27-pick-cap { font-size: 9px; letter-spacing: .06em; color: var(--ink-3); padding-left: 1px; }
 .y27-pick b small { font-family: var(--serif); font-size: 9.5px; color: var(--ink-3); font-weight: 400; margin-left: 2px; }
+
+/* ============================================================
+   유료 잠금 퍼널 · 심층 풀이 본문 · PDF 인쇄
+   ============================================================ */
+
+/* 무료 맛보기 */
+.y27-free {
+  position: relative; margin: 6px 0 4px; padding: 13px 13px 5px;
+  border: 1px solid rgba(127, 191, 168, .28); border-radius: 16px;
+  background: linear-gradient(180deg, rgba(127, 191, 168, .075), rgba(255, 255, 255, .012));
+}
+.y27-free-kicker {
+  display: inline-block; margin-bottom: 10px; padding: 2px 9px;
+  font-size: 9.5px; letter-spacing: .12em; color: #9FD8C4;
+  border: 1px solid rgba(127, 191, 168, .42); border-radius: 999px;
+}
+.y27-free .rp-lead { font-size: 12.5px; line-height: 1.8; }
+.y27-free .rp-para { font-size: 12px; }
+.y27-mini { margin: 0 0 10px; }
+.y27-mini .mini-pls { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.mini-pl {
+  display: flex; flex-direction: column; gap: 1px; align-items: center;
+  padding: 7px 4px; border: 1px solid rgba(255, 255, 255, .08); border-radius: 10px;
+  background: rgba(255, 255, 255, .03);
+}
+.mini-pl span { font-size: 8.5px; color: var(--ink-3); }
+.mini-pl b { font-family: var(--serif); font-size: 15px; line-height: 1.25; font-weight: 700; }
+.mini-pl.is-day { border-color: rgba(212, 175, 55, .45); background: rgba(212, 175, 55, .07); }
+.mini-pl.is-empty b { color: var(--ink-3); }
+.y27-mini-row { display: flex; flex-wrap: wrap; gap: 3px 10px; margin-top: 7px; font-size: 9.5px; color: var(--ink-3); }
+.y27-mini-row b { color: var(--gold-lt); font-weight: 600; }
+
+/* 블러 잠금 + 결제 유도 카드 */
+.pay-wrap { position: relative; margin-top: 6px; }
+.pay-body { transition: filter .32s ease; }
+.pay-wrap.is-locked .pay-body {
+  filter: blur(5px) saturate(.92);
+  max-height: 470px; min-height: 300px; overflow: hidden;
+  pointer-events: none; user-select: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 62%, rgba(0, 0, 0, .2) 100%);
+  mask-image: linear-gradient(180deg, #000 62%, rgba(0, 0, 0, .2) 100%);
+}
+.pay-wrap.is-open .pay-body { filter: none; }
+.pay-card {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  z-index: 4; width: calc(100% - 22px); max-width: 330px;
+  display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center;
+  padding: 16px 15px 14px; border-radius: 18px;
+  border: 1px solid rgba(212, 175, 55, .38);
+  background: linear-gradient(180deg, rgba(24, 26, 34, .985), rgba(11, 12, 17, .995));
+  box-shadow: 0 26px 60px -18px rgba(0, 0, 0, .95), inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+.pay-kicker {
+  font-size: 9px; letter-spacing: .16em; color: var(--gold);
+  border: 1px solid rgba(212, 175, 55, .35); border-radius: 999px; padding: 2px 9px;
+}
+.pay-c-title { font-family: var(--serif); font-size: 14.5px; line-height: 1.5; color: #F5EDDC; }
+.pay-c-desc { margin: 0; font-size: 10.5px; line-height: 1.65; color: var(--ink-2); }
+.pay-c-price { display: flex; align-items: baseline; gap: 7px; }
+.pay-c-price s { font-size: 10.5px; color: var(--ink-3); }
+.pay-c-price b { font-family: var(--serif); font-size: 18px; color: var(--gold-lt); }
+.pay-c-price em {
+  font-style: normal; font-size: 9.5px; color: #F3E2B0;
+  background: rgba(212, 175, 55, .16); border-radius: 6px; padding: 2px 6px;
+}
+.pay-c-note { font-size: 9px; line-height: 1.6; color: var(--ink-3); }
+.pay-c-note b { color: var(--gold-lt); font-weight: 500; }
+.pay-unlock { margin-top: 2px; }
+
+/* PDF 버튼 */
+.rp-toolbar { display: flex; justify-content: flex-end; margin: -2px 0 8px; }
+.pdf-btn {
+  border: 1px solid rgba(212, 175, 55, .3); background: rgba(212, 175, 55, .08);
+  color: var(--gold-lt); font-family: var(--sans); font-size: 10.5px;
+  padding: 6px 10px; border-radius: 10px; cursor: pointer;
+}
+.pdf-btn:hover { background: rgba(212, 175, 55, .16); }
+
+/* 심층 월운 문장 */
+.y27-line-head { display: flex; align-items: baseline; gap: 7px; margin-bottom: 5px; }
+.y27-line-head b { font-family: var(--serif); font-size: 11.5px; color: #F0E6D2; }
+.y27-line-head small { font-size: 9px; color: var(--ink-3); font-weight: 400; }
+.y27-line-head span { font-size: 9.5px; color: var(--ink-3); }
+.y27-line-head .y27-score { margin-left: auto; font-style: normal; font-size: 9px; color: var(--gold); }
+.y27-line p { font-size: 11.5px; line-height: 1.78; color: #CFC8BA; margin: 0 0 6px; }
+.y27-line p:last-child { margin-bottom: 0; }
+.y27-line .y27-fix {
+  font-size: 10px; color: var(--ink-3);
+  border-top: 1px dashed rgba(255, 255, 255, .09); padding-top: 5px; margin-top: 2px;
+}
+.y27-half .rp-para { font-size: 12px; }
+.y27-pick p { font-size: 10.5px; line-height: 1.7; }
+
+/* ============================================================
+   인쇄 (PDF 저장)
+   ============================================================ */
+@media print {
+  @page { size: A4; margin: 12mm 11mm; }
+  html, body { background: #fff !important; color: #17150F !important; }
+  body::before { display: none !important; }
+  .topbar, .tabbar, .dim, .toast, .sheet-grip, .sheet-head, .app-foot,
+  .main, .hero, .page-head, .rp-toolbar, .pdf-btn, .rp-actions, .pay-card { display: none !important; }
+  .stage { display: block !important; padding: 0 !important; min-height: 0 !important; }
+  .phone {
+    display: block !important; max-width: none !important; width: auto !important;
+    min-height: 0 !important; margin: 0 !important; padding: 0 !important;
+    border: 0 !important; box-shadow: none !important; background: #fff !important;
+  }
+  .sheet {
+    position: static !important; transform: none !important; inset: auto !important;
+    display: block !important; width: auto !important; max-width: none !important;
+    max-height: none !important; height: auto !important; border: 0 !important;
+    border-radius: 0 !important; box-shadow: none !important; background: #fff !important;
+    animation: none !important;
+  }
+  .sheet-body { overflow: visible !important; padding: 0 !important; max-height: none !important; }
+  .sheet-body, .sheet-body * { text-shadow: none !important; box-shadow: none !important; }
+  .pay-body {
+    filter: none !important; max-height: none !important; min-height: 0 !important;
+    overflow: visible !important; -webkit-mask-image: none !important; mask-image: none !important;
+  }
+  .pay-wrap.is-locked .pay-body { filter: blur(5px) !important; max-height: 300px !important; overflow: hidden !important; }
+  .rp-top, .y27-head, .y27-free, .rp-question, .rp-title, .rp-para, .rp-lead,
+  .y27-line, .y27-half, .y27-table, .y27-pick, .mini-item, .lucky-item, .pl,
+  .el-card, .rp-caution, .y27-samjae, .y27-leak, .y27-guin-item, .y27-sal-card { break-inside: avoid; }
+  .rp-para, .rp-lead, .rp-list li, .y27-line p, .y27-line-head b, .y27-line-head span { color: #1b1a17 !important; }
+  .rp-title span, .y27-half-head b, .pay-c-title { color: #6E510E !important; }
+  .rp-title::after { background: linear-gradient(90deg, rgba(0, 0, 0, .2), transparent) !important; }
+  .rp-para strong, .rp-lead .em, .lucky-item b, .stat b, .mini-pl b { color: #3B2E0B !important; }
+  .y27-line, .y27-half, .y27-table, .y27-pick, .y27-free, .mini-item, .mini-pl,
+  .lucky-item, .pl, .el-card, .rp-caution, .y27-samjae, .y27-leak, .y27-guin-item,
+  .y27-sal-card, .stat, .rp-question, .y27-share, .yy-wrap, .elem-row {
+    background: #fff !important; border-color: #D8D2C6 !important;
+  }
+  .rp-caution { border-left: 3px solid #B08B2A !important; }
+  .pl.is-day, .mini-pl.is-day { background: #FBF4E2 !important; border-color: #C9A33C !important; }
+  .pl .hz, .pl.is-day .hz, .y27-seal { color: #1b1a17 !important; }
+  .e-mok { color: #2C7A5B !important; }
+  .e-hwa { color: #B63A2F !important; }
+  .e-to { color: #8C6A18 !important; }
+  .e-geum { color: #5C6070 !important; }
+  .e-su { color: #35509E !important; }
+  .elem-bar, .c-bar, .gbar, .yy-bar { background: #EDE8DE !important; }
+  .rp-note, .pay-c-note, .y27-fix, .y27-line .y27-fix, .pl-legend { color: #5E5A52 !important; }
+  .y27-seal { border: 2px solid #9C7A22 !important; }
+  .y27-share em { color: #5E5A52 !important; }
+  .btn-gold, .btn-ghost { display: none !important; }
+}

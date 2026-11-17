@@ -58,6 +58,24 @@
     편인: '생각만 길어지기 쉽습니다. 결정 기한을 정해 두고 작게라도 실행하세요.'
   };
 
+  /* 달마다의 구체 장면 */
+  const REL_SCENE = {
+    충: '부딪혀 자리가 바뀌는 달입니다. 이사·이직·계약 변경처럼 판을 옮기는 일이 이 무렵 몰립니다.',
+    합: '묶여 하나가 되는 달입니다. 사람과 거래가 맺어지고, 미뤄 둔 약속이 이때 성사됩니다.',
+    형: '서로 눌리는 달입니다. 말과 서류에서 마찰이 생기고 가족·동료와의 감정이 올라옵니다.',
+    파: '맺은 것이 깨지는 달입니다. 서명과 합의를 미루고 구두 약속은 남기지 마세요.',
+    해: '말과 마음이 어긋나는 달입니다. 가까운 사람과의 오해가 생기니 얼굴을 보고 말하세요.',
+    복음: '같은 기운이 겹치는 달입니다. 판단이 강해지는 대신 고집도 함께 세집니다.'
+  };
+  const MINE_SCENE = {
+    충: '내 일지와 부딪히니 일정 변경과 이동이 생깁니다. 계약 날짜와 큰 결제는 이 달에 두지 마세요.',
+    합: '내 일지와 합하니 사람을 만나고 약속을 잡기에 좋습니다. 이 달에 맺은 인연은 오래 갑니다.',
+    형: '내 생활의 자리와 눌리니 가족·동거·가까운 사람과의 마찰이 올라옵니다. 말을 반 박자 늦추세요.',
+    파: '내 자리가 흔들리는 달입니다. 이사·이별·약속 파기 같은 일이 생기면 감정보다 순서를 보세요.',
+    해: '내 자리와 어긋나 혼자만 손해 보는 느낌이 드는 달입니다. 서운함을 쌓아 두지 말고 그때 말하세요.',
+    복음: '내 일지와 같은 기운이 겹쳐 의욕과 고집이 함께 올라가는 달입니다. 결정을 하나로 좁히세요.'
+  };
+
   const Y_INFO = {
     year: YEAR, stem: Y_STEM, branch: Y_BRANCH,
     hanja: '丁未', ko: '정미', animal: '양',
@@ -67,6 +85,7 @@
   };
 
   function animalOf(b) { return ANIMALS[b] + '띠'; }
+  function flatRel(arr) { return arr.map(r => E.REL_SIT[r] || r).join(', '); }
   function isHyung(a, b) {
     return HYUNG_PAIRS.some(p => (p[0] === a && p[1] === b) || (p[0] === b && p[1] === a));
   }
@@ -138,6 +157,32 @@
     const yearGod = E.tenGod(dm.stem, Y_STEM);
     const yongEl = chart.yongsin.elem, heeEl = chart.yongsin.hee;
 
+    /* 올해의 천간·지지가 내 사주에 들어오는 방식 */
+    const yearRead = (function () {
+      const me = E.ELEMENTS.indexOf(dm.elem);
+      const stemRel = E.relation(me, 1);   // 丁 = 화
+      const branchRel = E.relation(me, 2); // 未 = 토
+      const stemFav = E.ELEMENTS[1] === yongEl ? 'yong' : (E.ELEMENTS[1] === heeEl ? 'hee' : '');
+      const branchFav = E.ELEMENTS[2] === yongEl ? 'yong' : (E.ELEMENTS[2] === heeEl ? 'hee' : '');
+      const relText = {
+        비겁: '나와 같은 기운이 겹칩니다. 의욕과 경쟁심이 함께 올라가고 사람 사이의 자리다툼이 생기기 쉽습니다. 대신 내 이름으로 시작하는 일은 힘을 받습니다.',
+        식상: '내가 만들어 내놓는 기운이 들어옵니다. 표현과 결과물이 밖으로 나가는 해라 콘텐츠·영업·제안이 결실을 맺습니다.',
+        재성: '돈의 기운이 직접 들어옵니다. 버는 일이 늘고 그만큼 지출의 유혹도 함께 커집니다.',
+        관성: '책임과 평가의 기운이 들어옵니다. 직장·시험·계약처럼 공식의 자리에서 결과가 나오는 대신 몸과 마음의 압박도 함께 옵니다.',
+        인성: '배움과 보호의 기운이 들어옵니다. 공부·자격·문서에 유리한 해이고 대신 결정이 늦어지기 쉽습니다.'
+      };
+      const favCount = (stemFav ? 1 : 0) + (branchFav ? 1 : 0);
+      const verdict = favCount === 2
+        ? '두 기운 모두 내게 유리해, 2027년은 판을 키우기에 좋은 해입니다.'
+        : favCount === 1
+          ? '한쪽은 내게 유리하고 한쪽은 부담이라, 벌이와 정리를 함께 가져가야 하는 해입니다.'
+          : '두 기운 모두 내 용신과 멀어, 새로 벌이기보다 정리하며 힘을 아끼는 편이 나은 해입니다.';
+      return {
+        stemRel: stemRel, branchRel: branchRel, favCount: favCount,
+        text: '올해 천간 丁(화)은 내게 ' + stemRel + ' 기운, 지지 未(토)는 ' + branchRel + ' 기운입니다. ' + relText[stemRel] + (branchRel !== stemRel ? ' ' + relText[branchRel] : '') + ' ' + verdict
+      };
+    })();
+
     /* 내 지지 ↔ 未 */
     const yearHits = [];
     pool.forEach((b, i) => {
@@ -190,6 +235,30 @@
         + (verdict === '추진' ? '<b>밀어붙여도 좋습니다.</b>' : verdict === '균형' ? '절반은 진행하고 절반은 확인하세요.' : '<b>확인과 방어가 먼저입니다.</b>')
         + (elemNote ? ' (' + elemNote + ')' : '');
 
+      /* ---- 심층 문장 (유료 본문) ---- */
+      const gs = E.GOD_SIT[god], bs = E.GOD_SIT[branchGod];
+      const story = [];
+      story.push(base.no + '월(' + base.hanja + ', ' + base.startLabel + ' 절입) — 하늘에는 ' + base.stemKo + base.stemElem + '(' + god + '), 땅에는 ' + base.branchKo + base.branchElem + ' — ' + branchGod + ' 자리가 앉는 달입니다.'
+        + ' 내 일간 ' + dm.hanja + '에게 ' + E.josa(god, '은', '는') + ' ' + gs.sit + '이고, 이 달의 주제는 ' + gs.scene + '입니다.');
+      story.push('여기에 월지 본기의 ' + branchGod + '까지 겹쳐 ' + E.josa(bs.sit, '이', '가') + ' 한 겹 더해지고, 12운성은 ' + stage + ' — ' + E.STAGE_DEEP[stage] + '.');
+      story.push(relYear.length
+        ? '2027년의 未토와는 ' + flatRel(relYear) + ' 관계입니다. ' + REL_SCENE[relYear[0]] + (relYear.length > 1 ? ' 여기에 ' + relYear.slice(1).map(r => (E.REL_SIT[r] || r)).join(' · ') + '까지 겹쳐 같은 방향의 부담이 한 번 더 옵니다.' : '')
+        : '2027년의 未토와는 충·합이 없습니다. 해의 기운이 이 달을 크게 흔들지 않고, 월운 자체의 흐름으로만 움직입니다.');
+      story.push(relMine.length
+        ? '내 일지 쪽과는 ' + flatRel(relMine) + ' — ' + MINE_SCENE[relMine[0]] + (relMine.length > 1 ? ' ' + relMine.slice(1).map(r => (E.REL_SIT[r] || r)).join(' · ') + '까지 겹쳐 마음 쓸 일이 한 가지 더 생깁니다.' : '')
+        : '내 일지와는 부딪히지도 붙지도 않아, 내 생활의 리듬을 그대로 지킬 수 있는 달입니다.');
+      if (base.branchElem === yongEl) story.push('월지가 용신 ' + yongEl + '과 같은 기운이라 이 달은 내가 편해집니다. 같은 일을 해도 피로가 덜하고 판단이 빨라집니다.');
+      else if (base.branchElem === heeEl) story.push('희신 ' + heeEl + ' 기운이 실려 주변의 도움이 따라오는 달입니다. 누군가의 소개나 제안이 실제 이익으로 이어집니다.');
+      else if (base.branchElem === dm.elem) story.push('내 기운(' + dm.elem + ')이 겹치는 달이라 의욕은 앞서는데 결과는 늦습니다. 혼자 결정하기보다 한 번 검토를 거치세요.');
+      story.push('그래서 이 달은 ' + (verdict === '추진' ? '밀어붙여도 좋은 달입니다. ' : verdict === '균형' ? '절반은 진행하고 절반은 확인하는 달입니다. ' : '확인과 방어가 먼저인 달입니다. ')
+        + gs.tip + '. ' + fix);
+
+      const pick = verdict === '추진'
+        ? (ACTION[god] || '평소의 일') + '에 힘이 실립니다. ' + (relMine.indexOf('합') >= 0 ? '내 일지와 합해 사람이 붙으니 미뤄 둔 연락과 제안을 이 달에 꺼내세요.' : relYear.indexOf('합') >= 0 ? '올해의 未토와 합해 거래와 계약이 맺어지기 좋습니다.' : '흐름이 순해 미뤄 둔 일을 꺼내기 좋습니다.')
+        : verdict === '균형'
+          ? E.josa(ACTION[god] || '평소의 일', '은', '는') + ' 절반만 진행하세요. 나머지 절반은 확인과 정리에 두면 이 달이 손해 없이 지나갑니다.'
+          : (negs.length ? flatRel(negs) + ' 관계가 겹쳐 ' : '기운이 빠지는 달이라 ') + '새로 벌이지 말고 확인과 정리에 쓰세요. ' + gs.tip + '.';
+
       return {
         no: base.no, idx: base.idx, hanja: base.hanja, ko: base.ko,
         stemKo: base.stemKo, branchKo: base.branchKo, startLabel: base.startLabel,
@@ -197,7 +266,8 @@
         god: god, godGroup: E.GOD_GROUP[god], branchGod: branchGod, stage: stage,
         relYear: relYear, relMine: relMine, relYearBr: relYearBr,
         score: score, grade: grade, gradeKey: gradeKey, tag: tag,
-        line: line, fix: fix, action: ACTION[god] || '', verdict: verdict
+        line: line, fix: fix, action: ACTION[god] || '', verdict: verdict,
+        story: story, pick: pick
       };
     }).sort((a, b) => a.no - b.no);
 
@@ -205,12 +275,20 @@
     const good = ranked.slice(0, 3);
     const warn = ranked.slice(-3).reverse();
 
-    const half = (from, to) => {
+    const half = (from, to, label) => {
       const arr = ms.filter(m => m.no >= from && m.no <= to);
       const best = arr.slice().sort((a, b) => b.score - a.score)[0];
       const worst = arr.slice().sort((a, b) => a.score - b.score)[0];
       const avg = Math.round(arr.reduce((s, m) => s + m.score, 0) / arr.length);
-      return { arr: arr, best: best, worst: worst, avg: avg };
+      const good = arr.filter(m => m.score >= 62).map(m => m.no + '월');
+      const warn = arr.filter(m => m.score < 52).map(m => m.no + '월');
+      const story = [
+        E.josa(label, '은', '는') + ' 평균 ' + avg + '점입니다. 가장 힘이 실리는 달은 ' + best.no + '월(' + best.hanja + ') — ' + best.god + ' · ' + E.josa(best.stage, '으로', '로') + ', ' + best.pick,
+        '반대로 가장 낮은 달은 ' + worst.no + '월(' + worst.hanja + ') ' + worst.score + '점입니다. ' + worst.pick,
+        '큰 결정(계약·이직·이사·큰 결제)은 ' + (good.length ? good.join(' · ') : best.no + '월') + '에 몰아 두고, 점검과 정리·건강검진은 ' + (warn.length ? warn.join(' · ') : worst.no + '월') + '에 두세요. ' +
+        (from === 1 ? '1~2월에 한 해 계획을 확정해 두면 봄의 흔들림을 절반으로 줄일 수 있습니다.' : '9~10월에 미뤄 둔 일을 한 번 정리하고, 12월에는 새로운 시작보다 결산에 힘을 쓰세요.')
+      ];
+      return { arr: arr, best: best, worst: worst, avg: avg, goodMonths: good, warnMonths: warn, story: story };
     };
 
     /* 삼재 */
@@ -315,10 +393,10 @@
 
     return {
       info: Y_INFO, chart: chart,
-      yearGod: yearGod, yearGodGroup: E.GOD_GROUP[yearGod],
+      yearGod: yearGod, yearGodGroup: E.GOD_GROUP[yearGod], yearRead: yearRead,
       yearHits: yearHits, samhapYear: samhapYear,
       months: ms, good: good, warn: warn,
-      half1: half(1, 6), half2: half(7, 12),
+      half1: half(1, 6, '상반기'), half2: half(7, 12, '하반기'),
       samjae: samjae, sal: sal, leaks: leaks, guin: guin,
       focus: focus, reunion: reunion
     };
