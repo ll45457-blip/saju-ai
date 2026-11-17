@@ -183,7 +183,7 @@
       '<h3 class="hero-name">' + esc(c.name) + '<small>' + esc(c.hanja) + '</small></h3>' +
       '<p class="hero-tag">' + esc(c.tagline) + '</p>' +
       '<span class="hero-cta">바로 질문하기</span>' +
-      '<span class="hero-price"><s>' + won(c.listPrice) + '원</s> <b>' + won(c.price) + '원</b></span>' +
+      '<span class="hero-price"><b>' + won(c.price) + '원</b></span>' +
       '</div></div>'
     )).join('');
     dots.innerHTML = D.CHARACTERS.map((_, i) => '<i' + (i === 0 ? ' class="on"' : '') + '></i>').join('');
@@ -266,16 +266,14 @@
   /* ---------------- 홈: 도사 카드 ---------------- */
   function renderMasters() {
     $('#masterList').innerHTML = D.CHARACTERS.map(c => {
-      const off = Math.round((1 - c.price / c.listPrice) * 100);
       return '<div class="master" data-char="' + c.id + '" role="button">' +
-        '<div class="master-thumb"><img src="' + c.img + '" alt="' + esc(c.name) + '" loading="lazy" />' +
-        (off > 0 ? '<span class="discount">' + off + '%</span>' : '') + '</div>' +
+        '<div class="master-thumb"><img src="' + c.img + '" alt="' + esc(c.name) + '" loading="lazy" /></div>' +
         '<div class="master-info">' +
         '<div><div class="master-top"><span class="master-name">' + esc(c.name) + '</span><span class="master-hanja">' + esc(c.hanja) + '</span></div>' +
         '<div class="master-fields">' + c.fields.join(' · ') + '</div>' +
         '<div class="master-sample">“' + esc(c.sample.q) + '”<br />→ ' + esc(c.sample.a) + '</div></div>' +
         '<div class="master-bottom">' +
-        '<span class="master-price"><s>' + won(c.listPrice) + '</s><b>' + won(c.price) + '원</b></span>' +
+        '<span class="master-price"><b>' + won(c.price) + '원</b></span>' +
         '<button class="master-go" data-go="' + c.id + '">바로 질문하기</button>' +
         '</div></div></div>';
     }).join('');
@@ -290,12 +288,11 @@
   /* ---------------- 상품 상세 ---------------- */
   function openProduct(id) {
     const c = charById(id);
-    const off = Math.round((1 - c.price / c.listPrice) * 100);
     const html =
       '<div class="prod-hero"><img src="' + c.img + '" alt="' + esc(c.name) + '" />' +
       '<div class="ph-txt"><b>' + esc(c.name) + ' <small style="font-size:10px;letter-spacing:.2em;color:var(--ink-3)">' + esc(c.hanja) + '</small></b>' +
       '<span>' + esc(c.role) + ' · ' + esc(c.fields.slice(0, 2).join(' · ')) + '</span></div></div>' +
-      '<div class="prod-price"><b>' + won(c.price) + '원</b><s>' + won(c.listPrice) + '원</s>' + (off ? '<em>' + off + '% 할인</em>' : '') + '</div>' +
+      '<div class="prod-price"><b>' + won(c.price) + '원</b></div>' +
       '<p class="prod-desc">' + esc(c.intro) + '</p>' +
       '<ul class="prod-list">' + c.strengths.map(s => '<li>' + esc(s) + '</li>').join('') + '</ul>' +
       '<div class="rp-actions"><button class="btn-ghost" id="prodClose">닫기</button><button class="btn-gold" id="prodAsk">' + esc(c.name) + '에게 질문하기</button></div>';
@@ -641,34 +638,50 @@
     openReportSheet({ chart: chart, reading: reading, question: p.question, category: p.category, charId: p.charId, title: p.title, typeLabel: p.type === 'free' ? '무료' : '질문즉답' });
   }
 
-  /* ---------------- 유료 잠금 퍼널 (맛보기 → 블러 잠금 → 체험판 해제 → PDF) ---------------- */
+  /* ---------------- 유료 잠금 퍼널 (맛보기 → 블러 잠금 → 래피드 결제 · 열람 코드 → PDF) ---------------- */
+  const PAID_KINDS = ['report', 'compat', 'daeun', 'gilil', 'newyear', 'samjae', 'calendar', 'reunion'];
+
+  function latpeedConf() {
+    const c = window.WOLHA_LATPEED || {};
+    return { url: (c.url || '').trim(), code: (c.code || 'WOLHA2027').trim(), trialOpen: !!c.trialOpen };
+  }
+
+  function shownCodes(line) {
+    return (line || '').replace(/\s+/g, '').toUpperCase();
+  }
+
+  function unlockAll() {
+    PAID_KINDS.forEach(k => { state.unlocked[k] = true; });
+    store.set(K_TRIAL, state.unlocked);
+  }
+
   function payCardHTML(o) {
-    const off = o.list && o.price ? Math.round((1 - o.price / o.list) * 100) : 0;
+    const L = latpeedConf();
     return '<div class="pay-card">' +
       '<span class="pay-kicker">여기서부터 심층 풀이</span>' +
       '<b class="pay-c-title">' + o.label + '</b>' +
       '<p class="pay-c-desc">' + o.desc + '</p>' +
       '<ul class="pay-benefits">' +
       '<li><i>✓</i>내 사주 맞춤 심층 풀이 전체 열람</li>' +
-      '<li><i>✓</i>소장용 PDF 파일 저장 (인쇄·보관 가능)</li>' +
+      '<li><i>✓</i>소장용 PDF 파일 저장</li>' +
       '<li><i>✓</i>보관함 다시 보기 지원</li>' +
       '</ul>' +
-      '<div class="pay-c-price"><s>' + won(o.list) + '원</s><b>' + won(o.price) + '원</b>' + (off > 0 ? '<em>' + off + '% 할인</em>' : '') + '</div>' +
-      '<div class="pay-methods" role="group" aria-label="결제 수단 선택">' +
-      '<button type="button" class="pm-chip is-on" data-pm="card">신용·체크카드</button>' +
-      '<button type="button" class="pm-chip" data-pm="kakao">카카오페이</button>' +
-      '<button type="button" class="pm-chip" data-pm="naver">네이버페이</button>' +
+      '<div class="pay-c-price"><b>' + won(o.price) + '원</b></div>' +
+      '<button type="button" class="btn-gold wide pay-latpeed">래피드에서 결제하고 열람 코드 받기</button>' +
+      '<div class="pay-code-row">' +
+      '<input type="text" class="pay-code-input" inputmode="text" autocomplete="off" spellcheck="false" aria-label="열람 코드" placeholder="열람 코드 입력 (예: ' + esc(L.code) + ')" />' +
+      '<button type="button" class="pay-code-go">열람</button>' +
       '</div>' +
-      '<button type="button" class="btn-gold wide pay-unlock">결제하고 PDF·전체 풀이 받기 <small>(체험판 무료 열기)</small></button>' +
-      '<span class="pay-c-note">지금은 체험판으로 열리며 실제 결제는 이루어지지 않습니다<br />해제 후 <b>📄 PDF 파일 저장</b>과 인쇄를 쓰실 수 있습니다</span>' +
+      '<span class="pay-c-note">결제 후 받으신 <b>열람 코드</b>를 입력하면 바로 열립니다</span>' +
       '<span class="pay-c-legal">디지털 콘텐츠 특성상 잠금 해제(열람) 후에는 단순 변심 환불이 어렵습니다 · 무료 맛보기 확인 후 이용해 주세요.</span>' +
+      (L.trialOpen ? '<button type="button" class="pay-trial">체험판으로 먼저 열어 보기</button>' : '') +
       '</div>';
   }
 
   function payWrapHTML(o) {
     const open = !!state.unlocked[o.kind];
     return '<div class="pay-wrap' + (open ? ' is-open' : ' is-locked') + '" data-pay="' + o.kind +
-      '" data-price="' + (o.price || 0) + '" data-list="' + (o.list || 0) + '" data-label="' + esc(o.label || '') + '">' +
+      '" data-price="' + (o.price || 0) + '" data-label="' + esc(o.label || '') + '">' +
       '<div class="pay-body">' + o.inner + '</div>' +
       (open ? '' : payCardHTML(o)) +
       '</div>';
@@ -681,32 +694,68 @@
   function bindPay(root, kind) {
     const show = () => $$('[data-pdf]', root).forEach(b => { b.hidden = false; });
     const wrap = root.querySelector('.pay-wrap');
-    if (!wrap) { show(); return; }
-    if (wrap.classList.contains('is-open')) { show(); return; }
-    $$('.pm-chip', wrap).forEach(ch => ch.addEventListener('click', () => {
-      $$('.pm-chip', wrap).forEach(x => x.classList.toggle('is-on', x === ch));
-      trackEvent('select_pay_method', { content_kind: kind, method: ch.dataset.pm || '' });
-    }));
-    const un = wrap.querySelector('.pay-unlock');
-    if (!un) { show(); return; }
-    const meta = () => ({
-      content_kind: kind,
-      content_label: wrap.dataset.label || '',
-      value: +wrap.dataset.price || 0,
-      list_value: +wrap.dataset.list || 0
-    });
-    un.addEventListener('click', () => {
-      trackEvent('click_unlock', meta());
-      state.unlocked[kind] = true;
-      store.set(K_TRIAL, state.unlocked);
+    if (!wrap || wrap.classList.contains('is-open')) { show(); return; }
+
+    const L = latpeedConf();
+    const meta = () => ({ content_kind: kind, content_label: wrap.dataset.label || '', value: +wrap.dataset.price || 0 });
+    const codeIn = wrap.querySelector('.pay-code-input');
+
+    const openCard = () => {
       wrap.classList.remove('is-locked');
       wrap.classList.add('is-open');
       const card = wrap.querySelector('.pay-card');
       if (card) card.remove();
       show();
+    };
+
+    const tryCode = () => {
+      const v = shownCodes(codeIn.value);
+      if (!v) { showToast('받으신 열람 코드를 입력해 주세요'); codeIn.focus(); return; }
+      if (v === shownCodes(L.code)) {
+        unlockAll(); openCard();
+        trackEvent('unlock_code', meta());
+        showToast('열람 코드가 확인되었어요 · 전체 풀이와 PDF 파일 저장을 쓰실 수 있습니다');
+      } else {
+        showToast('열람 코드가 맞지 않습니다. 코드를 다시 확인해 주세요');
+        codeIn.select();
+      }
+    };
+
+    const go = wrap.querySelector('.pay-latpeed');
+    if (go) go.addEventListener('click', () => {
+      trackEvent('click_latpeed', meta());
+      if (L.url) { window.open(L.url, '_blank', 'noopener'); return; }
+      showToast('래피드 결제 링크 연결 전입니다. 받으신 열람 코드를 아래에 입력해 주세요');
+      if (codeIn) { codeIn.focus(); try { codeIn.scrollIntoView({ block: 'center' }); } catch (e) { } }
+    });
+
+    const lg = wrap.querySelector('.pay-code-go');
+    if (lg) lg.addEventListener('click', tryCode);
+    if (codeIn) codeIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); tryCode(); } });
+
+    const tr = wrap.querySelector('.pay-trial');
+    if (tr) tr.addEventListener('click', () => {
       trackEvent('unlock_trial', meta());
+      unlockAll(); openCard();
       showToast('체험판이 열렸어요 · 전체 풀이와 PDF 파일 저장을 쓰실 수 있습니다');
     });
+  }
+
+  /* 받은 링크(?unlock=코드)로 들어오면 이 기기 잠금을 바로 해제 */
+  function applyUnlockQuery() {
+    const m = /[?&]unlock=([^&]*)/.exec(location.search || '');
+    if (!m) return;
+    const L = latpeedConf();
+    let v = '';
+    try { v = decodeURIComponent(m[1]); } catch (e) { v = m[1]; }
+    if (v && shownCodes(v) === shownCodes(L.code)) {
+      unlockAll();
+      $$('[data-pdf]').forEach(b => { b.hidden = false; });
+      showToast('열람 코드가 확인되었어요 · 전체 풀이를 보실 수 있습니다');
+    } else {
+      showToast('열람 코드가 맞지 않습니다. 코드를 다시 확인해 주세요');
+    }
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) { }
   }
 
   function bindPdf(root, kind) {
@@ -985,7 +1034,7 @@
       '<p class="rp-lead">' + esc(rxCore.lead) + '</p>' +
 
       payWrapHTML({
-        kind: 'report', price: c.price, list: c.listPrice,
+        kind: 'report', price: c.price,
         label: esc(c.name) + ' 심층 리포트 전체 열기',
         desc: '재물 · 직장 · 연애 · 건강 네 갈래의 심층 풀이, 질문에 대한 깊은 답, 시기별 행동 지침까지 — 이 사주 하나만 놓고 쓴 본문입니다.',
         inner: paidInner
@@ -1156,8 +1205,8 @@
     const lead = $('#y27Lead'); if (lead) lead.textContent = D.Y2027.lead;
     box.innerHTML = D.Y2027.items.map(it => {
       const price = it.price
-        ? '<b>' + won(it.price) + '원</b><s>' + won(it.list) + '원</s>'
-        : '<b class="free">무료</b><s>' + won(it.list) + '원</s>';
+        ? '<b>' + won(it.price) + '원</b>'
+        : '<b class="free">무료</b>';
       return '<button class="y27-card" data-y="' + it.id + '">' +
         '<span class="y27-badge">' + esc(it.badge) + '</span>' +
         '<span class="y27-icon">' + it.icon + '</span>' +
@@ -1459,7 +1508,7 @@
 
     return profileBannerHTML(chart) + head + preview +
       (paid ? payWrapHTML({
-        kind: item.id, price: item.price, list: item.list,
+        kind: item.id, price: item.price,
         label: esc(item.title) + ' 전체 열기', desc: y27PayDesc(item.kind), inner: body
       }) : body) +
       '<div class="rp-title"><span>행운 포인트</span></div>' + y27Lucky(chart) +
@@ -1687,7 +1736,7 @@
       '<div class="rp-title"><span>점수 구성</span></div><div class="cp-parts detail">' + res.parts.map(p => '<i class="' + (p.v.charAt(0) === '+' ? 'up' : 'down') + '">' + esc(p.k) + ' ' + esc(p.v) + '</i>').join('') + '</div>';
 
     return head + free +
-      payWrapHTML({ kind: 'compat', price: 29900, list: 59000, label: '두 사람의 심층 궁합 전체 열기', desc: '일간·일지·16글자 관계 · 속궁합 · 결혼 시기 · 다툼과 화해의 달 · 처방전', inner: body }) +
+      payWrapHTML({ kind: 'compat', price: 9900, label: '두 사람의 심층 궁합 전체 열기', desc: '일간·일지·16글자 관계 · 속궁합 · 결혼 시기 · 다툼과 화해의 달 · 처방전', inner: body }) +
       pdfBarHTML() +
       '<div class="rp-actions"><button class="btn-ghost" id="cpClose">닫기</button><button class="btn-ghost" id="cpAgain">상대 바꿔 보기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 파일 저장하기</button><button class="btn-gold" id="cpSave">보관함 저장</button></div>' +
       disclaimerHTML() +
@@ -1770,7 +1819,7 @@
       '<ul class="rp-list advice">' + RX.daeunTips(c).map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>';
 
     return head + free +
-      payWrapHTML({ kind: 'daeun', price: 24900, list: 49000, label: '10년 대운 전체 풀이 열기', desc: '대운 8개의 재물·커리어·인생 전략 · 지금 대운의 의미 · 대운을 쓰는 순서', inner: body }) +
+      payWrapHTML({ kind: 'daeun', price: 4900, label: '10년 대운 전체 풀이 열기', desc: '대운 8개의 재물·커리어·인생 전략 · 지금 대운의 의미 · 대운을 쓰는 순서', inner: body }) +
       pdfBarHTML() +
       '<div class="rp-actions"><button class="btn-ghost" id="duClose">닫기</button><button class="btn-ghost" id="duAgain">내 정보 수정</button><button class="btn-ghost" data-pdf hidden>📄 PDF 파일 저장하기</button><button class="btn-gold" id="duSave">보관함 저장</button></div>' +
       disclaimerHTML() +
@@ -1883,7 +1932,7 @@
       '<div class="rp-caution">' + esc('길일은 “이 날이면 무조건 된다”는 뜻이 아닙니다. ' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간에 용신 ' + c.yongsin.elem + '인 이 사주는 같은 계약이라도 준비가 덜 된 날은 그 날의 기운을 쓰지 못합니다. 서류와 조건을 먼저 끝내 두고, 그 위에 ' + (g.picks.contract[0] ? g.picks.contract[0].m + '월 ' + g.picks.contract[0].d + '일' : '좋은 날') + '을 얹으세요.') + '</div>';
 
     return head + free +
-      payWrapHTML({ kind: 'gilil', price: 14900, list: 29000, label: '2027 길일 전체 열기', desc: '목적별 추천일과 이유 · 피할 날 · 달마다의 길일 · 도장 찍을 때의 팁', inner: body }) +
+      payWrapHTML({ kind: 'gilil', price: 4900, label: '2027 길일 전체 열기', desc: '목적별 추천일과 이유 · 피할 날 · 달마다의 길일 · 도장 찍을 때의 팁', inner: body }) +
       pdfBarHTML() +
       '<div class="rp-actions"><button class="btn-ghost" id="glClose">닫기</button><button class="btn-ghost" id="glAgain">내 정보 수정</button><button class="btn-ghost" data-pdf hidden>📄 PDF 파일 저장하기</button><button class="btn-gold" id="glSave">보관함 저장</button></div>' +
       disclaimerHTML() +
@@ -2007,7 +2056,7 @@
 
           '<h4 class="legal-h">1. 무료 맛보기(시험 사용) 제공</h4>' +
           '<p class="legal-p">회사는 결제 전에 사주팔자·오행·음양·십신 등 리포트의 앞부분을 무료로 공개합니다. 이용자는 맛보기와 상품 설명을 충분히 확인한 뒤 결제 여부를 결정할 수 있습니다.<br />' +
-          '현재 서비스의 심층 리포트는 결제 없이 열리는 <b>체험판</b>으로 제공되며, 실제 결제가 발생하지 않습니다. 유료 판매를 개시하는 경우에도 아래 기준을 동일하게 적용합니다.</p>' +
+          '심층 리포트는 <b>래피드(외부 결제 플랫폼)를 통해 발급된 열람 코드</b>로 이용하는 디지털 콘텐츠입니다. 결제와 열람 코드 발급은 래피드에서 이루어지며, 코드를 입력해 잠금을 해제한 시점을 열람 개시로 봅니다.</p>' +
 
           '<h4 class="legal-h">2. 청약철회 및 전액 환불 (열람 전)</h4>' +
           '<p class="legal-p">이용자는 결제일로부터 <b>7일 이내</b>에 청약철회를 할 수 있습니다. 콘텐츠를 열람(잠금 해제)하지 않은 상태라면 <b>전액 환불</b>합니다. (「전자상거래 등에서의 소비자보호에 관한 법률」 제17조 제1항)</p>' +
@@ -2107,7 +2156,7 @@
     initAnalytics();
 
     renderHero(); renderTopics(); renderY2027(); renderPlus(); renderHomeChips(); renderRanking(); renderMasters(); renderTodayWidget(); renderFreeGrid();
-    renderAskChars(); bindMisc();
+    renderAskChars(); bindMisc(); applyUnlockQuery();
     if (E.selfTest) {
       const bad = E.selfTest().filter(l => l.startsWith('FAIL'));
       if (bad.length) console.warn('[월하사주] 엔진 검증 실패:\n' + bad.join('\n'));

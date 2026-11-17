@@ -1037,13 +1037,8 @@ body::before {
 }
 .pay-c-title { font-family: var(--serif); font-size: 14.5px; line-height: 1.5; color: #F5EDDC; }
 .pay-c-desc { margin: 0; font-size: 11px; line-height: 1.65; color: #C7C0B2; }
-.pay-c-price { display: flex; align-items: baseline; gap: 7px; }
-.pay-c-price s { font-size: 10.5px; color: var(--ink-3); }
-.pay-c-price b { font-family: var(--serif); font-size: 18px; color: var(--gold-lt); }
-.pay-c-price em {
-  font-style: normal; font-size: 9.5px; color: #F3E2B0;
-  background: rgba(212, 175, 55, .16); border-radius: 6px; padding: 2px 6px;
-}
+.pay-c-price { display: flex; align-items: baseline; gap: 7px; margin: 1px 0; }
+.pay-c-price b { font-family: var(--serif); font-size: 21px; letter-spacing: -.01em; color: var(--gold-lt); }
 .pay-c-note { font-size: 10px; line-height: 1.7; color: #BDB6A6; }
 .pay-c-note b { color: var(--gold-lt); font-weight: 500; }
 .pay-unlock { margin-top: 2px; }
@@ -1057,6 +1052,24 @@ body::before {
 .pay-benefits li { display: flex; gap: 7px; align-items: flex-start; font-size: 11px; line-height: 1.5; color: #E7E0CF; }
 .pay-benefits i { font-style: normal; color: #EBD490; font-weight: 700; line-height: 1.45; }
 .pay-methods { display: flex; gap: 6px; width: 100%; }
+.pay-code-row { display: flex; gap: 5px; width: 100%; }
+.pay-code-input {
+  flex: 1; min-width: 0; padding: 9px 10px; border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .05);
+  color: #F1EADA; font-family: var(--sans); font-size: 11.5px; letter-spacing: .02em;
+}
+.pay-code-input::placeholder { color: #8E887B; }
+.pay-code-input:focus { outline: none; border-color: rgba(212, 175, 55, .62); background: rgba(212, 175, 55, .08); }
+.pay-code-go {
+  flex: 0 0 auto; padding: 9px 13px; border-radius: 9px; cursor: pointer;
+  border: 1px solid rgba(212, 175, 55, .62); background: rgba(212, 175, 55, .16);
+  color: #F7E9BE; font-family: var(--sans); font-size: 11.5px; font-weight: 600;
+}
+.pay-code-go:hover { background: rgba(212, 175, 55, .26); }
+.pay-trial {
+  margin-top: 2px; padding: 4px 6px; background: none; border: 0; cursor: pointer;
+  color: var(--ink-3); font-family: var(--sans); font-size: 10px; text-decoration: underline;
+}
 .pm-chip {
   flex: 1; padding: 8px 3px; border-radius: 9px; cursor: pointer;
   border: 1px solid rgba(255, 255, 255, .14); background: rgba(255, 255, 255, .04);
