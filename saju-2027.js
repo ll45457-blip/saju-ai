@@ -76,6 +76,25 @@
     복음: '내 일지와 같은 기운이 겹쳐 의욕과 고집이 함께 올라가는 달입니다. 결정을 하나로 좁히세요.'
   };
 
+  /* 달마다의 생활 장면 — 십성에 따라 그 달에 실제로 벌어지는 일 */
+  const MONTH_SCENE = {
+    비견: '같이 일하는 사람과 내 몫을 견주는 일이 생기는 달입니다. 회의에서 내가 낸 아이디어가 다른 사람 이름으로 정리되는 장면이 나오면, 그때가 이 달의 신호입니다.',
+    겁재: '지인이 밥을 먹다 “요즘 뭐 벌어?” 하고 묻고, 그 자리에서 “같이 해 보자”는 말이 따라붙는 달입니다. 돈이 오가는 약속은 그 자리에서 금액을 정하세요.',
+    식신: '만들어 둔 초안을 처음으로 남에게 보여 주는 달입니다. 반응이 없어도 다음 편을 만들어야 이 달의 흐름을 살립니다.',
+    상관: '회의에서 “이건 이렇게 하는 게 낫지 않나”가 목까지 올라오는 달입니다. 그 말을 짧게 하면 개선으로 남고, 길게 하면 관계가 긁힙니다.',
+    편재: '새 거래와 부업, 투자 이야기가 들어오는 달입니다. 금액이 커 보일수록 하루 묶어 두면 새는 돈이 줄어듭니다.',
+    정재: '정산서와 통장을 정리하는 달입니다. 밀린 영수증과 구독을 한 번에 정리하면 다음 분기가 훨씬 가벼워집니다.',
+    편관: '갑작스러운 지시와 평가가 몰리는 달입니다. 야근이 길어지는 주에는 검진과 수면을 먼저 달력에 넣으세요.',
+    정관: '면접과 보고, 계약처럼 격식이 있는 자리가 생기는 달입니다. 서류의 숫자는 두 번 확인하세요.',
+    편인: '공부와 정리에 몰입하는 달입니다. 다만 결정을 미루기 쉬워, 기한을 종이에 먼저 적어 두세요.',
+    정인: '어른의 조언이나 자격 이야기가 들어오는 달입니다. 망설이지 말고 도움을 청하는 쪽이 몇 달을 줄입니다.'
+  };
+  const MONTH_TIP = {
+    추진: '이 달에 미뤄 둔 연락과 지원, 제안을 꺼내세요.',
+    균형: '이 달은 이미 벌인 일을 끝내는 데 쓰세요. 새 일은 다음 달로 넘겨도 늦지 않습니다.',
+    방어: '새로 벌이지 말고 정리에 쓰세요. 큰 결제와 계약은 이 달을 비켜 두는 편이 낫습니다.'
+  };
+
   const Y_INFO = {
     year: YEAR, stem: Y_STEM, branch: Y_BRANCH,
     hanja: '丁未', ko: '정미', animal: '양',
@@ -242,9 +261,9 @@
       const story = [];
       const v = base.no % 3;
       const headV = [
-        base.no + '월(' + base.hanja + ', ' + base.startLabel + ' 절입) — 하늘에는 ' + base.stemKo + base.stemElem + '(' + god + '), 땅에는 ' + base.branchKo + base.branchElem + ' — ' + branchGod + ' 자리가 앉는 달입니다.',
-        base.no + '월(' + base.hanja + ', ' + base.startLabel + ' 절입) — 천간은 ' + base.stemKo + base.stemElem + '(' + god + '), 지지는 ' + base.branchKo + base.branchElem + '라 ' + branchGod + ' 자리가 깔립니다.',
-        base.no + '월(' + base.hanja + ', ' + base.startLabel + ' 절입) — 이 달의 간지는 ' + base.stemKo + base.stemElem + '(' + god + ') 위에 ' + base.branchKo + base.branchElem + '(' + branchGod + ')가 앉았습니다.'
+        base.no + '월(' + base.hanja + ', ' + base.startLabel + (base.no === 1 ? ' ' + E.plain('절입') : ' 절입') + ') — 하늘에는 ' + base.stemKo + base.stemElem + '(' + god + '), 땅에는 ' + base.branchKo + base.branchElem + ' — ' + branchGod + ' 자리가 앉는 달입니다.',
+        base.no + '월(' + base.hanja + ', ' + base.startLabel + (base.no === 1 ? ' ' + E.plain('절입') : ' 절입') + ') — 천간은 ' + base.stemKo + base.stemElem + '(' + god + '), 지지는 ' + base.branchKo + base.branchElem + '라 ' + branchGod + ' 자리가 깔립니다.',
+        base.no + '월(' + base.hanja + ', ' + base.startLabel + (base.no === 1 ? ' ' + E.plain('절입') : ' 절입') + ') — 이 달의 간지는 ' + base.stemKo + base.stemElem + '(' + god + ') 위에 ' + base.branchKo + base.branchElem + '(' + branchGod + ')가 앉았습니다.'
       ];
       story.push(headV[v] + ' 내 일간 ' + dm.hanja + '에게 ' + E.josa(god, '은', '는') + ' ' + gs.sit + '이고, 이 달의 주제는 ' + gs.scene + '입니다.');
       const secondV = [
@@ -279,6 +298,11 @@
       const verdictLine = verdict === '추진' ? PUSH[base.no % 3] : (verdict === '균형' ? BAL[base.no % 3] : DEF[base.no % 3]);
       story.push(base.no + '월 ' + base.hanja + ' ' + dm.hanja + ' 일간은 ' + (verdict === '추진' ? '그래서 ' : '') + verdictLine + gs.tip + '.'
         + (verdict === '방어' && score < 48 ? ' 이런 달에 큰 결정을 하면 대개 일이 두 번 꼬입니다. 한 번 접어 두는 것도 실력입니다.' : ''));
+      /* 생활 장면 — 그 달에 실제로 겪을 일과 바로 할 일 */
+      const LEAD = ['생활로 옮기면 이렇습니다. ', '이 달을 하루로 바꿔 보면, ', '이 달의 생활 장면은 이렇습니다. '];
+      if (base.no === 1) LEAD[base.no % 3] = E.plain('월운') + '은 절입일을 기준으로 새 달이 시작되니, 매달 첫 주에 그 달 계획을 세우세요. ';
+      story.push(LEAD[base.no % 3] + (MONTH_SCENE[god] || MONTH_SCENE.정인) + ' ' + MONTH_TIP[verdict]
+        + ' 이 달의 흐름은 ' + score + '점이고, 내 일지 ' + chart.pillars.day.branchName + '(' + chart.pillars.day.branchKo + ')와는 ' + (relMine.length ? relMine.join('·') : '아무 작용도 없는 자리') + '입니다.');
 
       const PUSH_T = ['흐름이 순해 미뤄 둔 일을 꺼내기 좋습니다.', '막혀 있던 일이 풀리는 달입니다.', '이 달에 건 일은 대개 붙습니다.'];
       const BAL_T = ['나머지 절반은 확인과 정리에 두면 이 달이 손해 없이 지나갑니다.', '결정은 한 번 미루세요. 확인하는 쪽이 남는 장사입니다.', '계획만 세워 두고 실행은 다음 달로 넘겨도 늦지 않습니다.'];
@@ -326,7 +350,7 @@
       if (SAMJAE_2027.indexOf(yearBr) >= 0) {
         return {
           is: true, stage: '날삼재', stageNo: 3,
-          head: animalOf(yearBr) + ' · 2027년은 삼재의 마지막 해(날삼재)',
+          head: animalOf(yearBr) + ' · 2027년은 ' + E.plain('삼재') + '의 마지막 해(날삼재)',
           body: '申·子·辰 띠는 2025 사년(들삼재) → 2026 오년(눌삼재) → 2027 미년(날삼재)으로 삼재 3년을 보냅니다. 마지막 해는 남은 것을 정리하는 해입니다. 새로 크게 벌이기보다 새는 곳을 막고 몸과 문서를 정돈하면, 삼재가 끝나는 2028년부터 판이 넓어집니다.',
           todo: ['새 보증·동업·큰 대출은 2028년으로 미루기', '기존 계약서·세금·보험 서류 정리', '건강검진 1회, 수면 시간 고정']
         };
@@ -341,7 +365,7 @@
       }
       return {
         is: false, stage: '삼재 아님', stageNo: -1,
-        head: animalOf(yearBr) + ' · 2027년 삼재는 해당 없음',
+        head: animalOf(yearBr) + ' · 2027년 ' + E.plain('삼재') + '는 해당 없음',
         body: '2027 정미년은 申·子·辰 띠(쥐·원숭이·용)의 삼재 마지막 해입니다. ' + animalOf(yearBr) + '인 당신은 올해 삼재에 들지 않습니다. 다만 삼재가 아니어도 지지의 충·형은 따로 작용하니 아래 지지 분석을 함께 보세요.',
         todo: ['삼재 대신 내 지지의 충·형 확인', '2027년은 확장보다 정리에 유리', '좋은 달에 큰 일을 몰아 두기']
       };

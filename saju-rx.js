@@ -336,7 +336,7 @@ window.SAJU_RX = (function () {
 
   function relLabel(f) {
     var rel = Y27 ? Y27.relOf(7, f.dayBranch) : [];
-    return rel.length ? rel.join('·') : '충·합이 없는';
+    return rel.length ? rel.map(function (r) { return E.plain(r); }).join('·') : '충·합이 없는';
   }
   function relHas(f, k) {
     var rel = Y27 ? Y27.relOf(7, f.dayBranch) : [];
@@ -364,7 +364,7 @@ window.SAJU_RX = (function () {
     var items = [];
     var d = f.daeun;
     if (d) {
-      items.push('지금은 ' + d.hanja + '(' + d.ko + ') ' + d.stemGod + '·' + d.branchGod + ' 대운의 ' + d.stage + ' 자리(' + d.ageFrom + '~' + d.ageTo + '세, ' + d.yearFrom + '~' + d.yearTo + '년)입니다. ' + E.STAGE_DEEP[d.stage] + '. 내 일간 ' + f.dmKey + '에 ' + E.josa(d.stemGod, '이', '가') + ' 들어온 10년이니, ' + t.label + '의 결정은 이 대운의 속도에 맞춰야 합니다.');
+      items.push('지금은 ' + d.hanja + '(' + d.ko + ') ' + d.stemGod + '·' + d.branchGod + ' ' + E.plain('대운') + '의 ' + d.stage + ' 자리(' + d.ageFrom + '~' + d.ageTo + '세, ' + d.yearFrom + '~' + d.yearTo + '년)입니다. ' + E.STAGE_DEEP[d.stage] + '. 내 일간 ' + f.dmKey + '에 ' + E.josa(d.stemGod, '이', '가') + ' 들어온 10년이니, ' + t.label + '의 결정은 이 대운의 속도에 맞춰야 합니다.');
     } else {
       items.push('아직 첫 대운이 열리기 전입니다. 이 시기는 내 사주보다 부모와 환경의 그릇이 먼저 작동합니다. 일간 ' + f.dmKey + '의 결대로 ' + f.dm.body + '를 먼저 지키세요.');
     }
@@ -375,14 +375,15 @@ window.SAJU_RX = (function () {
       var hit = y.months.filter(function (m) { return gods.indexOf(m.god) >= 0 || gods.indexOf(m.branchGod) >= 0; });
       var yMon = y.months.filter(function (m) { return m.stemElem === f.yong || m.branchElem === f.yong; });
       var openList = hit.length ? hit.map(function (m) { return m.no + '월(' + m.hanja + ')'; }).join(' · ') : '뚜렷하지 않음';
-      items.push('2027 정미년에서 ' + t.label + '의 문이 열리는 달은 ' + openList + '입니다. 이 사주의 일지 ' + f.dayB + '(' + f.dayBk + ') — 2027년 未토와 ' + relLabel(f) + ' 관계로 만나고, 그중 ' + (y.good[0].no) + '월(' + y.good[0].hanja + ')이 흐름 점수 ' + y.good[0].score + '점으로 가장 높습니다.');
+      items.push('2027 정미년 ' + E.plain('월운') + '에서 ' + t.label + '의 문이 열리는 달은 ' + openList + '입니다. 이 사주의 일지 ' + f.dayB + '(' + f.dayBk + ') — 2027년 未토와 ' + relLabel(f) + ' 관계로 만나고, 그중 ' + (y.good[0].no) + '월(' + y.good[0].hanja + ')이 흐름 점수 ' + y.good[0].score + '점으로 가장 높습니다.');
       items.push('용신 ' + E.josa(f.yong, '이', '가') + ' 들어오는 달은 ' + (yMon.length ? yMon.map(function (m) { return m.no + '월'; }).join(' · ') : '없음') + '이고, 피해야 할 달은 ' + y.warn.map(function (m) { return m.no + '월'; }).join(' · ') + '입니다. ' + f.dmKey + ' 사주는 이 달들에 큰 결정을 몰아 두고, 나머지 달은 ' + (f.strongKey === 'weak' ? '체력과 사람을 정비하는 데' : '검토와 정리에') + ' 쓰면 됩니다.');
     } else {
       items.push('시기는 이 사주의 월지 ' + f.monB + '(' + f.monG + ')가 움직이는 절기를 기준으로 잡습니다. 다음 절입은 ' + (f.chart.month.nextAt ? (f.chart.month.nextAt.m + '월 ' + f.chart.month.nextAt.d + '일') : '확인 필요') + '입니다.');
     }
     return {
       items: items,
-      para: '시기를 정할 때는 감이 아니라 달력으로 정하세요. 이 사주는 ' + f.yong + ' 기운이 들어오는 달에 결정하고, ' + (f.strongKey === 'strong' ? '힘이 넘치는 달에는 일을 벌이되 사람을 크게 쓰는 결정은 한 달 미루는' : f.strongKey === 'weak' ? '기운이 빠지는 달에는 새 일을 벌이지 않고 이미 벌인 것을 끝내는' : '흐름이 고른 만큼 기한을 스스로 정해 밀어붙이는') + ' 방식이 가장 안전합니다.'
+      para: '큰 결정은 날짜로 정해 두세요. 좋은 달이 나왔다면 그 달 첫째 주에 할 일을 하나만 적고, 그날은 비워 두는 것이 이 사주의 방식입니다. ' +
+        '시기를 정할 때는 감이 아니라 달력으로 정하세요. 이 사주는 ' + f.yong + ' 기운이 들어오는 달에 결정하고, ' + (f.strongKey === 'strong' ? '힘이 넘치는 달에는 일을 벌이되 사람을 크게 쓰는 결정은 한 달 미루는' : f.strongKey === 'weak' ? '기운이 빠지는 달에는 새 일을 벌이지 않고 이미 벌인 것을 끝내는' : '흐름이 고른 만큼 기한을 스스로 정해 밀어붙이는') + ' 방식이 가장 안전합니다.'
     };
   }
 
@@ -408,7 +409,7 @@ window.SAJU_RX = (function () {
     out.push(E.josa(f.strongEl, '이', '가') + ' ' + f.pct[f.strongEl] + '%로 넘쳐 ' + E.ELEM_DEEP[f.strongEl].over + '. 이 사주의 과열은 ' + E.ELEM_DEEP[f.strongEl].organ + '에서 먼저 신호를 보냅니다.');
     out.push('이 사주의 ' + f.sal + '은 ' + SAL[f.sal].risk + ' 쪽으로 작용합니다. ' + (f.salHits[0] ? f.salHits[0].where : '사주') + '에 걸려 있으니 ' + SAL[f.sal].act + '.');
     out.push(pick(t.cau, seed(f.chart, 'cau' + cat))(f) + '.');
-    out.push(f.cheonHit ? '천을귀인은 ' + f.cheonWhere + '에 앉아 있습니다. 결정적인 순간에는 그 자리의 사람에게 먼저 물으세요.' : '천을귀인 자리(' + f.cheonChars + ')가 사주에 앉지 않았습니다. 막혔을 때 하늘을 기다리기보다 그 띠의 사람을 먼저 찾으세요.');
+    out.push(f.cheonHit ? E.plain('천을귀인') + '은 ' + f.cheonWhere + '에 앉아 있습니다. 결정적인 순간에는 그 자리의 사람에게 먼저 물으세요.' : '천을귀인 자리(' + f.cheonChars + ')가 사주에 앉지 않았습니다. 막혔을 때 하늘을 기다리기보다 그 띠의 사람을 먼저 찾으세요.');
     return out;
   }
 
@@ -430,41 +431,40 @@ window.SAJU_RX = (function () {
     ];
   }
 
-  /* ---------------- 10~13 심층 팁 ---------------- */
+  /* ---------------- 10~13 심층 팁 (일상 장면 → 바로 할 일) ---------------- */
   function tips(chart, kind) {
     var f = asF(chart);
-    var leak = E.moneyLeaks(f.chart)[0];
     if (kind === 'money') {
       return [
-        leak.fix + ' — ' + f.dmKey + ' 사주 1순위 구멍은 “' + leak.title + '”(' + leak.why + ')입니다.',
-        '수입의 10%를 ' + f.yong + ' 기운의 자산으로 먼저 떼어 두세요. ' + f.dmKey + ' 사주는 남는 돈을 모으는 방식이 아니라 먼저 빼 두는 방식이 통합니다.',
-        '재성 ' + f.groups.재성 + '개 · ' + f.jaeEl + ' ' + f.pct[f.jaeEl] + '% 구조라 ' + (f.groups.재성 >= 3 ? '수입이 늘면 지출도 같이 늘어납니다. 생활비를 먼저 고정하세요.' : f.groups.재성 === 0 ? '큰 벌이보다 손에 익은 기술에서 작은 유료 일을 먼저 만드세요.' : '통장을 둘로 나누고 하나는 손대지 마세요.'),
-        (f.groups.비겁 >= 2 ? '지인과의 동업·보증·공동 결제는 금액과 날짜를 문서로 남기세요. 비겁 ' + f.groups.비겁 + '개인 이 사주에서 가장 크게 새는 자리입니다.' : '새 수입원은 하나만 여세요. ' + f.dom + ' ' + f.domN + '개 구조라 두 개를 동시에 벌이면 둘 다 어설퍼집니다.')
+        '월급날(정산일) 밤, 통장을 열어 비상금 계좌로 자동이체부터 걸어 두세요. ' + f.dmKey + ' 사주는 남는 돈을 모으는 방식이 아니라 먼저 빼 두는 방식이 통합니다 — 재성 ' + f.jaeEl + ' ' + f.pct[f.jaeEl] + '%인 이 사주는 그 한 번의 순서로 1년이 달라집니다.',
+        '큰 결제는 장바구니에 담고 다음 날 아침에 다시 보세요. 밤에 누른 결제가 이 사주에서 가장 자주 후회로 남습니다 — ' + f.dmKey + ' 사주는 밤에 판단이 부드러워지고 아침에 후회하는 쪽입니다. 결제 앱은 잠들기 30분 전에 닫아 두세요.',
+        '재성 ' + f.groups.재성 + '개 · ' + f.jaeEl + ' ' + f.pct[f.jaeEl] + '% 구조라 ' + (f.groups.재성 >= 3 ? '수입이 늘면 지출도 같이 늘어납니다. 생활비를 먼저 고정하고 남은 돈을 움직이세요.' : f.groups.재성 === 0 ? '큰 벌이보다 손에 익은 기술에서 작은 유료 일을 먼저 만드세요. 그 한 건이 통로를 뚫습니다.' : '통장을 둘로 나누고 하나는 카드도 앱도 연결하지 마세요. 손이 닿지 않아야 남습니다.'),
+        (f.groups.비겁 >= 2 ? '모임에서 한턱내는 날이 이 사주에서 가장 비싼 날입니다. 비겁 ' + f.groups.비겁 + '개 — 지인과의 동업·보증·공동 결제는 금액과 날짜를 문자로 남기세요.' : '새 수입원은 하나만 여세요. ' + f.dom + ' ' + f.domN + '개 구조라 두 개를 동시에 벌이면 둘 다 어설퍼집니다.')
       ];
     }
     if (kind === 'work') {
       return [
-        '이직을 생각한다면 지금은 조건을 모으는 단계로 쓰세요. 일지 ' + f.dayB + '의 ' + f.dayG + '이 말하는 자리로 옮겨야 오래 갑니다.',
-        '성과 하나를 문서로 남기세요. ' + f.dmKey + ' 사주는 말보다 기록이 평가를 바꿉니다.',
-        '윗사람과의 관계를 한 번 정리하세요. 관성 ' + f.groups.관성 + '개인 이 사주는 ' + (f.groups.관성 >= 2 ? '윗사람과의 인연이 곧 승진의 문입니다.' : '윗사람과의 거리가 곧 스트레스의 크기입니다. 선을 분명히 하세요.'),
-        '사표는 감정이 아니라 날짜로 정하세요. ' + f.dm.img + '의 결은 ' + f.dm.shadow + ' — 그 순간에 결심이 앞섭니다.'
+        '이직을 생각한다면 이번 주엔 공고를 세 개만 모아 조건을 나란히 적어 보세요. 일지 ' + f.dayB + '의 ' + f.dayG + '이 말하는 자리로 옮겨야 오래 갑니다.',
+        '이번 달 성과 하나를 문서 한 장으로 남기세요. 회의록에 “내가 맡은 것·숫자로 줄인 것”을 한 줄씩 적어 두면, ' + f.dmKey + ' 사주는 그 기록이 평가를 바꿉니다.',
+        '윗사람과의 관계를 한 번 정리하세요. 관성 ' + f.groups.관성 + '개인 이 사주는 ' + (f.groups.관성 >= 2 ? '윗사람과의 인연이 곧 승진의 문입니다. 보고는 결론부터, 하루 먼저 하세요.' : '윗사람과의 거리가 곧 스트레스의 크기입니다. 보고는 짧게, 선은 분명히 하세요.'),
+        '사표는 감정이 아니라 날짜로 정하세요. ' + f.dm.img + '의 결은 ' + f.dm.shadow + ' — 그 결이 나오는 순간 결심이 앞섭니다. 결심한 날 바로 던지지 말고 사흘을 두세요.'
       ];
     }
     if (kind === 'love') {
       var dohwa = f.salHits.filter(function (s) { return s.name === '년살(도화)'; }).length > 0;
       return [
-        '먼저 연락하는 쪽이 되세요. ' + f.dayB + ' 일지의 ' + f.dayG + '은 기다림보다 가벼운 안부에 먼저 반응합니다.',
-        '상대의 말보다 반복되는 행동을 보세요. ' + f.dmKey + ' 사주는 ' + f.dm.shadow + ' — 그 결 때문에 말에 흔들리기 쉽습니다.',
-        (dohwa ? '도화가 ' + f.salHits.filter(function (s) { return s.name === '년살(도화)'; })[0].where + '에 앉아 호의가 잦습니다. 호의와 약속을 구분하세요.' : '도화는 ' + f.dayB + ' 일지에 앉지 않았습니다. ' + f.dmKey + '의 매력은 ' + f.yong + ' 기운(' + YONG[f.yong].place + ')에서 만들어집니다.'),
-        '상대를 시험하는 말로 확신을 얻으려 하면 ' + f.dom + ' ' + f.domN + '개인 이 사주에서는 관계가 한 단계 뒤로 물립니다.'
+        '이번 주에 마음이 가는 사람에게 ' + YONG[f.yong].time + ' 안에 짧은 안부를 한 번 보내세요. ' + f.yong + ' 기운이 살아나는 시간대라 말이 부드럽게 닿습니다 — ' + f.dayB + ' 일지의 ' + E.josa(f.dayG, '은', '는') + ' 기다리는 쪽에 서면 그대로 흐려지는 자리입니다.',
+        '상대의 말보다 반복되는 행동을 세어 보세요. 약속 시간에 늘 일찍 오는지, 연락이 하루씩 밀리는지 — ' + f.dmKey + ' 사주는 ' + f.dm.shadow + ' — 그 결 때문에 말 한마디에 흔들리기 쉽습니다.',
+        (dohwa ? '도화가 ' + f.salHits.filter(function (s) { return s.name === '년살(도화)'; })[0].where + '에 앉아 호의가 잦습니다. 호의와 약속을 구분하세요. 약속은 날짜가 정해진 것만 약속입니다.' : '도화가 ' + f.dayB + ' 일지에 앉지 않았습니다. ' + f.dmKey + '의 매력은 ' + f.yong + ' 기운(' + YONG[f.yong].place + ')에서 만들어지니, 그 자리에서 만남을 잡으세요.'),
+        '상대를 시험하는 말로 확신을 얻으려 하면 ' + f.dom + ' ' + f.domN + '개인 이 사주에서는 관계가 한 단계 뒤로 물립니다. 묻고 싶은 게 있으면 질문 하나로 바로 물으세요.'
       ];
     }
     if (kind === 'health') {
       return [
-        '잠자는 시간을 먼저 고정하세요. ' + f.dmKey + ' 사주에 용신 ' + f.yong + '의 시간(' + YONG[f.yong].time + ')이 회복 시간입니다.',
-        E.ELEM_DEEP[f.thinEl].care + ' — ' + E.josa(f.thinEl, '이', '가') + ' ' + f.pct[f.thinEl] + '%로 가장 얇은 자리입니다.',
+        '잠자는 시간을 먼저 고정하고 나머지 일정을 그 위에 얹으세요. ' + f.dmKey + ' 사주에 용신 ' + f.yong + '의 시간(' + YONG[f.yong].time + ')이 회복 시간입니다.',
+        E.ELEM_DEEP[f.thinEl].care + ' — ' + E.josa(f.thinEl, '이', '가') + ' ' + f.pct[f.thinEl] + '%로 가장 얇은 자리라, 이 한 가지만 매일 해도 다음 달 몸이 다릅니다.',
         '카페인 섭취는 오후 4시 이전으로 제한하고, 밤 각성을 피하세요. 음양 ' + f.yangPct + ':' + f.yinPct + '의 ' + f.dmKey + ' 사주는 밤의 각성이 다음 날 기운을 크게 깎습니다.',
-        '한 달에 하루는 일정을 비우세요. ' + f.dayStage + '의 일지에 ' + f.dom + ' ' + f.domN + '개의 그늘이 겹치는 시기에는 비운 날이 체력을 만듭니다.'
+        '한 달에 하루는 일정을 통째로 비우세요. ' + f.dayStage + '의 일지에 ' + f.dom + ' ' + f.domN + '개의 그늘이 겹치는 시기에는 비운 날이 체력을 만듭니다.'
       ];
     }
     return [];
@@ -476,7 +476,7 @@ window.SAJU_RX = (function () {
     var gc = (D.COPY.todayGod && D.COPY.todayGod[r.god]) || { head: r.god + '의 날', body: '', do: '', avoid: '' };
     var head = f.dmKey + ' 일간에 ' + r.god + '이 들어오는 날';
     var body = gc.body + ' 여기에 일간 ' + f.dmKey + '의 결(' + f.dm.img + ')이 겹쳐, ' +
-      (r.clash ? '일지 ' + f.dayB + '와 오늘 지지가 충(沖)하니 이동과 계약은 한 번 미루세요.' : r.combine ? '일지 ' + f.dayB + '와 오늘 지지가 합(合)하니 약속과 만남이 실제 이익으로 이어집니다.' : '일지 ' + f.dayB + '(' + f.dayBk + ') 쪽과 부딪히지 않아 평소의 리듬대로 가면 됩니다.') +
+      (r.clash ? '일지 ' + f.dayB + '와 오늘 지지가 ' + E.plain('충') + '하니 이동과 계약은 한 번 미루세요.' : r.combine ? '일지 ' + f.dayB + '와 오늘 지지가 ' + E.plain('합') + '하니 약속과 만남이 실제 이익으로 이어집니다.' : '일지 ' + f.dayB + '(' + f.dayBk + ') 쪽과 부딪히지 않아 평소의 리듬대로 가면 됩니다.') +
       ' ' + (r.element === f.yong ? '오늘 천간이 용신 ' + f.yong + ' 기운과 같아 판단이 가볍습니다.' : r.element === f.hee ? '희신 ' + f.hee + ' 기운이 실려 주변의 도움이 따라옵니다.' : '오늘의 기운은 용신 ' + f.yong + '에서 멀어, 결정은 한 번 검토를 거치세요.');
     return {
       head: head,
@@ -516,9 +516,10 @@ window.SAJU_RX = (function () {
   function daeunTips(c) {
     var f = facts(c);
     return [
-      '대운이 바뀌는 해에는 새 일을 벌이지 말고 그 전 1년에 정리와 준비를 끝내 두세요. ' + f.dmKey + ' 사주는 준비가 끝난 판에서 가장 강합니다.',
+      '대운이 바뀌는 해에는 새 일을 벌이지 말고 그 전 1년에 정리와 준비를 끝내 두세요. 이사·이직·계약은 그 전 해 12월까지 마무리해 두면 새 10년이 훨씬 가볍게 열립니다 — ' + f.dmKey + ' 사주는 준비가 끝난 판에서 가장 강합니다.',
       '힘이 실리는 대운에는 벌이고 눌리는 대운에는 지키세요. ' + f.dmKey + ' 사주는 용신 ' + E.josa(f.yong, '이', '가') + ' 대운에 들어오는 10년이 그 신호입니다.',
-      '대운은 10년이지만 실제 변화는 그 안의 해에서 옵니다. ' + f.dayB + ' 일지와 부딪히는 해에는 좋은 대운이라도 그해는 한 박자 늦추세요.'
+      '대운은 10년이지만 실제 변화는 그 안의 해에서 옵니다. ' + f.dayB + ' 일지와 부딪히는 해에는 좋은 대운이라도 그해는 한 박자 늦추세요.',
+      '새 10년이 시작되는 해 1월에 그 10년의 목표를 한 장으로 적어 두세요. ' + f.dmKey + ' 사주는 글로 남긴 목표에만 오래 매달립니다.'
     ];
   }
 
@@ -539,7 +540,7 @@ window.SAJU_RX = (function () {
       ],
       move: [
         '이삿날은 오전에 시작해 해가 지기 전에 마무리하세요. ' + f.dmKey + ' 사주는 밤에 들어가는 이사가 남는 기운이 좋지 않습니다.',
-        '새집에 들어가면 ' + f.yong + ' 기운을 먼저 들이세요 — ' + YONG[f.yong].item + '을 먼저 놓고 불을 켜세요. ' + f.dmKey + '은 문을 여는 순서에 그 해의 기운이 실립니다.',
+        '새집에 들어가면 ' + f.yong + ' 기운을 먼저 들이세요 — ' + YONG[f.yong].item + '을 먼저 놓고 불을 켜세요. ' + E.josa(f.dmKey, '은', '는') + ' 문을 여는 순서에 그 해의 기운이 실립니다.',
         '개업이라면 첫 손님 전에 금전함 자리를 정하고, 그 자리만은 나중에 옮기지 마세요. ' + f.dayB + ' 일지의 ' + f.dayG + '이 재물 자리를 지킵니다.'
       ]
     };
@@ -581,7 +582,7 @@ window.SAJU_RX = (function () {
       life: function (f, x) { return '이 10년은 몸이 곧 자본입니다. ' + f.dmKey + '의 ' + f.yong + ' 기운이 ' + f.pct[f.yong] + '%인 만큼 사람을 많이 만나느라 잠을 줄이면 그 값이 다음 대운에 옵니다.'; } },
     '겁재': { key: '나누고 지키는 법을 배우는 10년',
       money: function (f, x) { return '돈이 들어오는 만큼 나가는 길도 함께 열립니다. ' + x.hanja + ' 대운에 재성 ' + f.groups.재성 + '개가 겹치니 통장을 하나 분리해 두는 것만으로 결과가 달라집니다.'; },
-      work: function (f, x) { return '경쟁이 붙는 시기입니다. ' + x.ageFrom + '세부터 남과 같은 판에서 겨루기보다 ' + f.dmKey + '이 잘하는 한 가지를 더 깊게 파는 쪽이 이깁니다.'; },
+      work: function (f, x) { return '경쟁이 붙는 시기입니다. ' + x.ageFrom + '세부터 남과 같은 판에서 겨루기보다 ' + E.josa(f.dmKey, '이', '가') + ' 잘하는 한 가지를 더 깊게 파는 쪽이 이깁니다.'; },
       life: function (f, x) { return '이 10년에 사람을 잘못 고르면 10년이 흔들립니다. 비겁이 ' + f.groups.비겁 + '개인 이 사주는 돈이 오가는 자리의 사람을 천천히 보세요.'; } },
     '식신': { key: '내가 만든 것이 밖으로 나가는 10년',
       money: function (f, x) { return x.hanja + ' 대운에는 기술·콘텐츠·요리·돌봄처럼 손으로 만든 것이 수입이 됩니다. 식상 ' + f.groups.식상 + '개인 이 사주는 저축 비율을 정해 두면 ' + x.yearFrom + '년 무렵 자산이 한 번 뜁니다.'; },
@@ -590,31 +591,86 @@ window.SAJU_RX = (function () {
     '상관': { key: '정해진 것을 뜯어고치는 10년',
       money: function (f, x) { return '아이디어로 돈을 만드는 시기입니다. ' + x.hanja + ' 대운에 식상이 ' + f.groups.식상 + '개인 이 사주는 벌이보다 씀씀이가 앞서기 쉬워 수입의 30%를 먼저 묶어야 합니다.'; },
       work: function (f, x) { return '기획·개선·발표에서 재능이 드러납니다. ' + x.ageFrom + '세 전후로 조직에 오래 몸을 담그기보다 내 방식이 통하는 자리로 옮기는 편이 낫습니다.'; },
-      life: function (f, x) { return '이 10년은 말이 관계를 만듭니다. ' + f.dmKey + '이 윗사람 앞에서 결론부터 말하는 습관 하나가 ' + x.yearTo + '년까지의 성패를 가릅니다.'; } },
+      life: function (f, x) { return '이 10년은 말이 관계를 만듭니다. ' + E.josa(f.dmKey, '이', '가') + ' 윗사람 앞에서 결론부터 말하는 습관 하나가 ' + x.yearTo + '년까지의 성패를 가릅니다.'; } },
     '편재': { key: '판이 넓어지고 돈의 길이 열리는 10년',
       money: function (f, x) { return '큰돈이 움직이는 시기입니다. ' + x.hanja + ' 대운에 ' + f.jaeEl + ' 재성 ' + f.groups.재성 + '개가 열리니 새 거래·부업·투자에서 손에 쥔 돈은 그 자리에서 묶어야 남습니다.'; },
       work: function (f, x) { return '영업·사업·해외처럼 판을 넓히는 일이 어울립니다. ' + x.ageFrom + '세에 직장에 있더라도 외부와 닿는 일을 맡으세요.'; },
-      life: function (f, x) { return '이 10년은 사람이 재물입니다. ' + f.dmKey + '은 조건만 보고 만난 사람에게 조건이 어긋날 때 먼저 떠나는 쪽이라, 사람을 고르는 기준을 먼저 세우세요.'; } },
+      life: function (f, x) { return '이 10년은 사람이 재물입니다. ' + E.josa(f.dmKey, '은', '는') + ' 조건만 보고 만난 사람에게 조건이 어긋날 때 먼저 떠나는 쪽이라, 사람을 고르는 기준을 먼저 세우세요.'; } },
     '정재': { key: '쌓은 것이 숫자로 확인되는 10년',
       money: function (f, x) { return '꾸준한 벌이와 정산이 결과로 남는 시기입니다. ' + x.hanja + ' 대운에 재성 ' + f.groups.재성 + '개인 이 사주는 부동산·적금처럼 쌓이는 자산을 ' + x.ageFrom + '세 무렵 잡아 두면 다음 대운이 편합니다.'; },
       work: function (f, x) { return '관리·재무·운영처럼 정확함이 평가받는 자리에 어울립니다. ' + x.yearTo + '년까지는 승진보다 자리를 깊게 만드는 쪽이 유리합니다.'; },
-      life: function (f, x) { return '안정이 최고의 복인 시기입니다. 다만 ' + f.dmKey + '은 안정에 기대어 새 길을 미루면 10년 뒤에 그 값이 옵니다.'; } },
+      life: function (f, x) { return '안정이 최고의 복인 시기입니다. 다만 ' + E.josa(f.dmKey, '은', '는') + ' 안정에 기대어 새 길을 미루면 10년 뒤에 그 값이 옵니다.'; } },
     '편관': { key: '무거운 책임을 지고 버티는 10년',
       money: function (f, x) { return '돈이 크게 들어오기보다 지켜지는 시기입니다. ' + x.hanja + ' 대운에는 대출·보증·큰 결제를 몰지 말고 ' + f.jaeEl + ' 재성 ' + f.groups.재성 + '개를 지키는 데 쓰세요.'; },
       work: function (f, x) { return '평가와 압박이 몰리지만 버티면 인정이 남습니다. ' + x.ageFrom + '세에 책임 있는 자리를 맡으면 ' + x.yearTo + '년까지 경력의 뼈대가 됩니다.'; },
-      life: function (f, x) { return '몸이 먼저 신호를 보내는 시기입니다. ' + f.dmKey + '은 잠과 검진을 일정에 먼저 넣으세요. 이 10년의 건강이 다음 10년의 속도를 정합니다.'; } },
+      life: function (f, x) { return '몸이 먼저 신호를 보내는 시기입니다. ' + E.josa(f.dmKey, '은', '는') + ' 잠과 검진을 일정에 먼저 넣으세요. 이 10년의 건강이 다음 10년의 속도를 정합니다.'; } },
     '정관': { key: '공식의 자리에서 이름이 오르는 10년',
       money: function (f, x) { return '조직·자격·평판이 재물의 발판이 됩니다. ' + x.hanja + ' 대운에 관성 ' + f.groups.관성 + '개인 이 사주는 크게 벌기보다 안정적으로 오르는 시기라 자격과 직함에 투자하세요.'; },
       work: function (f, x) { return '승진·시험·계약·공직처럼 공식의 자리에서 결과가 나옵니다. ' + x.ageFrom + '세에 잡은 자리가 오래갑니다.'; },
-      life: function (f, x) { return '남의 시선을 의식해 하고 싶은 말을 삼키는 시기입니다. ' + f.dmKey + '은 한 달에 한 번 내 마음을 소리 내어 말하는 연습을 하세요.'; } },
+      life: function (f, x) { return '남의 시선을 의식해 하고 싶은 말을 삼키는 시기입니다. ' + E.josa(f.dmKey, '은', '는') + ' 한 달에 한 번 내 마음을 소리 내어 말하는 연습을 하세요.'; } },
     '편인': { key: '안으로 들어가 다시 세우는 10년',
       money: function (f, x) { return '큰 벌이보다 정리와 절약이 재물을 지킵니다. ' + x.hanja + ' 대운에 공부·자격에 쓴 돈이 ' + x.yearTo + '년 이후 수입으로 돌아옵니다.'; },
       work: function (f, x) { return '전문성·연구·기술처럼 혼자 깊어지는 일이 어울립니다. ' + x.ageFrom + '세에 만든 결과물이 다음 대운의 명함이 됩니다.'; },
-      life: function (f, x) { return '생각이 길어져 결정을 미루기 쉽습니다. ' + f.dmKey + '은 기한을 정해 두고 작게라도 시작하는 습관이 이 10년의 숙제입니다.'; } },
+      life: function (f, x) { return '생각이 길어져 결정을 미루기 쉽습니다. ' + E.josa(f.dmKey, '은', '는') + ' 기한을 정해 두고 작게라도 시작하는 습관이 이 10년의 숙제입니다.'; } },
     '정인': { key: '배움과 도움이 나를 키우는 10년',
       money: function (f, x) { return '부동산·지식·자격처럼 쌓이는 자산이 재물이 됩니다. ' + x.hanja + ' 대운에는 급하게 벌기보다 오래 가는 것을 고르세요. 인성 ' + f.groups.인성 + '개인 이 사주에 맞는 방식입니다.'; },
       work: function (f, x) { return '교육·상담·연구처럼 사람을 품는 자리에 어울립니다. ' + x.ageFrom + '세에 만난 어른 한 사람이 10년을 줄여 줍니다.'; },
-      life: function (f, x) { return '받은 도움을 당연하게 여기면 이 시기의 복이 빠져나갑니다. ' + f.dmKey + '이 고맙다는 말을 자주 하는 만큼 이 대운을 다 씁니다.'; } }
+      life: function (f, x) { return '받은 도움을 당연하게 여기면 이 시기의 복이 빠져나갑니다. ' + E.josa(f.dmKey, '이', '가') + ' 고맙다는 말을 자주 하는 만큼 이 대운을 다 씁니다.'; } }
+  };
+
+  /* ---------------- 대운의 일상 장면 (10년을 생활로 옮긴 문장) ----------------
+     십성마다 겪을 장면이 다르고, 나이·일지·오행 자리를 함께 넣어 다른 사주와 겹치지 않게 쓴다 */
+  var DAILY_DAEUN = {
+    '비견': {
+      money: function (f, x) { return '장면으로 옮기면 ' + x.ageFrom + '세 무렵 처음으로 남과 돈을 나누는 자리가 생깁니다. 그 자리에서 현금을 바로 나누지 말고 계좌로 보내고 메모를 한 줄 남기세요 — ' + f.dmKey + ' 사주는 기록이 없으면 그 돈을 다시 잃습니다.'; },
+      work: function (f, x) { return '출근길에 “이 일을 왜 내가 이 방식으로 해야 하지”가 반복해서 떠오르는 시기입니다. ' + f.dayB + ' 일지의 ' + f.dayG + ' 결이 그 신호이고, 답은 사표가 아니라 내가 결정하는 일을 하나 만드는 쪽입니다.'; },
+      life: function (f, x) { return '점심시간에 누가 계산할지로 기분이 상하는 날이 이 10년에 생깁니다. 그날 바로 “다음엔 내가 낼게”로 끝내세요 — ' + f.dmKey + ' 사주의 ' + x.hanja + ' 대운은 작은 셈이 쌓여 관계를 만듭니다.'; }
+    },
+    '겁재': {
+      money: function (f, x) { return '지인이 “같이 해 보자”고 하는 제안이 이 10년에 두세 번 옵니다. 그 자리에서 금액과 기간을 먼저 물으세요 — 재성 ' + f.groups.재성 + '개인 이 사주는 나누는 자리에서 새는 돈이 가장 큽니다.'; },
+      work: function (f, x) { return x.ageFrom + '세 전후로 같은 자리에서 나보다 늦게 온 사람이 먼저 올라가는 장면을 봅니다. 그때 비교에 쓰는 에너지를 한 가지 기술을 더 깊게 파는 데 쓰면 이 대운이 뒤집힙니다.'; },
+      life: function (f, x) { return '모임 뒤 정산이 어긋나 서운해지는 날이 이 10년에 생깁니다. 그날 밤 문자로 “오늘 얼마였지?”를 보내는 쪽이 오래 갑니다 — ' + x.hanja + ' 대운의 ' + f.dmKey + ' 사주는 참으면 두 배로 돌아옵니다.'; }
+    },
+    '식신': {
+      money: function (f, x) { return '만들어 둔 초안이 처음으로 값을 받는 달이 이 10년 안에 옵니다. 금액이 작아도 두 번째, 세 번째를 내놓는 사람이 이 대운을 다 씁니다 — 식상 ' + f.groups.식상 + '개인 이 사주가 그렇습니다.'; },
+      work: function (f, x) { return '회의에서 “이건 제가 만들었습니다”를 한 번은 말하게 되는 시기입니다. 말하지 않으면 그 결과물은 팀 이름으로 남습니다 — ' + x.ageFrom + '세에 그 한마디를 아끼지 마세요.'; },
+      life: function (f, x) { return '마감이 없는 주가 이어지면 저녁이 그냥 비어 버리는 시기입니다. 목요일 저녁에 다음 주 마감을 하나 정해 두세요 — ' + f.dayB + ' 일지의 ' + f.dayG + ' 결이 그 마감에 반응합니다.'; }
+    },
+    '상관': {
+      money: function (f, x) { return '회사에서 쓰던 아이디어가 주말 부수입이 되는 시기입니다. 첫 정산이 들어온 날, 다음 작업에 쓸 돈을 먼저 떼어 두세요 — ' + x.hanja + ' 대운의 ' + f.dmKey + ' 사주는 손에 남은 돈을 다 씁니다.'; },
+      work: function (f, x) { return '회의에서 “이건 이렇게 하는 게 낫지 않나”가 목까지 올라오는 시기입니다. 그 말을 결론부터 짧게 하면 개선으로 남고, 길게 하면 관계를 긁습니다.'; },
+      life: function (f, x) { return '윗사람 앞에서 한마디 잘못한 날 밤에 잠이 얕아지는 시기입니다. 그날 저녁에 짧게 정리해 사과 한 줄을 남기세요 — 그 한 줄이 다음 해의 평판을 정합니다.'; }
+    },
+    '편재': {
+      money: function (f, x) { return '새 거래와 부업 제안이 이 10년에 몰립니다. 서명하기 전 그 자리에서 “정산일이 언제인가”만 확인하세요 — ' + x.hanja + ' 대운의 ' + f.dmKey + ' 사주는 그 한 줄에서 갈립니다.'; },
+      work: function (f, x) { return '바깥 사람을 만나는 자리가 생기는 시기입니다. ' + x.ageFrom + '세에 외부 미팅을 스스로 잡으세요 — 이 대운의 기회는 회의실 밖에서 옵니다.'; },
+      life: function (f, x) { return '여행지나 모임에서 인연이 생기고 돌아와 연락이 끊기는 일이 이 10년에 반복됩니다. 돌아온 다음 날 한 통 연락을 넣으세요 — ' + f.dayB + ' 일지의 ' + f.dayG + ' 결은 그 한 통에 움직입니다.'; }
+    },
+    '정재': {
+      money: function (f, x) { return '이름 붙인 통장이 하나씩 늘어나는 10년입니다. 적금·연금·전세 자금 중 하나를 골라 ' + x.ageFrom + '세에 만들고, 그 통장만은 앱에 연결하지 마세요 — 재성 ' + f.groups.재성 + '개인 이 사주의 돈은 눈에 안 보여야 남습니다.'; },
+      work: function (f, x) { return '정산일과 서류 마감이 몰리는 시기입니다. ' + x.yearFrom + '년에 업무 순서표를 한 장 만들어 붙여 두세요 — ' + f.dmKey + ' 사주는 순서가 눈에 보이면 실수가 줄어듭니다.'; },
+      life: function (f, x) { return '월급이 들어오는 날과 카드값이 나가는 날이 같은 하루로 겹치는 10년입니다. 그날 저녁에 생활비를 확인하는 습관을 들이세요 — ' + x.hanja + ' 대운은 그 루틴으로 유지됩니다.'; }
+    },
+    '편관': {
+      money: function (f, x) { return '보증을 서 달라는 부탁이 이 10년에 한두 번 옵니다. 그 자리에서 “며칠 생각해 볼게”로 답하고 그대로 미루세요 — ' + f.dmKey + ' 사주의 ' + x.hanja + ' 대운은 거절이 재물을 지킵니다.'; },
+      work: function (f, x) { return '책임이 얹히고 평가가 몰리는 시기입니다. ' + x.ageFrom + '세에 맡은 자리를 거절하지 마세요 — 버틴 사람에게 인정이 남습니다. 다만 야근이 이어지는 주엔 검진을 먼저 잡으세요.'; },
+      life: function (f, x) { return '목과 어깨가 먼저 굳고 아침에 일어나는 게 무거워지는 시기입니다. ' + x.yearFrom + '년부터 분기마다 검진 날짜를 미리 잡아 두세요 — ' + f.dayB + ' 일지의 ' + f.dayG + ' 결은 몸으로 먼저 말합니다.'; }
+    },
+    '정관': {
+      money: function (f, x) { return '연봉 협상 자리에서 직함과 자격이 값을 만드는 시기입니다. 제안이 오면 숫자보다 직함을 먼저 확인하세요 — ' + x.hanja + ' 대운의 ' + f.dmKey + ' 사주는 그 자리가 오래갑니다.'; },
+      work: function (f, x) { return '면접과 보고, 계약이 몰리는 시기입니다. ' + x.ageFrom + '세에 보는 시험은 준비 기간을 넉넉히 두세요 — 서류 숫자 하나가 결과를 바꿉니다.'; },
+      life: function (f, x) { return '하고 싶은 말을 삼키는 저녁이 이 10년에 늘어납니다. 한 달에 한 번, 가까운 사람에게 오늘 서운했던 것을 말로 꺼내 보세요 — ' + x.yearTo + '년의 몸이 그 말에 달려 있습니다.'; }
+    },
+    '편인': {
+      money: function (f, x) { return '자격 공부에 낸 돈이 몇 해 뒤 수입으로 돌아오는 시기입니다. ' + x.ageFrom + '세에 시작한 공부는 끝까지 마치세요 — 중간에 접으면 그 수입도 같이 끊깁니다.'; },
+      work: function (f, x) { return '회의보다 혼자 앉아 있는 시간이 결과를 만드는 시기입니다. ' + x.yearFrom + '년에 결과물 하나를 문서로 남겨 두세요 — 그것이 다음 자리의 명함이 됩니다.'; },
+      life: function (f, x) { return '밤에 결정을 미루는 버릇이 굳는 시기입니다. ' + x.ageFrom + '세부터 밤 열한 시 이후 결정을 하지 않는 규칙을 두세요 — ' + f.dayB + ' 일지의 ' + f.dayG + ' 결이 그 규칙을 도와줍니다.'; }
+    },
+    '정인': {
+      money: function (f, x) { return '부동산·지식·자격 중 하나가 이 10년의 재산이 됩니다. ' + x.yearFrom + '년에 미뤄 둔 공부나 계약을 실제로 시작하세요 — 인성 ' + f.groups.인성 + '개인 이 사주는 시작이 늦으면 값이 오릅니다.'; },
+      work: function (f, x) { return '어른의 조언 한마디가 방향을 바꾸는 시기입니다. ' + x.ageFrom + '세에 만난 사람에게 “배울 게 있으면 알려 달라”고 먼저 말해 보세요.'; },
+      life: function (f, x) { return '도움을 받고도 고맙다는 말을 미루는 날이 이 10년에 생깁니다. 받은 그날 문자로 한 줄 남기세요 — ' + f.dmKey + ' 사주의 ' + x.hanja + ' 대운은 그 한 줄로 이어집니다.'; }
+    }
   };
 
   function daeunCard(chart, x) {
@@ -623,12 +679,13 @@ window.SAJU_RX = (function () {
     var fav = (x.stemEl === f.yong || x.branchEl === f.yong) ? '이 10년에는 내게 필요한 ' + f.yong + ' 기운이 대운에 직접 들어옵니다. ' + (x.stage === '제왕' || x.stage === '건록' || x.stage === '관대' ? '힘의 자리까지 겹쳐, 미뤄 둔 일을 이 안에 밀어붙이면 됩니다.' : '기운이 도와주니 혼자 버티지 말고 사람과 자리를 함께 쓰세요.')
       : (x.stemEl === f.hee || x.branchEl === f.hee) ? '내 편에 서 주는 ' + f.hee + ' 기운이 들어오는 10년입니다. 결정적인 도움은 아니지만 버티는 힘이 붙습니다.'
         : '이 10년은 내게 필요한 기운이 크게 들어오지는 않습니다. 새로 벌이기보다 지키고 다지는 쪽이 남습니다.';
+    var dd = DAILY_DAEUN[x.stemGod] || DAILY_DAEUN['비견'];
     return {
       key: x.hanja + ' ' + x.stemGod + ' 대운 · ' + dec.key,
       flow: (E.STAGE_DEEP[x.stage] || '') + '. ' + x.hanja + '의 ' + x.stemGod + '·' + x.branchGod + '이 ' + f.dmKey + ' 일간에 앉아 ' + fav,
-      money: dec.money(f, x),
-      work: dec.work(f, x),
-      life: dec.life(f, x)
+      money: dec.money(f, x) + ' ' + dd.money(f, x),
+      work: dec.work(f, x) + ' ' + dd.work(f, x),
+      life: dec.life(f, x) + ' ' + dd.life(f, x)
     };
   }
 

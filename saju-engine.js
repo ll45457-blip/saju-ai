@@ -889,6 +889,218 @@
     };
   }
 
+  /* ============================================================
+     쉬운 말 풀이 — 명리 용어가 처음 나올 때 한 번, 괄호로 뜻을 붙인다
+     ============================================================ */
+  const GLOSS = {
+    '일간': '태어난 날의 나', '일지': '나와 짝이 앉는 자리', '월지': '사회로 나가는 자리',
+    '신강': '기운이 넘침', '신약': '기운이 약함', '중화': '기운이 고름',
+    '비겁': '동료·경쟁자 기운', '식상': '표현·실행력', '재성': '돈·결과물 기운',
+    '관성': '직장·규율 기운', '인성': '문서·배움 기운',
+    '비견': '나와 같은 편', '겁재': '나누고 겨루는 편',
+    '식신': '차분히 만드는 힘', '상관': '뜯어고치는 힘',
+    '편재': '한 번에 크게 움직이는 돈', '정재': '꾸준히 쌓는 돈',
+    '편관': '압박과 책임', '정관': '공식·직함',
+    '편인': '혼자 깊어지는 배움', '정인': '도움받는 배움',
+    '용신': '내게 필요한 기운', '희신': '용신을 도와 주는 기운',
+    '십성': '나를 기준으로 나눈 다섯 기운', '십이운성': '기운이 머무는 단계', '운성': '기운이 머무는 단계',
+    '대운': '10년 단위 큰 흐름', '월운': '달 단위 흐름', '세운': '그해의 흐름',
+    '대운수': '첫 대운이 열리는 나이', '순행': '앞으로 흐르는 대운', '역행': '뒤로 흐르는 대운',
+    '절입': '달의 경계가 바뀌는 날', '천을귀인': '막힌 일을 풀어 주는 사람',
+    '삼재': '3년에 걸친 시험의 구간', '도화': '사람을 끄는 힘', '홍염': '은근히 스미는 매력',
+    '역마': '움직이는 기운', '화개': '혼자 깊어지는 자리', '배우자궁': '짝이 들어오는 자리',
+    '충': '부딪힘', '합': '묶임', '형': '서로 누름', '파': '깨짐', '해': '어긋남', '복음': '같은 기운이 겹침',
+    '삼합': '세 글자가 힘을 합치는 자리', '육합': '두 글자가 묶이는 자리', '천간합': '두 일간이 묶이는 자리'
+  };
+  function plain(term) { const ex = GLOSS[term]; return ex ? term + '(' + ex + ')' : term; }
+
+  /* ============================================================
+     일상 장면 — 같은 풀이도 생활의 한 장면으로 옮겨 보여 준다
+     장면(scene) · 바로 해 볼 일(tip) · 이 사주 기준(fact) 세 문장으로 쓴다
+     ============================================================ */
+  const DAILY = {
+    money: {
+      lead: '생활로 옮겨 보면 이렇습니다. ',
+      byLeak: {
+        '사람 사이에서 새는 돈': {
+          scene: '금요일 저녁 모임에서 분위기를 띄우다 “이번엔 내가 쏠게”가 나오고, 이어서 경조사 봉투와 같이 쓰는 구독료까지 겹치는 달이 가장 크게 새는 자리입니다.',
+          tip: '모임은 한 달 두 번, 경조사비는 봉투 상한을 먼저 정해 두세요. 결제 버튼을 누르기 전에 “이 돈은 나눠 쓰는 돈인가”만 한 번 물으면 절반이 남습니다.'
+        },
+        '들어오는 길이 좁은 그릇': {
+          scene: '월급 하나로 생활비와 카드값, 보험료가 한 통장을 지나갑니다. 그래서 급한 일이 생기면 늘 카드가 먼저 나오고, 다음 달에 그 카드값을 또 월급으로 막는 달이 반복됩니다.',
+          tip: '손에 이미 익은 기술에서 작은 유료 일 하나(과외·외주·제작·손기술)를 이번 달에 만들어 보세요. 낯선 분야로 뛰는 것보다 한 걸음 확장이 훨씬 빨리 돈이 됩니다.'
+        },
+        '손이 커지는 그릇': {
+          scene: '정산이 들어온 주에 쓸 일도 같이 커집니다. 통장에 숫자가 올라간 것을 한 번 보고 “이 정도면 괜찮다”는 계산이 서는 순간, 다음 주에 지출이 따라붙습니다.',
+          tip: '들어온 돈은 48시간 묶어 두고, 수입의 10%는 자동이체로 먼저 빼 두세요. 생활비는 수입이 늘기 전 금액으로 고정해 두면 손이 커지지 않습니다.'
+        },
+        '생각이 길어 실행이 늦는 구멍': {
+          scene: '사려고 마음먹은 물건을 일주일째 비교만 하다가, 결국 급해진 밤에 더 비싼 쪽으로 결제하는 장면이 반복됩니다. 준비가 길어질수록 이 사주는 비싼 쪽을 고릅니다.',
+          tip: '살 물건은 장바구니에 넣고 하루만 두되, 결정은 30분 안에 끝내세요. 결제 전날 밤에 앱을 닫아 두는 것만으로도 값이 달라집니다.'
+        },
+        '체력·건강 유지비로 새는 돈': {
+          scene: '피곤한 주에는 배달음식과 택시, 영양제와 병원비로 지출이 몰립니다. 몸이 먼저 지치는 주에 지갑이 같이 열리는 구조입니다.',
+          tip: '병원비와 잠은 아끼지 말고, 대신 늦은 밤 배달과 유흥 지출을 끊으세요. 잠을 7시간으로 고정하는 것만으로 이 달 지출이 눈에 띄게 줄어듭니다.'
+        },
+        '고정비·집·차로 새는 돈': {
+          scene: '안 쓰는 구독 세 개와 관리비, 할부금이 매달 같은 날 빠져나갑니다. 한 번도 쓰지 않은 서비스에 돈이 나가는 것이 이 사주의 대표적인 구멍입니다.',
+          tip: '이번 주에 카드 명세서를 한 장에 옮겨 적고, 석 달 동안 안 쓴 구독부터 끊으세요. 고정비 세 개를 정리하면 그대로 저축이 됩니다.'
+        },
+        '구독·충동·유흥으로 새는 돈': {
+          scene: '새벽에 폰을 보다 결제 완료를 누르고, 다음 날 아침 주문 내역을 보고 한숨 쉬는 장면입니다. 이 사주는 밤에 지갑이 가벼워집니다.',
+          tip: '결제 전 하루 묵히기, 구독은 분기마다 정리하기. 이 두 가지만 지켜도 새는 돈이 절반이 됩니다. 잠들기 전 30분은 결제 앱을 닫아 두세요.'
+        },
+        '관계·모임·선물로 새는 돈': {
+          scene: '모임에서 분위기를 띄우다 한턱내는 날, 생일과 기념일 선물이 몰리는 달에 지출이 뜁니다. 사람을 향한 마음이 그대로 결제가 되는 사주입니다.',
+          tip: '선물은 금액 상한을 먼저 정하고 모임은 월 두 번으로 나누세요. 대신 고마운 사람에게는 돈 대신 시간을 쓰면 이 사주는 오히려 더 남습니다.'
+        },
+        '새는 곳이 적은 그릇': {
+          scene: '새는 곳이 적은 대신 들어오는 길도 좁습니다. 아껴서 모은 돈이 있어도 “이 정도면 됐다”에서 멈추는 장면이 반복됩니다.',
+          tip: '막는 힘보다 버는 힘에 쓰세요. 이번 분기에 수입 통로를 하나 더 열고, 그 통로의 첫 달 수입을 그대로 확인해 보세요.'
+        },
+        '결제 습관의 구멍': {
+          scene: '지난달 카드값이 얼마였는지 바로 답이 안 나오는 것이 이 사주의 첫 번째 구멍입니다. 새는 곳이 아니라 새는지도 모르는 구조입니다.',
+          tip: '한 달만 결제 내역을 한 파일에 모아 보세요. 보이는 순간 새는 곳이 줄어듭니다. 주말에 10분, 카드 앱 세 개만 열어도 됩니다.'
+        }
+      }
+    },
+    work: {
+      lead: '하루로 옮겨 보면 이렇습니다. ',
+      byStyle: {
+        '조직·전문직형': {
+          scene: '회의에서 내 의견이 결재선을 지나 결론이 나는 자리, 자격과 경력이 곧 신뢰가 되는 자리에 서 있습니다. 지금 자리가 답답한 건 일이 없어서가 아니라 결정권이 없어서입니다.',
+          tip: '옮기기 전에 다음 자격 하나를 먼저 확보하세요. 이 사주는 자리를 버리면 재물의 발판도 같이 사라지니, 이직은 자격을 챙긴 다음이 안전합니다.'
+        },
+        '만들어 파는 사업형': {
+          scene: '내가 만든 것을 그대로 내놓고 반응을 그날 확인하는 자리가 맞습니다. 대신 포장과 배송, 정산 같은 반복 업무가 밤 시간을 잡아먹습니다.',
+          tip: '반복 업무는 이번 달에 하나 사서 넘기세요. 남는 시간에 만드는 일을 하나 더 하는 편이 이 사주에는 훨씬 이득입니다.'
+        },
+        '제작·기획형': {
+          scene: '기획서를 쓰고 발표하는 자리에서는 말이 잘 풀리는데, 정해진 양식만 채우는 업무에서는 오후 세 시쯤 눈이 흐려집니다.',
+          tip: '성과를 숫자로 남기세요. 이 사주는 “열심히 했다”보다 “○○를 20% 줄였다”는 한 줄에 평가가 바뀝니다.'
+        },
+        '조직·관리형': {
+          scene: '사람과 일정을 정리하는 자리에서 신뢰를 얻습니다. 다만 윗사람의 평가를 지나치게 의식해 하고 싶은 말을 삼키는 순간, 승진의 문이 늦게 열립니다.',
+          tip: '회의가 끝나기 전에 내 의견을 한 번은 말로 남기세요. 이 사주는 조용히 잘한 일이 기록되지 않으면 평가에서 빠집니다.'
+        },
+        '자립·영업형': {
+          scene: '내 이름이 걸린 일에서 힘이 나고 혼자 결정하는 속도가 빠릅니다. 대신 협업에서 성과 배분을 말하지 않고 넘어가면 그 자리에서 사람이 상합니다.',
+          tip: '같이 하는 일은 시작 전에 몫을 글로 정하세요. 이 사주는 일은 잘 풀리는데 배분에서 사람을 잃는 경우가 가장 많습니다.'
+        },
+        '균형·운영형': {
+          scene: '어느 판에나 무리 없이 적응하는 대신, 퇴근길에 “내가 제일 잘하는 게 뭐지”라는 질문이 남는 자리입니다.',
+          tip: '잘하는 일 하나를 골라 3년을 파세요. 이 사주는 한 우물에서 두터워질 때 대우가 따라옵니다.'
+        }
+      }
+    },
+    love: {
+      lead: '실제 장면으로 옮기면 이렇습니다. ',
+      byGod: {
+        비견: {
+          scene: '주말에 같이 볼 영화를 고르다가 서로 “아무거나 괜찮아”만 하고 결국 아무것도 안 본 채 헤어지는 장면이 이 사주 연애의 축소판입니다. 마음은 있는데 시작을 서로 미룹니다.',
+          tip: '마음이 생기면 다음 약속 날짜와 장소를 내가 먼저 정하세요. 이 사주는 “언젠가”로 두면 그대로 흐려집니다.'
+        },
+        겁재: {
+          scene: '처음 몇 달은 매일 연락하고 잘 맞는 것 같다가, 어느 순간부터 데이트 비용과 시간을 서로 재기 시작합니다. 그 계산이 시작되면 마음이 먼저 식습니다.',
+          tip: '돈 이야기는 가볍게 미리 정해 두고, 서운한 건 그날 말하세요. 이 사주는 참아 둔 것이 다음 날 두 배로 돌아옵니다.'
+        },
+        식신: {
+          scene: '처음 만난 날 밥을 먹다가 두 시간이 훅 지나가는 사람에게 마음이 갑니다. 반대로 대화가 잘 풀려도 밥이 어색했던 사람은 오래 기억에 남지 않습니다.',
+          tip: '고백은 식사 자리에서 하세요. 이 사주는 말보다 같은 자리에서 쌓인 시간이 마음을 움직입니다.'
+        },
+        상관: {
+          scene: '단체 대화방에서 제일 웃긴 말을 하는 사람에게 먼저 눈이 갑니다. 그런데 그 농담을 내가 상대에게 할 때, 웃음이 한 번에 끝나는 날이 있습니다.',
+          tip: '웃긴 말을 꺼내기 전에 한 번만 멈추세요. 이 사주는 한 문장으로 관계의 온도를 올리고 내리는 힘이 있습니다.'
+        },
+        편재: {
+          scene: '소개팅 자리보다 여행지나 모임에서 만나는 쪽이 훨씬 잘 풀립니다. 다만 만남이 늘어날수록 “누가 진짜인가”가 흐려집니다.',
+          tip: '호의와 약속을 구분하세요. 이 사주는 호의가 많아서 진짜 인연을 놓치는 쪽입니다.'
+        },
+        정재: {
+          scene: '첫 만남에 상대의 생활 시간표를 먼저 봅니다. 몇 시에 자고 무엇을 먹는지가 마음의 기준이 되고, 그게 맞으면 천천히 오래 갑니다.',
+          tip: '조건을 재는 인상이 비치면 상대가 먼저 닫힙니다. 물질적인 표현보다 시간을 쓰세요.'
+        },
+        편관: {
+          scene: '연락이 뜸하다가 갑자기 확 밀어붙이는 사람에게 끌립니다. 그 속도가 처음엔 설레지만 몇 달 뒤에는 숨이 막히는 자리가 됩니다.',
+          tip: '관계의 속도를 한 번 늦춰 보세요. 이 사주는 밀리는 쪽에 서면 판단이 흐려집니다.'
+        },
+        정관: {
+          scene: '소개로 만나 예의를 갖춰 몇 번 만나고, 그다음에 마음이 따라오는 쪽입니다. 그래서 시작은 늦지만 헤어질 때도 시간이 오래 걸립니다.',
+          tip: '확인하고 싶은 게 있으면 직접 물어보세요. 이 사주는 혼자 결론을 내려 두는 시간이 길어집니다.'
+        },
+        편인: {
+          scene: '설명이 잘 안 되는 사람이 자꾸 눈에 들어옵니다. 그 사람 이야기를 듣고 정리하느라 내 하루가 밀리고, 정작 내 마음은 한 번도 말하지 못합니다.',
+          tip: '내가 어떤 사람인지 한 번은 말로 설명하세요. 설명을 아끼면 상대는 오해한 채로 멀어집니다.'
+        },
+        정인: {
+          scene: '힘든 날 “밥은 먹었어?” 한마디를 해 주는 사람에게 마음이 갑니다. 대신 내가 그 말을 해 줄 때는 어색해합니다.',
+          tip: '받는 것만으로 관계를 두지 말고, 이번 주에 내가 먼저 챙기는 장면을 하나 만드세요.'
+        }
+      }
+    },
+    health: {
+      lead: '몸의 장면으로 옮기면 이렇습니다. ',
+      byElem: {
+        목: {
+          scene: '밤늦게까지 화면을 본 날 다음 아침 눈이 먼저 무겁고, 목과 어깨가 굳어 있습니다. 스트레칭을 미룬 주에 두통이 따라옵니다.',
+          tip: '잠들기 전 눈을 감고 3분 쉬기, 목을 옆으로 길게 늘이기. 앉아 있는 시간이 긴 날일수록 이 두 동작을 저녁에 한 번씩 넣으세요.'
+        },
+        화: {
+          scene: '늦은 오후에 마신 커피가 새벽 세 시에 깨우고, 다음 날 가슴이 두근거립니다. 화가 올라온 날은 잠이 얕아집니다.',
+          tip: '오후 두 시 이후 커피를 끊고, 화가 오른 날엔 찬물로 세수만 해도 잠이 빨리 옵니다. 잠들기 전 30분은 조명을 낮춰 두세요.'
+        },
+        토: {
+          scene: '회의가 길어진 날 밥을 급하게 먹고, 오후에 속이 더부룩해집니다. 끼니를 건너뛴 날 다음 날까지 몸이 무겁습니다.',
+          tip: '점심 먹고 10분 걷기를 붙이고, 회의가 긴 날엔 간식을 작게 나눠 드세요. 배고픔을 오래 참는 시간이 이 사주의 위장을 먼저 상하게 합니다.'
+        },
+        금: {
+          scene: '환절기에 목과 코가 먼저 막히고, 방이 어수선한 날 피부가 가렵습니다. 숨이 얕아지는 날은 어깨까지 같이 굳습니다.',
+          tip: '주 3회 걷기나 수영으로 숨을 길게 쓰고, 방 습도를 한 번 확인하세요. 환절기엔 마스크보다 목을 따뜻하게 두는 쪽이 이 사주에 맞습니다.'
+        },
+        수: {
+          scene: '아침에 일어나는 게 유독 힘들고 허리와 무릎이 무겁습니다. 물을 거의 안 마신 날은 몸이 붓고 머리가 멍합니다.',
+          tip: '잠을 7시간으로 고정하고, 허리와 무릎이 무거운 아침엔 따뜻한 물로 씻고 10분 먼저 움직이세요. 물컵을 책상에 두고 눈에 보일 때마다 한 모금씩 마시면 하루가 가볍습니다.'
+        }
+      }
+    }
+  };
+
+  /* 일상 장면 — kind(money·work·love·health)에 맞는 세 문장을 만든다 */
+  function daily(kind, chart, opt) {
+    opt = opt || {};
+    const dm = chart.dayMaster, g = chart.godGroups, pct = chart.pct;
+    const dayB = chart.pillars.day.branchName, dayBk = chart.pillars.day.branchKo;
+    const dayG = chart.gods.dayBranch, monG = chart.gods.monthBranch, monB = chart.pillars.month.branchName;
+    let block = null, fact = '';
+
+    if (kind === 'money') {
+      const leak = moneyLeaks(chart)[0];
+      const jae = ELEMENTS[(ELEMENTS.indexOf(dm.elem) + 2) % 5];
+      block = (DAILY.money.byLeak[leak.title] || DAILY.money.byLeak['결제 습관의 구멍']);
+      fact = '지금 재성 ' + josa(jae, '이', '가') + ' ' + pct[jae] + '%로 놓인 이 사주는 ' + (pct[jae] >= 25 ? '들어오는 길이 넓은 대신 나가는 길도 같이 넓습니다.' : pct[jae] >= 12 ? '버는 힘과 지키는 힘이 비슷해, 장치를 만든 쪽이 남습니다.' : '버는 힘이 얇아 먼저 떼어 두는 습관이 없으면 남는 것이 없습니다.');
+      return DAILY.money.lead + block.scene + ' ' + block.tip + ' ' + fact;
+    }
+    if (kind === 'work') {
+      const style = opt.style || '';
+      block = DAILY.work.byStyle[style] || DAILY.work.byStyle['균형·운영형'];
+      fact = '월지 ' + monB + '에 ' + josa(monG, '이', '가') + ' 앉아 ' + GOD_SIT[monG].sit + '이고, 그래서 ' + josa(GOD_SIT[monG].risk, '이', '가') + ' 이 사주에서 되풀이되는 실수입니다.';
+      return DAILY.work.lead + block.scene + ' ' + block.tip + ' ' + fact;
+    }
+    if (kind === 'love') {
+      block = DAILY.love.byGod[dayG] || DAILY.love.byGod.정인;
+      fact = '이 사주는 ' + (g.관성 + g.재성 === 0 ? '먼저 움직이지 않으면 아무 일도 일어나지 않는 구조' : g.재성 > g.관성 ? '내가 챙기고 표현할 때 관계가 깊어지는 구조' : g.관성 > g.재성 ? '상대가 나를 선택하는 방식으로 시작하는 구조' : '주고받는 속도가 비슷해 먼저 나서는 쪽이 판을 잡는 구조') + '입니다 — 관성 ' + g.관성 + '개 · 재성 ' + g.재성 + '개의 배치가 그렇게 말합니다.';
+      return DAILY.love.lead + block.scene + ' ' + block.tip + ' ' + fact;
+    }
+    if (kind === 'health') {
+      const ext = elemExtremes(chart);
+      const thin = ext.weak;
+      block = DAILY.health.byElem[thin] || DAILY.health.byElem.수;
+      fact = '가장 얇은 ' + thin + ' ' + pct[thin] + '%가 ' + ELEM_DEEP[thin].organ + ' 쪽으로 먼저 옵니다. ' + dayB + '(' + dayBk + ') 일지의 ' + dayG + ' 결까지 겹치면 그 신호가 더 또렷해집니다.';
+      return DAILY.health.lead + block.scene + ' ' + block.tip + ' ' + fact;
+    }
+    return '';
+  }
+
   function deepRead(chart) {
     const dm = chart.dayMaster;
     const dIdx = ELEMENTS.indexOf(dm.elem);
@@ -924,10 +1136,10 @@
 
     /* 받쳐 주는 자리가 하나도 없을 수 있다 — 빈 자리를 문장으로 메운다 */
     const supLine = sup.length
-      ? '여덟 글자에서 나를 받쳐 주는 쪽(비겁·인성)은 ' + top(sup) + ', 나를 쓰는 쪽은 ' + top(drain) + '입니다.'
-      : '여덟 글자에 나를 받쳐 주는 자리(비겁·인성)가 하나도 없고, 나를 쓰는 쪽은 ' + top(drain) + '입니다.';
+      ? '여덟 글자에서 나를 받쳐 주는 쪽인 ' + plain('비겁') + '·' + plain('인성') + '은 ' + top(sup) + ', 나를 쓰는 쪽은 ' + top(drain) + '입니다.'
+      : '여덟 글자에 나를 받쳐 주는 자리인 ' + plain('비겁') + '·' + plain('인성') + '가 하나도 없고, 나를 쓰는 쪽은 ' + top(drain) + '입니다.';
     const nature = [
-      '일간 ' + dm.hanja + '(' + dm.ko + ') ' + dm.elem + ' — ' + ELEM_DEEP[dm.elem].name + '의 기운으로 태어났습니다. ' + supLine + ' 이 배치로 기운은 ' + chart.strengthKo + '(' + chart.strengthRatio + '%)입니다. ' + strengthBody +
+      plain('일간') + ' ' + dm.hanja + '(' + dm.ko + ') ' + dm.elem + ' — ' + ELEM_DEEP[dm.elem].name + '의 기운으로 태어났습니다. ' + supLine + ' 이 배치로 기운은 ' + plain(chart.strengthKo) + ' ' + chart.strengthRatio + '%입니다. ' + strengthBody +
       ' 월지 ' + chart.pillars.month.branchName + '(' + chart.pillars.month.branchKo + ')의 자리는 ' + chart.stages.month + ' — ' + STAGE_DEEP[chart.stages.month] + '.',
       (function () {
         const yy = chart.yinyang;
@@ -935,7 +1147,7 @@
           (ext.empty ? thinEl + ' 기운이 아예 비어 있어 ' : thinEl + ' 기운이 ' + pct[thinEl] + '%로 가장 얇아 ') + ELEM_DEEP[thinEl].lack + '. ' +
           '음양은 양 ' + yy.yangPct + '% · 음 ' + yy.yinPct + '%로 ' + (yy.yangPct >= 65 ? '행동이 생각보다 앞서는 사람입니다. 몸이 먼저 나가고 마음이 뒤따라옵니다.' : yy.yinPct >= 65 ? '생각과 감정이 먼저 움직이는 사람입니다. 안에서 정리된 뒤에야 밖으로 나옵니다.' : '행동과 생각의 속도가 비슷해 판단이 흔들리지 않습니다.') + '';
       })(),
-      '이 사주의 중심은 ' + yong + '(' + H[ELEMENTS.indexOf(yong)] + ')입니다. ' + chart.yongsin.reason + '. 일상에서는 색으로 ' + L.color + ', 맛으로 ' + L.taste + ', 방향으로 ' + L.dir + ', 시간으로는 ' + josa(L.time, '을', '를') + ' 권합니다. 옷과 소품, 식탁, 책상 배치, 약속 시간까지 이 결로 맞춰 보세요. 일로는 ' + ELEM_DEEP[yong].job + ' 쪽이 물이 잘 흐르는 길입니다. 희신 ' + hee + '도 함께 쓰면 좋은데, 결정을 내릴 때 ' + yong + '·' + hee + ' 기운이 강한 사람을 곁에 두면 판단이 흔들리지 않습니다. ' + chart.yongsin.care + '.'
+      '이 사주의 중심은 ' + plain('용신') + '인 ' + yong + '(' + H[ELEMENTS.indexOf(yong)] + ')입니다. ' + chart.yongsin.reason + '. 일상에서는 색으로 ' + L.color + ', 맛으로 ' + L.taste + ', 방향으로 ' + L.dir + ', 시간으로는 ' + josa(L.time, '을', '를') + ' 권합니다. 옷과 소품, 식탁, 책상 배치, 약속 시간까지 이 결로 맞춰 보세요. 일로는 ' + ELEM_DEEP[yong].job + ' 쪽이 물이 잘 흐르는 길입니다. ' + plain('희신') + '인 ' + hee + '도 함께 쓰면 좋은데, 결정을 내릴 때 ' + yong + '·' + hee + ' 기운이 강한 사람을 곁에 두면 판단이 흔들리지 않습니다. ' + chart.yongsin.care + '.'
     ];
 
     /* ---- 재물 ---- */
@@ -952,11 +1164,11 @@
       if (p.stemElem === jae || p.branchElem === jae) jaePos.push(pair[1]);
     });
     let moneyP1;
-    if (g.재성 === 0) moneyP1 = '재성이 여덟 글자 안에 하나도 없습니다. 이는 돈이 없다는 뜻이 아니라, 돈이 직접 들어오는 통로가 원국에 새겨지지 않았다는 뜻입니다. 재성은 내가 만든 결과물이 지나가며 남기는 자리이므로, 이 사주는 만들고 파는 일을 먼저 해야 돈이 붙습니다.';
-    else if (g.재성 >= 3) moneyP1 = '재성이 ' + g.재성 + '개로 겹쳐 있습니다. 돈이 보이는 창구가 여러 개라는 뜻이라 기회는 많지만, 손도 함께 커져 들어온 만큼 나가는 구조가 되기 쉽습니다.';
-    else if (chart.strength === 'strong') moneyP1 = '재성 ' + g.재성 + '개에 신강한 몸입니다. 벌수록 담을 수 있는 그릇이라 돈이 들어와도 감당할 힘이 있습니다. 문제는 벌이가 아니라 지키는 장치입니다.';
-    else if (chart.strength === 'weak') moneyP1 = '재성 ' + g.재성 + '개인데 몸은 신약합니다. 눈앞의 돈은 보이는데 혼자 쥐려 하면 몸과 시간이 먼저 상하는 그릇입니다. 손으로 붙잡기보다 통장과 사람에게 맡기는 방식이 맞습니다.';
-    else moneyP1 = '재성 ' + g.재성 + '개가 중화된 몸에 놓였습니다. 한 번에 크게 벌기보다 한 우물을 오래 파서 두툼해지는 그릇입니다.';
+    if (g.재성 === 0) moneyP1 = plain('재성') + '이 여덟 글자 안에 하나도 없습니다. 이는 돈이 없다는 뜻이 아니라, 돈이 직접 들어오는 통로가 원국에 새겨지지 않았다는 뜻입니다. 재성은 내가 만든 결과물이 지나가며 남기는 자리이므로, 이 사주는 만들고 파는 일을 먼저 해야 돈이 붙습니다.';
+    else if (g.재성 >= 3) moneyP1 = plain('재성') + '이 ' + g.재성 + '개로 겹쳐 있습니다. 돈이 보이는 창구가 여러 개라는 뜻이라 기회는 많지만, 손도 함께 커져 들어온 만큼 나가는 구조가 되기 쉽습니다.';
+    else if (chart.strength === 'strong') moneyP1 = plain('재성') + ' ' + g.재성 + '개에 신강한 몸입니다. 벌수록 담을 수 있는 그릇이라 돈이 들어와도 감당할 힘이 있습니다. 문제는 벌이가 아니라 지키는 장치입니다.';
+    else if (chart.strength === 'weak') moneyP1 = plain('재성') + ' ' + g.재성 + '개인데 몸은 신약합니다. 눈앞의 돈은 보이는데 혼자 쥐려 하면 몸과 시간이 먼저 상하는 그릇입니다. 손으로 붙잡기보다 통장과 사람에게 맡기는 방식이 맞습니다.';
+    else moneyP1 = plain('재성') + ' ' + g.재성 + '개가 중화된 몸에 놓였습니다. 한 번에 크게 벌기보다 한 우물을 오래 파서 두툼해지는 그릇입니다.';
     if (jaePos.length) moneyP1 += ' ' + (posMap[jaePos[0]] || '');
     moneyP1 += ' 이 사주에서 재성은 ' + jae + '(' + H[ELEMENTS.indexOf(jae)] + ')이고, 일지 ' + chart.pillars.day.branchName + '의 ' + chart.gods.dayBranch + '이 돈을 다루는 방식입니다.';
 
@@ -966,7 +1178,7 @@
       ['비겁', g.비겁, '사람이 곧 매출인 사주입니다 — 영업·중개·모임·동업에서 돈이 붙습니다.', '영업·중개·모임·동업에서 돈이 붙는 자리'],
       ['인성', g.인성, '지식과 자산이 재물이 되는 사주입니다 — 자격·부동산·문서·브랜드가 쌓여 돈이 됩니다.', '자격·부동산·문서·브랜드가 쌓여 돈이 되는 자리']
     ].sort((a, b) => b[1] - a[1]);
-    const moneyP2 = '이 사주로 돈이 들어오는 길은 ' + channels[0][0] + '(' + channels[0][1] + '개)과 ' + channels[1][0] + '(' + channels[1][1] + '개)입니다. ' + channels[0][2] + ' ' + josa('두 번째 길인 ' + channels[1][0], '은', '는') + ' ' + channels[1][3] + '입니다. ' +
+    const moneyP2 = '이 사주로 돈이 들어오는 길은 ' + plain(channels[0][0]) + ' ' + channels[0][1] + '개와 ' + plain(channels[1][0]) + ' ' + channels[1][1] + '개입니다. ' + channels[0][2] + ' ' + josa('두 번째 길인 ' + channels[1][0], '은', '는') + ' ' + channels[1][3] + '입니다. ' +
       (g.식상 >= 2 ? '특히 만들고 내놓는 일을 미루지 마세요. 이 사주는 완성도보다 먼저 내놓는 쪽이 돈이 됩니다.' : '새 수입원을 만들 때는 이미 손에 익은 일에서 한 걸음만 확장하세요. 낯선 분야는 이 사주에서 오래 가지 못합니다.');
 
     const leaks = moneyLeaks(chart);
@@ -990,8 +1202,8 @@
     else if (g.관성 >= 2) style = { key: '조직·관리형', text: '책임과 규율이 힘이 되는 사주입니다. 관리·운영·영업관리·총무처럼 사람과 일정을 정리하는 자리에서 신뢰를 얻습니다. 다만 평가를 지나치게 의식해 하고 싶은 말을 삼키면 승진의 문이 늦게 열립니다.' };
     else if (g.비겁 >= 2) style = { key: '자립·영업형', text: '내 힘으로 판을 여는 사주입니다. 영업·중개·프리랜서·동업처럼 내 이름이 걸린 일에서 강합니다. 다만 혼자 결정하는 습관이 커지면 협업이 어려워지니, 성과 배분을 처음에 글로 정해 두세요.' };
     else style = { key: '균형·운영형', text: '한쪽으로 치우치지 않아 어떤 판에도 무리 없이 적응하는 사주입니다. 다만 강한 무기가 하나는 있어야 대우가 따라오니, 가장 잘하는 일 하나를 골라 3년을 파세요.' };
-    const workP1 = '이 사주는 ' + style.key + '에 가깝습니다 — 관성 ' + g.관성 + ' · 식상 ' + g.식상 + ' · 재성 ' + g.재성 + ' · 인성 ' + g.인성 + ' · 비겁 ' + g.비겁 + '의 배치가 그렇게 말합니다. ' + style.text;
-    const workP2 = '사회로 나가는 자리인 월지 ' + chart.pillars.month.branchName + '의 십성은 ' + chart.gods.monthBranch + ' — ' + josa(GOD_SIT[chart.gods.monthBranch].sit, '으로', '로') + ', 12운성으로는 ' + josa(chart.stages.month, '이라', '라') + ' ' + STAGE_DEEP[chart.stages.month] + '. 일지 ' + chart.pillars.day.branchName + '의 ' + josa(chart.gods.dayBranch, '은', '는') + ' 내가 일을 대하는 방식입니다 — ' + josa(GOD_SIT[chart.gods.dayBranch].scene, '을', '를') + ' 자연스럽게 여긴다는 뜻이고, 반대로 ' + josa(GOD_SIT[chart.gods.dayBranch].risk, '이', '가') + ' 반복되면 일이 두 배로 늘어납니다.';
+    const workP1 = '이 사주는 ' + style.key + '에 가깝습니다 — ' + plain('십성') + ' 배치를 보면 관성 ' + g.관성 + ' · 식상 ' + g.식상 + ' · 재성 ' + g.재성 + ' · 인성 ' + g.인성 + ' · 비겁 ' + g.비겁 + '의 배치가 그렇게 말합니다. ' + style.text;
+    const workP2 = '사회로 나가는 자리인 월지 ' + chart.pillars.month.branchName + '의 십성은 ' + chart.gods.monthBranch + ' — ' + josa(GOD_SIT[chart.gods.monthBranch].sit, '으로', '로') + ', ' + plain('십이운성') + '으로는 ' + josa(chart.stages.month, '이라', '라') + ' ' + STAGE_DEEP[chart.stages.month] + '. 일지 ' + chart.pillars.day.branchName + '의 ' + josa(chart.gods.dayBranch, '은', '는') + ' 내가 일을 대하는 방식입니다 — ' + josa(GOD_SIT[chart.gods.dayBranch].scene, '을', '를') + ' 자연스럽게 여긴다는 뜻이고, 반대로 ' + josa(GOD_SIT[chart.gods.dayBranch].risk, '이', '가') + ' 반복되면 일이 두 배로 늘어납니다.';
     const workP3 = chart.strength === 'weak'
       ? '지금 당장의 창업은 권하지 않습니다. ' + dm.hanja + ' 일간에 ' + chart.strengthKo + ' ' + chart.strengthRatio + '%인 이 사주는 혼자 버티는 힘이 약해, 준비 없이 나가면 몸과 자금이 동시에 빠집니다. 대신 재직 중에 부업으로 6개월 검증하세요. 기준은 하나면 충분합니다 — 본업 월급의 30%를 부업으로 세 번 연속 벌어 보는 것. 그 기준을 넘기면 그때 나가도 늦지 않습니다.'
       : '결정권이 있는 자리로 옮기는 것이 맞습니다. ' + dm.hanja + ' 일간에 ' + chart.strengthKo + ' ' + chart.strengthRatio + '%인 이 사주는 남의 지시만 받는 자리에 오래 있으면 기운이 새고, 책임을 맡으면 오히려 단단해집니다. 다만 사람을 크게 쓰는 확장은 한 박자 늦추세요 — 매출보다 인건비가 먼저 늘어나는 순간이 가장 위험합니다.';
@@ -1011,7 +1223,7 @@
       const p = chart.pillars[pair[0]]; if (!p) return;
       if (p.stemElem === partnerEl || p.branchElem === partnerEl) pPos.push(pair[1]);
     });
-    const loveP1 = '배우자궁인 일지 ' + chart.pillars.day.branchName + '(' + chart.pillars.day.branchKo + ')에 ' + josa(chart.gods.dayBranch, '이', '가') + ' 앉았습니다. ' + LOVE_SIT[chart.gods.dayBranch] + ' 여기에 12운성 ' + josa(chart.stages.day, '이', '가') + ' 겹쳐 ' + STAGE_DEEP[chart.stages.day] + '.';
+    const loveP1 = plain('배우자궁') + '인 일지 ' + chart.pillars.day.branchName + '(' + chart.pillars.day.branchKo + ')에 ' + josa(chart.gods.dayBranch, '이', '가') + ' 앉았습니다. ' + LOVE_SIT[chart.gods.dayBranch] + ' 여기에 12운성 ' + josa(chart.stages.day, '이', '가') + ' 겹쳐 ' + STAGE_DEEP[chart.stages.day] + '.';
     const loveP2 = (pn === 0
       ? '이 사주는 ' + partnerGroup + '이 비어 있어 인연이 저절로 굴러 들어오는 통로가 없습니다. 대신 소개·모임·일을 통해 만나야 하고, 그 자리에서 먼저 이름을 남기는 쪽이 유리합니다.'
       : '이 사주에서 인연은 ' + partnerGroup + '(' + pn + '개)으로 들어옵니다' + (pPos.length ? ' — ' + pPos.join(' · ') + '에 앉아 있어 ' + (partnerGroup === '재성' ? '내가 챙기고 표현할 때 관계가 깊어집니다' : '상대가 나를 선택하는 쪽으로 관계가 시작됩니다') : '') + '. ' + (partnerGroup === '재성' ? '다만 조건을 재는 인상이 비치면 상대의 마음이 먼저 닫히니, 물질적 표현보다 시간을 쓰세요.' : '다만 책임을 앞세우면 상대가 부담을 느끼니, 가벼운 대화의 자리를 먼저 만드세요.'));
@@ -1019,7 +1231,7 @@
     const hasDohwa = ['year', 'month', 'day', 'hour'].some(k => sal[k] && sal[k].indexOf('도화') >= 0);
     const hasYeokma = ['year', 'month', 'day', 'hour'].some(k => sal[k] && sal[k].indexOf('역마') >= 0);
     const hasHwagae = ['year', 'month', 'day', 'hour'].some(k => sal[k] && sal[k].indexOf('화개') >= 0);
-    const loveP3 = (hasDohwa ? '매력의 결에 도화(桃花)가 있습니다 — 처음 만난 사람도 먼저 말을 걸어 오고, 사람을 만나는 일에서 이 힘이 곧 무기입니다. ' : '일지 ' + chart.pillars.day.hanja + '(' + chart.pillars.day.branchKo + ')의 ' + chart.gods.dayBranch + ' 결에는 도화(桃花)가 없습니다. 대신 ') + (hasYeokma ? '역마가 함께 있어 낯선 곳, 여행지, 새로 시작한 판에서 인연이 붙습니다. ' : '') + (hasHwagae ? '화개가 있어 혼자 깊어지는 시간이 필요하고, 그 시간이 사람을 끄는 힘이 됩니다. ' : '') + (chart.godGroups.식상 >= 2 ? '표현이 자연스러워 마음을 숨기지 못하고, 그 솔직함이 오히려 상대를 움직입니다.' : '감정을 아껴 표현하는 편이라 마음이 있어도 상대가 알아채기 어렵습니다. 마음이 있으면 한 번은 말로 꺼내세요.');
+    const loveP3 = (hasDohwa ? '매력의 결에 ' + plain('도화') + '가 있습니다 — 처음 만난 사람도 먼저 말을 걸어 오고, 사람을 만나는 일에서 이 힘이 곧 무기입니다. ' : '일지 ' + chart.pillars.day.hanja + '(' + chart.pillars.day.branchKo + ')의 ' + chart.gods.dayBranch + ' 결에는 ' + plain('도화') + '가 없습니다. 대신 ') + (hasYeokma ? '역마가 함께 있어 낯선 곳, 여행지, 새로 시작한 판에서 인연이 붙습니다. ' : '') + (hasHwagae ? '화개가 있어 혼자 깊어지는 시간이 필요하고, 그 시간이 사람을 끄는 힘이 됩니다. ' : '') + (chart.godGroups.식상 >= 2 ? '표현이 자연스러워 마음을 숨기지 못하고, 그 솔직함이 오히려 상대를 움직입니다.' : '감정을 아껴 표현하는 편이라 마음이 있어도 상대가 알아채기 어렵습니다. 마음이 있으면 한 번은 말로 꺼내세요.');
     const loveTips = [
       '먼저 연락하는 쪽이 되세요. 이 사주에서는 기다림보다 가벼운 안부가 효과적입니다.',
       '상대의 말보다 반복되는 행동을 보세요. 그 패턴이 관계의 답입니다.',
@@ -1048,10 +1260,10 @@
     return {
       nature: nature,
       voice: voice,
-      money: { paras: [moneyP1, moneyP2, moneyP3], tips: moneyTips, voice: voice.money },
-      work: { paras: [workP1, workP2, workP3], tips: workTips, voice: voice.work },
-      love: { paras: [loveP1, loveP2, loveP3], tips: loveTips, voice: voice.love },
-      health: { paras: [healthP1, healthP2], tips: healthTips, voice: voice.health },
+      money: { paras: [moneyP1, moneyP2, moneyP3, daily('money', chart)], tips: moneyTips, voice: voice.money },
+      work: { paras: [workP1, workP2, workP3, daily('work', chart, { style: style.key })], tips: workTips, voice: voice.work },
+      love: { paras: [loveP1, loveP2, loveP3, daily('love', chart)], tips: loveTips, voice: voice.love },
+      health: { paras: [healthP1, healthP2, daily('health', chart)], tips: healthTips, voice: voice.health },
       style: style.key,
       yong: yong, hee: hee, thinEl: thinEl, strongEl: strongEl
     };
@@ -1065,6 +1277,7 @@
     newMoonJD, jdnToYmd, lunarToSolar, solarToLunar, lunarLeapMonths, lunarYearMonths, SIZI_NAMES,
     buildChart, getToday, describeDay, todayReading, tenGod, relation, stageOf, hash,
     deepRead, moneyLeaks, josa, josaHan, ELEM_DEEP, GOD_SIT, STAGE_DEEP, REL_SIT, LOVE_SIT, elemExtremes,
+    plain, daily, GLOSS,
     stemElem: s => ELEMENTS[STEM_ELEM[s]],
     branchElem: b => ELEMENTS[BRANCH_ELEM[b]],
     branchMainStem: b => BRANCH_MAIN_STEM[b],
