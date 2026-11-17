@@ -597,7 +597,12 @@
     }
     if (h.kind === 'daeun') { try { daeunSheet(E.buildChart(h.chart)); } catch (e) { showToast('이 기록을 다시 열 수 없어요'); } return; }
     if (h.kind === 'gilil') { try { gililSheet(E.buildChart(h.chart)); } catch (e) { showToast('이 기록을 다시 열 수 없어요'); } return; }
-    if (h.kind === 'y2027' && Y27) { y2027Sheet(h.y, h.chart); return; }
+    if (h.kind === 'y2027' && Y27) {
+      let cy = h.chart;
+      if (cy && !cy.pillars) { try { cy = E.buildChart(cy); } catch (e) { cy = null; } }
+      if (!cy) { showToast('이 기록을 다시 열 수 없어요'); return; }
+      y2027Sheet(h.y, cy); return;
+    }
     if (h.kind === 'today') {
       const c = charById(h.charId);
       openSheet('오늘의 운세 기록', '<div class="rp-top"><img class="rp-ava" src="' + c.img + '" alt="" /><div class="rp-who"><b>' + esc(h.dateLabel) + ' 운세</b><span>보관함에 저장된 기록</span></div></div>' +
@@ -1505,9 +1510,10 @@
     if (closeBtn) closeBtn.addEventListener('click', closeSheet);
     const saveBtn = $('#rpSave');
     if (saveBtn) saveBtn.addEventListener('click', () => {
+      /* 저장은 가볍게 — 계산된 차트 대신 생년월일만 담고, 다시 열 때 그 자리에서 세운다 */
       const savedOK = saveHistory({
         kind: 'report', typeLabel: o.typeLabel, title: o.title, question: o.question,
-        category: o.category, charId: o.charId, chart: chart, reading: o.reading || null,
+        category: o.category, charId: o.charId, chart: chart.input || chart, reading: null,
         dateLabel: (new Date().getMonth() + 1) + '월 ' + new Date().getDate() + '일',
         summary: reportSummary(chart, o.category)
       });
@@ -2006,7 +2012,7 @@
       const savedOK = saveHistory({
         kind: 'y2027', y: kind, typeLabel: '2027 정미년', title: item.title,
         question: '', category: item.kind === 'moneyleak' || item.kind === 'calendar' ? 'money' : item.kind === 'reunion' ? 'reunion' : 'fate',
-        charId: item.charId, chart: chart,
+        charId: item.charId, chart: chart.input || chart,
         dateLabel: (new Date().getMonth() + 1) + '월 ' + new Date().getDate() + '일',
         summary: Y27.summary(chart, kind)
       });
