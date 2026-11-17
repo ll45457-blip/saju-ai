@@ -509,7 +509,8 @@
 
   function birthFormHTML(p, opts) {
     opts = opts || {};
-    const y = p ? p.year : 1995, m = p ? p.month : 1, d = p ? p.day : 1;
+    /* 저장된 값이 없으면 아무 날짜도 미리 골라 두지 않는다 (임의 날짜 fallback 금지) */
+    const y = p && p.year ? p.year : '', m = p && p.month ? p.month : '', d = p && p.day ? p.day : '';
     const cal = (p && p.calendar === 'lunar') ? 'lunar' : 'solar';
     const leap = !!(p && p.leap);
     let hourOpts = '<option value=""' + (!p || p.hour == null ? ' selected' : '') + '>태어난 시간 모름</option>' + SIZI.map(s => '<option value="' + s.v + '"' + (p && +p.hour === s.v ? ' selected' : '') + '>' + s.l + '</option>').join('');
@@ -526,9 +527,9 @@
       '<button type="button" data-c="solar"' + (cal === 'solar' ? ' class="is-on"' : '') + '>양력</button>' +
       '<button type="button" data-c="lunar"' + (cal === 'lunar' ? ' class="is-on"' : '') + '>음력</button></div></div>' +
       '<div class="field"><label>생년월일 <span id="bfCalLabel">(' + (cal === 'lunar' ? '음력' : '양력') + ')</span></label><div class="field-row">' +
-      '<select id="bfY">' + rangeOpts(1930, 2026, y, '년') + '</select>' +
-      '<select id="bfM">' + rangeOpts(1, 12, m, '월') + '</select>' +
-      '<select id="bfD">' + rangeOpts(1, 31, d, '일') + '</select></div></div>' +
+      '<select id="bfY" aria-label="출생 연도">' + rangeOpts(1930, 2026, y, '년', '연도') + '</select>' +
+      '<select id="bfM" aria-label="출생 월">' + rangeOpts(1, 12, m, '월', '월') + '</select>' +
+      '<select id="bfD" aria-label="출생 일">' + rangeOpts(1, 31, d, '일', '일') + '</select></div></div>' +
       '<div class="checkline" id="bfLeapWrap"' + (cal === 'lunar' ? '' : ' hidden') + '><input type="checkbox" id="bfLeap"' + (leap ? ' checked' : '') + ' /><label for="bfLeap">윤달(음력 윤월)입니다</label></div>' +
       '<div class="field"><label for="bfH">태어난 시간</label><select id="bfH">' + hourOpts + '</select></div>' +
       '<div class="checkline"><input type="checkbox" id="bfRemember"' + (p ? ' checked' : '') + ' /><label for="bfRemember">이 기기에 사주 프로필 저장 (보관함에서 다시 보기)</label></div>' +
@@ -537,9 +538,9 @@
       '<button class="btn-gold wide" type="submit">사주 세우기</button>' +
       '</form>';
   }
-  function rangeOpts(a, b, sel, unit) {
-    let s = '';
-    for (let i = a; i <= b; i++) s += '<option value="' + i + '"' + (i === sel ? ' selected' : '') + '>' + i + unit + '</option>';
+  function rangeOpts(a, b, sel, unit, emptyLabel) {
+    let s = emptyLabel ? '<option value=""' + (sel === '' || sel == null ? ' selected' : '') + '>' + emptyLabel + '</option>' : '';
+    for (let i = a; i <= b; i++) s += '<option value="' + i + '"' + (+sel === i ? ' selected' : '') + '>' + i + unit + '</option>';
     return s;
   }
 
@@ -577,12 +578,18 @@
     });
     $('#birthForm').addEventListener('submit', e => {
       e.preventDefault();
+      const nameVal = $('#bfName').value.trim();
+      const yRaw = $('#bfY').value, mRaw = $('#bfM').value, dRaw = $('#bfD').value;
+      const noteEl = $('#bfNote');
+      const warn = msg => { noteEl.textContent = msg; noteEl.classList.add('warn'); };
+      if (!nameVal) { warn('이름 또는 별명을 입력해 주세요.'); $('#bfName').focus(); return; }
+      if (!yRaw || !mRaw || !dRaw) { warn('생년월일을 입력해 주세요.'); ($('#bfY').value ? ($('#bfM').value ? $('#bfD') : $('#bfM')) : $('#bfY')).focus(); return; }
       const input = {
-        name: $('#bfName').value.trim(),
+        name: nameVal,
         gender: g,
         calendar: cal,
         leap: cal === 'lunar' ? !!($('#bfLeap') && $('#bfLeap').checked) : false,
-        year: +$('#bfY').value, month: +$('#bfM').value, day: +$('#bfD').value,
+        year: +yRaw, month: +mRaw, day: +dRaw,
         hour: $('#bfH').value === '' ? null : +$('#bfH').value,
         minute: $('#bfH').value === '' ? 0 : 30
       };
@@ -1509,7 +1516,7 @@
 
   /* ---- 정밀 궁합: 두 사람 입력 ---- */
   function personFieldsHTML(key, title, p) {
-    const y = p && p.year ? p.year : 1995, m = p && p.month ? p.month : 1, d = p && p.day ? p.day : 1;
+    const y = p && p.year ? p.year : '', m = p && p.month ? p.month : '', d = p && p.day ? p.day : '';
     const cal = (p && p.calendar === 'lunar') ? 'lunar' : 'solar';
     const leap = !!(p && p.leap);
     const hourOpts = '<option value=""' + (!p || p.hour == null || p.hour === '' ? ' selected' : '') + '>태어난 시간 모름</option>' +
@@ -1524,9 +1531,9 @@
       '<button type="button" data-c="solar"' + (cal === 'solar' ? ' class="is-on"' : '') + '>양력</button>' +
       '<button type="button" data-c="lunar"' + (cal === 'lunar' ? ' class="is-on"' : '') + '>음력</button></div></div>' +
       '<div class="field"><label>생년월일 <span id="pf' + key + 'CalLabel">(' + (cal === 'lunar' ? '음력' : '양력') + ')</span></label><div class="field-row">' +
-      '<select id="pf' + key + 'Y">' + rangeOpts(1930, 2026, y, '년') + '</select>' +
-      '<select id="pf' + key + 'M">' + rangeOpts(1, 12, m, '월') + '</select>' +
-      '<select id="pf' + key + 'D">' + rangeOpts(1, 31, d, '일') + '</select></div></div>' +
+      '<select id="pf' + key + 'Y" aria-label="출생 연도">' + rangeOpts(1930, 2026, y, '년', '연도') + '</select>' +
+      '<select id="pf' + key + 'M" aria-label="출생 월">' + rangeOpts(1, 12, m, '월', '월') + '</select>' +
+      '<select id="pf' + key + 'D" aria-label="출생 일">' + rangeOpts(1, 31, d, '일', '일') + '</select></div></div>' +
       '<div class="checkline" id="pf' + key + 'LeapWrap"' + (cal === 'lunar' ? '' : ' hidden') + '><input type="checkbox" id="pf' + key + 'Leap"' + (leap ? ' checked' : '') + ' /><label for="pf' + key + 'Leap">음력 윤달</label></div>' +
       '<div class="field"><label>태어난 시간</label><select id="pf' + key + 'H">' + hourOpts + '</select></div>' +
       '</div>';
@@ -1593,6 +1600,11 @@
         minute: $('#pf' + key + 'H').value === '' ? 0 : 30
       });
       const a = read('A'), b = read('B');
+      const note = $('#cpNote');
+      if (!a.name || !b.name) { note.textContent = '두 사람의 이름 또는 별명을 입력해 주세요.'; note.classList.add('warn'); return; }
+      if (!$('#pfAY').value || !$('#pfAM').value || !$('#pfAD').value || !$('#pfBY').value || !$('#pfBM').value || !$('#pfBD').value) {
+        note.textContent = '두 사람의 생년월일을 입력해 주세요.'; note.classList.add('warn'); return;
+      }
       for (const p of [a, b]) {
         if (p.calendar === 'lunar') continue;
         const dt = new Date(p.year, p.month - 1, p.day);

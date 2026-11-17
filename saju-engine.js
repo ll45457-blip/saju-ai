@@ -373,6 +373,16 @@
 
   /* ---------- 사주 구성 ---------- */
   function buildChart(input) {
+    /* 생년월일이 비어 있으면 임의의 날짜로 대신 세우지 않고 중단합니다. */
+    if (!input || input.year == null || input.month == null || input.day == null ||
+        input.year === '' || input.month === '' || input.day === '') {
+      throw new Error('생년월일을 입력해 주세요');
+    }
+    var _y = +input.year, _m = +input.month, _d = +input.day;
+    if (!isFinite(_y) || !isFinite(_m) || !isFinite(_d) || _y < 1900 || _y > 2100 || _m < 1 || _m > 12 || _d < 1 || _d > 31) {
+      throw new Error('생년월일을 입력해 주세요');
+    }
+
     /* 양력·음력 입력을 모두 받아 계산은 양력으로 합니다.
        input.calendar === 'lunar' 이면 실제 음력→양력 변환을 거칩니다. */
     const calendar = (input.calendar === 'lunar' || input.solar === false) ? 'lunar' : 'solar';
@@ -960,7 +970,7 @@
       const p = chart.pillars[pair[0]]; if (!p) return;
       if (p.stemElem === partnerEl || p.branchElem === partnerEl) pPos.push(pair[1]);
     });
-    const loveP1 = '배우자궁인 일지 ' + chart.pillars.day.branchName + '(' + chart.pillars.day.branchKo + ')에 ' + josa(chart.gods.dayBranch, '이', '가') + ' 앉았습니다. ' + LOVE_SIT[chart.gods.dayBranch] + ' 여기에 12운성 ' + chart.stages.day + '이 겹쳐 ' + STAGE_DEEP[chart.stages.day] + '.';
+    const loveP1 = '배우자궁인 일지 ' + chart.pillars.day.branchName + '(' + chart.pillars.day.branchKo + ')에 ' + josa(chart.gods.dayBranch, '이', '가') + ' 앉았습니다. ' + LOVE_SIT[chart.gods.dayBranch] + ' 여기에 12운성 ' + josa(chart.stages.day, '이', '가') + ' 겹쳐 ' + STAGE_DEEP[chart.stages.day] + '.';
     const loveP2 = (pn === 0
       ? '이 사주는 ' + partnerGroup + '이 비어 있어 인연이 저절로 굴러 들어오는 통로가 없습니다. 대신 소개·모임·일을 통해 만나야 하고, 그 자리에서 먼저 이름을 남기는 쪽이 유리합니다.'
       : '이 사주에서 인연은 ' + partnerGroup + '(' + pn + '개)으로 들어옵니다' + (pPos.length ? ' — ' + pPos.join(' · ') + '에 앉아 있어 ' + (partnerGroup === '재성' ? '내가 챙기고 표현할 때 관계가 깊어집니다' : '상대가 나를 선택하는 쪽으로 관계가 시작됩니다') : '') + '. ' + (partnerGroup === '재성' ? '다만 조건을 재는 인상이 비치면 상대의 마음이 먼저 닫히니, 물질적 표현보다 시간을 쓰세요.' : '다만 책임을 앞세우면 상대가 부담을 느끼니, 가벼운 대화의 자리를 먼저 만드세요.'));
