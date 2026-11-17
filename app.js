@@ -989,8 +989,8 @@
     const block = (list, cls, cap) => !list.length ? '' : '<div class="y27-pick-group"><span class="y27-pick-cap">' + cap + '</span><div class="y27-picks">' +
       list.map(m => card(m, cls)).join('') + '</div></div>';
     return '<div class="y27-pick-wrap">' +
-      block(y.good, 'good', '좋은 달 — 밀어붙일 자리') +
-      block(y.warn, 'bad', '조심할 달 — 방어할 자리') + '</div>';
+      block(y.good, 'good', '좋은 달 — 힘을 싣기 좋은 달') +
+      block(y.warn, 'bad', '조심할 달 — 방어가 필요한 달') + '</div>';
   }
 
   function y27Lines(arr) {
@@ -1061,7 +1061,7 @@
       (p.hour ? cell('시주', p.hour) : '<div class="mini-pl is-empty"><span>시주</span><b>·</b><b>·</b></div>') + '</div>' +
       '<div class="y27-mini-row">' +
       '<span>일간 <b>' + chart.dayMaster.hanja + ' ' + chart.dayMaster.elem + '</b></span>' +
-      '<span>형세 <b>' + chart.strengthKo + ' ' + chart.strengthRatio + '</b></span>' +
+      '<span>형세 <b>' + chart.strengthKo + ' ' + chart.strengthRatio + '%</b></span>' +
       '<span>용신 <b>' + chart.yongsin.elem + '</b></span>' +
       '<span>음양 <b>' + yy.yangPct + ':' + yy.yinPct + '</b></span>' +
       '</div></div>';
