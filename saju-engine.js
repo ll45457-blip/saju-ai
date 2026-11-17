@@ -907,6 +907,7 @@
     else if (chart.strength === 'weak') moneyP1 = '재성 ' + g.재성 + '개인데 몸은 신약합니다. 눈앞의 돈은 보이는데 혼자 쥐려 하면 몸과 시간이 먼저 상하는 그릇입니다. 손으로 붙잡기보다 통장과 사람에게 맡기는 방식이 맞습니다.';
     else moneyP1 = '재성 ' + g.재성 + '개가 중화된 몸에 놓였습니다. 한 번에 크게 벌기보다 한 우물을 오래 파서 두툼해지는 그릇입니다.';
     if (jaePos.length) moneyP1 += ' ' + (posMap[jaePos[0]] || '');
+    moneyP1 += ' 이 사주에서 재성은 ' + jae + '(' + H[ELEMENTS.indexOf(jae)] + ')이고, 일지 ' + chart.pillars.day.branchName + '의 ' + chart.gods.dayBranch + '이 돈을 다루는 방식입니다.';
 
     const channels = [
       ['식상', g.식상, '기술과 콘텐츠로 만들어 파는 일이 주된 길입니다 — 글·영상·강의·제작·요리처럼 결과물이 남는 수입이 여기서 나옵니다.', '글·영상·강의·제작처럼 결과물이 남는 수입이 나오는 자리'],
