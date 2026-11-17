@@ -1378,7 +1378,7 @@
   function cpRow(chart, who) {
     const p = chart.pillars;
     return '<div class="cp-row">' +
-      '<div class="cp-who"><b>' + esc(chart.input.name || who) + '</b><span>' + (chart.input.gender === 'female' ? '여' : '남') + ' · ' + chart.input.year + '.' + pad(chart.input.month) + '.' + pad(chart.input.day) + '</span><span>' + esc(P.timeLabel(chart)) + '</span></div>' +
+      '<div class="cp-who"><b>' + esc(chart.input.name || who) + '</b><span>' + (chart.input.gender === 'female' ? '여' : '남') + ' · ' + chart.input.year + '.' + pad(chart.input.month) + '.' + pad(chart.input.day) + '</span><span>' + esc(P.timeLabel(chart).split(' ')[0]) + '</span></div>' +
       cpCell('년', p.year) + cpCell('월', p.month) + cpCell('일', p.day, true) + cpCell('시', p.hour) + '</div>';
   }
 
@@ -1471,7 +1471,6 @@
   function daeunRow(x, cur) {
     return '<div class="du-tr' + (cur ? ' is-now' : '') + '">' +
       '<span class="du-age"><b>' + x.ageFrom + '~' + x.ageTo + '</b><i>' + x.startLabel + '</i></span>' +
-      '<span class="du-year">' + x.yearFrom + '</span>' +
       '<span class="du-gz"><b class="' + ELCLS[x.stemEl] + '">' + E.STEMS[x.stem] + '</b><b class="' + ELCLS[x.branchEl] + '">' + E.BRANCHES[x.branch] + '</b></span>' +
       '<span class="du-god">' + x.stemGod + '<i>' + x.branchGod + '</i></span>' +
       '<span class="du-st">' + x.stage + '</span>' +
@@ -1488,7 +1487,7 @@
 
     const free = '<div class="y27-free"><span class="y27-free-kicker">무료 맛보기 · 10년마다 바뀌는 큰 물길</span>' +
       '<div class="du-table">' +
-      '<div class="du-tr th"><span>나이</span><span>시작</span><span>간지</span><span>십성</span><span>운성</span><span>흐름</span></div>' +
+      '<div class="du-tr th"><span>나이</span><span>간지</span><span>십성</span><span>운성</span><span>흐름</span></div>' +
       d.list.map(x => daeunRow(x, d.current && d.current.no === x.no)).join('') + '</div>' +
       '<p class="rp-note" style="margin-top:6px">나이는 세는나이 · 시작은 그 대운이 열린 해와 달 · 십성 큰 글씨는 대운 천간, 작은 글씨는 대운 지지 · 흐름 100점 만점</p>' +
       '<div class="du-high">' + d.golden.map(g => '<div class="du-hi"><span>인생 전성기</span><b>' + g.ageFrom + '~' + g.ageTo + '세 · ' + g.hanja + '</b><i>' + g.yearFrom + '~' + g.yearTo + '년</i><p>' + esc(d.say(g).key) + ' — ' + esc(d.say(g).flow) + '</p></div>').join('') + '</div>' +
@@ -1562,18 +1561,19 @@
     return out.slice(0, 3);
   }
 
-  function glPickCard(day, key, chart, idx) {
+  function glPickCard(day, key, chart, idx, compact) {
     const label = { contract: '계약·매매', job: '이직·면접', move: '이사·개업' }[key];
     const tips = P.TIPS[key];
-    return '<div class="gl-pick"><div class="gl-pick-head"><b>' + day.m + '월 ' + day.d + '일 <small>(' + day.weekday + ')</small></b>' +
-      '<span>' + day.hanja + '(' + day.ko + ') · ' + day.animal + '날</span><em>' + label + ' ' + day[key] + '점</em></div>' +
-      '<ul class="gl-why">' + glWhy(day, chart, key).map(w => '<li>' + esc(w) + '</li>').join('') + '</ul>' +
-      '<p class="gl-tip">' + esc(tips[idx % tips.length]) + '</p></div>';
+    const why = glWhy(day, chart, key);
+    return '<div class="gl-pick' + (compact ? ' is-mini' : '') + '"><div class="gl-pick-head"><b>' + day.m + '월 ' + day.d + '일 <small>(' + day.weekday + ')</small></b>' +
+      '<span>' + day.hanja + '(' + day.ko + ') · ' + day.jikKo + '일</span><em>' + label + ' ' + day[key] + '점</em></div>' +
+      '<ul class="gl-why">' + why.slice(0, compact ? 2 : 3).map(w => '<li>' + esc(w) + '</li>').join('') + '</ul>' +
+      (compact ? '' : '<p class="gl-tip">' + esc(tips[idx % tips.length]) + '</p>') + '</div>';
   }
 
   function glMonthCards(g) {
     return '<div class="gl-months">' + g.monthStat.map(mo => {
-      const good = mo.days.filter(d => Math.max(d.contract, d.job, d.move) >= 68)
+      const good = mo.days.filter(d => Math.max(d.contract, d.job, d.move) >= 64)
         .sort((a, b) => Math.max(b.contract, b.job, b.move) - Math.max(a.contract, a.job, a.move)).slice(0, 4)
         .sort((a, b) => a.d - b.d);
       const risk = mo.days.filter(d => d.risk >= 7).sort((a, b) => b.risk - a.risk).slice(0, 2).sort((a, b) => a.d - b.d);
@@ -1595,7 +1595,7 @@
     const free = '<div class="y27-free"><span class="y27-free-kicker">무료 맛보기 · 12개월 길일 달력</span>' +
       glMonthCards(g) +
       '<p class="rp-note" style="margin-top:8px">금색 숫자는 계약·이직·이사 중 하나라도 힘이 실리는 날입니다. 아래 심층 풀이에서 목적별 날짜와 이유를 하나씩 짚습니다.</p>' +
-      '<div class="gl-first">' + ['contract', 'job', 'move'].map(k => g.picks[k][0] ? glPickCard(g.picks[k][0], k, c, 0) : '').join('') + '</div>' +
+      '<div class="gl-first">' + ['contract', 'job', 'move'].map(k => g.picks[k][0] ? glPickCard(g.picks[k][0], k, c, 0, true) : '').join('') + '</div>' +
       '</div>';
 
     const purposeBlock = (key, title, desc) => '<div class="rp-title"><span>' + title + '</span></div>' +

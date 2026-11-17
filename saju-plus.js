@@ -237,17 +237,21 @@
     const cp = CP_TEXT[sc.ganKey];
     const jt = JI_TEXT[sc.jiKey] || JI_TEXT['무관'];
     const aName = A.input.name || '나', bName = Bc.input.name || '상대';
+    const aOwn = A.input.name ? A.input.name + ' 님' : '나';
+    const bOwn = Bc.input.name ? Bc.input.name + ' 님' : '상대';
+    const aSubj = A.input.name ? A.input.name + ' 님이' : '내가';
+    const bSubj = Bc.input.name ? Bc.input.name + ' 님이' : '상대가';
     const aJi = A.pillars.day, bJi = Bc.pillars.day;
     const aEl = A.dayMaster.elem, bEl = Bc.dayMaster.elem;
 
     /* 오행 보완 문장 */
     const fill = sc.fill;
     let fillText;
-    if (fill.bHasA >= 20) fillText = '상대의 사주에 ' + aName + ' 님에게 필요한 ' + fill.aNeed + '(' + { 목: '木', 화: '火', 토: '土', 금: '金', 수: '水' }[fill.aNeed] + ') 기운이 넉넉히 있습니다. ' + aName + ' 님이 혼자 할 때 막히던 일이 이 사람과 함께하면 풀리는 이유가 여기에 있습니다.';
-    else if (fill.bHasA >= 12) fillText = '상대에게 ' + aName + ' 님의 ' + fill.aNeed + ' 기운이 조금 있습니다. 결정적인 도움은 아니지만, ' + aName + ' 님이 지칠 때 곁에서 숨을 고르게 해 주는 정도는 됩니다.';
-    else fillText = '상대의 사주에 ' + aName + ' 님의 ' + fill.aNeed + ' 기운은 많지 않습니다. ' + aName + ' 님이 필요한 기운은 이 사람이 아니라 생활에서 채워야 합니다 — ' + (fill.aNeed === '목' ? '아침 산책과 새로 시작하는 취미' : fill.aNeed === '화' ? '햇빛을 쬐는 시간과 사람을 만나는 자리' : fill.aNeed === '토' ? '규칙적인 끼니와 익숙한 공간' : fill.aNeed === '금' ? '정리와 마감, 그리고 단호한 거절' : '물가를 걷는 시간과 충분한 잠') + '이 두 사람 사이에서 ' + aName + ' 님을 지켜 줍니다.';
-    if (fill.aHasB >= 20) fillText += ' 반대로 ' + bName + ' 님도 ' + aName + ' 님에게서 ' + fill.bNeed + ' 기운을 받고 있습니다. 서로에게 필요한 것을 주고받는, 드문 짝입니다.';
-    else if (fill.aHasB < 12) fillText += ' ' + bName + ' 님이 필요한 ' + fill.bNeed + ' 기운도 ' + aName + ' 님에게서 크게 나오지는 않습니다. 그래서 두 사람 모두 상대에게 모든 걸 기대하지 않는 편이 오래갑니다.';
+    if (fill.bHasA >= 20) fillText = '상대의 사주에 ' + aOwn + '에게 필요한 ' + fill.aNeed + '(' + { 목: '木', 화: '火', 토: '土', 금: '金', 수: '水' }[fill.aNeed] + ') 기운이 넉넉히 있습니다. ' + aSubj + ' 혼자 할 때 막히던 일이 이 사람과 함께하면 풀리는 이유가 여기에 있습니다.';
+    else if (fill.bHasA >= 12) fillText = '상대의 사주에도 ' + aOwn + '에게 필요한 ' + fill.aNeed + ' 기운이 조금 있습니다. 결정적인 도움은 아니지만, ' + aSubj + ' 지칠 때 곁에서 숨을 고르게 해 주는 정도는 됩니다.';
+    else fillText = '상대의 사주에 ' + aOwn + '에게 필요한 ' + fill.aNeed + ' 기운은 많지 않습니다. ' + aOwn + '에게 필요한 기운은 이 사람이 아니라 생활에서 채워야 합니다 — ' + (fill.aNeed === '목' ? '아침 산책과 새로 시작하는 취미' : fill.aNeed === '화' ? '햇빛을 쬐는 시간과 사람을 만나는 자리' : fill.aNeed === '토' ? '규칙적인 끼니와 익숙한 공간' : fill.aNeed === '금' ? '정리와 마감, 그리고 단호한 거절' : '물가를 걷는 시간과 충분한 잠') + '이 두 사람 사이에서 ' + (A.input.name ? A.input.name + ' 님을' : '나를') + ' 지켜 줍니다.';
+    if (fill.aHasB >= 20) fillText += ' 반대로 ' + bOwn + '도 ' + aOwn + '에게서 ' + fill.bNeed + ' 기운을 받고 있습니다. 서로에게 필요한 것을 주고받는, 드문 짝입니다.';
+    else if (fill.aHasB < 12) fillText += ' ' + bOwn + '에게 필요한 ' + fill.bNeed + ' 기운도 ' + aOwn + '에게서 크게 나오지는 않습니다. 그래서 두 사람 모두 상대에게 모든 걸 기대하지 않는 편이 오래갑니다.';
 
     /* 속궁합 — 일지·오행 온도 */
     const jiElA = aJi.branchElem, jiElB = bJi.branchElem;
@@ -432,7 +436,7 @@
         money: dec.money,
         work: dec.work,
         life: dec.life,
-        flow: (E.STAGE_DEEP[d.stage] || '') + ' ' + yongHit
+        flow: (E.STAGE_DEEP[d.stage] || '') + '. ' + yongHit
       };
     }
 
@@ -452,6 +456,14 @@
      ============================================================ */
   const HANJA_EL = { 목: '木', 화: '火', 토: '土', 금: '金', 수: '水' };
   const GOD_GOOD = { 정재: '정재일', 정관: '정관일', 식신: '식신일', 편재: '편재일', 정인: '정인일' };
+  const JIK = ['建', '除', '滿', '平', '定', '執', '破', '危', '成', '收', '開', '閉'];
+  const JIK_KO = { 建: '건', 除: '제', 滿: '만', 平: '평', 定: '정', 執: '집', 破: '파', 危: '위', 成: '성', 收: '수', 開: '개', 閉: '폐' };
+  const JIK_LUCK = { 除: 3, 滿: 2, 定: 4, 成: 5, 開: 4 };
+  const JIK_RISK = { 破: 5, 危: 2, 閉: 3 };
+  /* 황도(黃道) 12신 — 월지마다 청룡이 서는 지지가 정해져 있다 */
+  const HWANG_START = [8, 10, 0, 2, 4, 6, 8, 10, 0, 2, 4, 6];   // 子→申 丑→戌 寅→子 …
+  const SIN_NAME = ['청룡', '명당', '천형', '주작', '금궤', '천덕', '백호', '옥당', '천뢰', '현무', '사명', '구진'];
+  const SIN_GOOD = [0, 1, 4, 5, 7, 10];                          // 청룡·명당·금궤·천덕·옥당·사명
   const TIPS = {
     contract: [
       '도장은 오전 11시에서 오후 1시 사이, 해가 가장 높은 때에 찍으세요. 이 시간대가 서류의 기운을 가장 곧게 세웁니다.',
@@ -496,6 +508,18 @@
         const tags = [];
         let luck = 0;
 
+        /* 절기월 · 12직(建除) · 황도일 */
+        const lam = E.sunLongitude(E.toJD(year, m, d, 12) - 9 / 24);
+        const mBranch = (2 + Math.floor(((((lam - 315) + 360) % 360)) / 30)) % 12;
+        const jik = JIK[((branch - mBranch) % 12 + 12) % 12];
+        const sinIdx = ((branch - HWANG_START[mBranch]) % 12 + 12) % 12;
+        const sin = SIN_NAME[sinIdx];
+        luck += JIK_LUCK[jik] || 0;
+        const jikBad = JIK_RISK[jik] || 0;
+        if (sinIdx === 0) tags.push('청룡황도일');
+        else if (SIN_GOOD.indexOf(sinIdx) >= 0) tags.push('황도일');
+        if (SIN_GOOD.indexOf(sinIdx) >= 0) luck += 4;
+
         if (cheoneul.indexOf(branch) >= 0) { tags.push('천을귀인일'); luck += 10; }
         if (jr.indexOf('합') >= 0) { tags.push('일지 육합'); luck += 9; }
         else if (half) { tags.push('일지 반합'); luck += 7; }
@@ -514,23 +538,26 @@
         if (jr.indexOf('형') >= 0) { bad.push('일지 형일'); risk += 3; }
         if (jr.indexOf('파') >= 0) { bad.push('일지 파일'); risk += 4; }
         if (jr.indexOf('해') >= 0) { bad.push('일지 해일'); risk += 2; }
+        if (jikBad) { bad.push(JIK_KO[jik] + '일'); risk += jikBad; }
+        if (sin === '천형' || sin === '주작' || sin === '백호') risk += 3;
 
         const base = 44;
         const contract = base + luck + (gs === '정재' ? 7 : gs === '정관' ? 6 : gs === '식신' ? 4 : gs === '편재' ? 3 : 0)
           + (gb === '정재' ? 4 : gb === '정관' ? 3 : 0) - (gs === '상관' && (gb === '정관' || gb === '편관') ? 16 : 0)
           - (gs === '겁재' ? 9 : 0) - (jr.indexOf('충') >= 0 ? 18 : 0) - (jr.indexOf('형') >= 0 ? 8 : 0)
-          - (jr.indexOf('파') >= 0 ? 10 : 0) - (jr.indexOf('해') >= 0 ? 5 : 0);
+          - (jr.indexOf('파') >= 0 ? 10 : 0) - (jr.indexOf('해') >= 0 ? 5 : 0) - jikBad * 2;
         const job = base + luck + (gs === '정관' ? 9 : gs === '편관' ? 4 : 0)
           + (gb === '정관' ? 4 : 0) - (gs === '상관' ? 6 : 0) - (gs === '겁재' ? 6 : 0)
-          - (jr.indexOf('충') >= 0 ? 14 : 0) - (jr.indexOf('형') >= 0 ? 7 : 0) - (jr.indexOf('파') >= 0 ? 7 : 0);
+          - (jr.indexOf('충') >= 0 ? 14 : 0) - (jr.indexOf('형') >= 0 ? 7 : 0) - (jr.indexOf('파') >= 0 ? 7 : 0) - jikBad;
         const move = base + luck + (gs === '식신' ? 7 : gs === '편재' ? 6 : gs === '정재' ? 4 : 0)
           - (jr.indexOf('충') >= 0 ? 13 : 0) - (jr.indexOf('형') >= 0 ? 8 : 0) - (jr.indexOf('파') >= 0 ? 10 : 0)
-          - (jr.indexOf('해') >= 0 ? 5 : 0);
+          - (jr.indexOf('해') >= 0 ? 5 : 0) - jikBad * 2;
 
         const day = {
           y: year, m: m, d: d, idx: idx, stem: stem, branch: branch,
           hanja: STEMS[stem] + BRANCHES[branch], ko: STEMS_KO[stem] + BRANCHES_KO[branch],
           animal: ANIMALS[branch], tags: tags, bad: bad, luck: luck, risk: risk,
+          jik: jik, jikKo: JIK_KO[jik], sin: sin, mBranch: mBranch,
           contract: Math.max(0, Math.min(100, contract)),
           job: Math.max(0, Math.min(100, job)),
           move: Math.max(0, Math.min(100, move)),
