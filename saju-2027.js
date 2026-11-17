@@ -163,8 +163,8 @@
       if (!relMine.length && samhapWith(base.branch, pool)) score += 5;
 
       let elemNote = '';
-      if (base.branchElem === yongEl) { score += 8; elemNote = '용신 ' + yongEl + '이 실린 달'; }
-      else if (base.branchElem === heeEl) { score += 4; elemNote = '희신 ' + heeEl + '의 도움'; }
+      if (base.branchElem === yongEl) { score += 8; elemNote = '용신 ' + yongEl + ' 기운이 실린 달'; }
+      else if (base.branchElem === heeEl) { score += 4; elemNote = '희신 ' + heeEl + ' 기운의 도움'; }
       else if (base.branchElem === dm.elem) { score -= 2; elemNote = '내 기운이 겹쳐 판단이 강해지는 달'; }
 
       score = Math.max(12, Math.min(97, score));

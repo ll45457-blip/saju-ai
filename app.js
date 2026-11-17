@@ -552,9 +552,9 @@
         '<span class="ko">' + p.stemKo + p.branchKo + '</span>' +
         '<div class="el-chips"><i class="elc ' + ELCLS[p.stemElem] + '">' + p.stemElem + '</i><i class="elc ' + ELCLS[p.branchElem] + '">' + p.branchElem + '</i><em>' + p.animal + '</em></div>' +
         '<div class="pl-tags">' +
-        (god ? '<span class="tg god">' + god + '</span>' : '') +
-        (stage ? '<span class="tg stage">' + stage + '</span>' : '') +
-        (sinsal ? '<span class="tg sal">' + sinsal + '</span>' : '') +
+        (god ? '<span class="tg tg-god">' + god + '</span>' : '') +
+        (stage ? '<span class="tg tg-un">' + stage + '</span>' : '') +
+        (sinsal ? '<span class="tg tg-sal">' + sinsal + '</span>' : '') +
         '</div></div>';
     };
     const pillarsHTML = '<div class="pillars' + (noTime ? ' no-time' : '') + '">' +
