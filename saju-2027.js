@@ -263,7 +263,7 @@
       const headV = [
         base.no + '월(' + base.hanja + ', ' + base.startLabel + (base.no === 1 ? ' ' + E.plain('절입') : ' 절입') + ') — 하늘에는 ' + base.stemKo + base.stemElem + '(' + god + '), 땅에는 ' + base.branchKo + base.branchElem + ' — ' + branchGod + ' 자리가 앉는 달입니다.',
         base.no + '월(' + base.hanja + ', ' + base.startLabel + (base.no === 1 ? ' ' + E.plain('절입') : ' 절입') + ') — 천간은 ' + base.stemKo + base.stemElem + '(' + god + '), 지지는 ' + base.branchKo + base.branchElem + '라 ' + branchGod + ' 자리가 깔립니다.',
-        base.no + '월(' + base.hanja + ', ' + base.startLabel + (base.no === 1 ? ' ' + E.plain('절입') : ' 절입') + ') — 이 달의 간지는 ' + base.stemKo + base.stemElem + '(' + god + ') 위에 ' + base.branchKo + base.branchElem + '(' + branchGod + ')가 앉았습니다.'
+        base.no + '월(' + base.hanja + ', ' + base.startLabel + (base.no === 1 ? ' ' + E.plain('절입') : ' 절입') + ') — 이 달의 간지는 ' + base.stemKo + base.stemElem + '(' + god + ') 위에 ' + base.branchKo + base.branchElem + '(' + branchGod + ')' + E.josa(branchGod, '이', '가') + ' 앉았습니다.'
       ];
       story.push(headV[v] + ' 내 일간 ' + dm.hanja + '에게 ' + E.josa(god, '은', '는') + ' ' + gs.sit + '이고, 이 달의 주제는 ' + gs.scene + '입니다.');
       const secondV = [
