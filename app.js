@@ -1262,7 +1262,10 @@
     '겁재일': '겁재(劫財)의 날 — 돈이 오가는 자리에서 손실이 생기기 쉽습니다.',
     '일지 형일': '형(刑)이 드는 날 — 가까운 사람과 마찰이 생깁니다.',
     '일지 파일': '파(破)가 드는 날 — 맺은 약속이 어긋나기 쉽습니다.',
-    '일지 해일': '해(害)가 드는 날 — 말과 마음이 어긋납니다.'
+    '일지 해일': '해(害)가 드는 날 — 말과 마음이 어긋납니다.',
+    '파일': '파(破)일 — 맺은 것을 깨는 날이라 계약과 이사에 가장 나쁩니다.',
+    '폐일': '폐(閉)일 — 닫히는 날이라 새 일을 시작하지 마세요.',
+    '위일': '위(危)일 — 위태로운 날이라 큰 결정을 하루 미루세요.'
   };
 
   function renderPlus() {
@@ -1595,7 +1598,17 @@
     const free = '<div class="y27-free"><span class="y27-free-kicker">무료 맛보기 · 12개월 길일 달력</span>' +
       glMonthCards(g) +
       '<p class="rp-note" style="margin-top:8px">금색 숫자는 계약·이직·이사 중 하나라도 힘이 실리는 날입니다. 아래 심층 풀이에서 목적별 날짜와 이유를 하나씩 짚습니다.</p>' +
-      '<div class="gl-first">' + ['contract', 'job', 'move'].map(k => g.picks[k][0] ? glPickCard(g.picks[k][0], k, c, 0, true) : '').join('') + '</div>' +
+      '<div class="gl-first">' + (function () {
+        const used = {};
+        return ['contract', 'job', 'move'].map(k => {
+          const list = g.picks[k];
+          let pick = null;
+          for (let i = 0; i < list.length; i++) { if (!used[list[i].m + '-' + list[i].d]) { pick = list[i]; break; } }
+          if (!pick) return '';
+          used[pick.m + '-' + pick.d] = 1;
+          return glPickCard(pick, k, c, 0, true);
+        }).join('');
+      })() + '</div>' +
       '</div>';
 
     const purposeBlock = (key, title, desc) => '<div class="rp-title"><span>' + title + '</span></div>' +
