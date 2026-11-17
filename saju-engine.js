@@ -663,7 +663,9 @@
         care: '혼자 밀어붙이기보다 사람과 환경의 도움을 받을 때 길이 열립니다'
       };
     }
-    const scarce = ELEMENTS.slice().sort((a, b) => counts[a] - counts[b])[0];
+    /* 화면에 보이는 pct(가중 점수) 기준으로 가장 얇은 오행을 고른다 — 글자 수(counts)로 고르면
+       월지 가중 때문에 화면 퍼센티지와 결론이 어긋난다. */
+    const scarce = ELEMENTS.slice().sort((a, b) => (scores[a] || 0) - (scores[b] || 0))[0];
     const scarceIdx = ELEMENTS.indexOf(scarce);
     return {
       elem: scarce, hee: ELEMENTS[(scarceIdx + 4) % 5],
@@ -852,6 +854,40 @@
     return ch >= 0xAC00 && ch <= 0xD7A3 && (ch - 0xAC00) % 28 !== 0;
   }
   function josa(w, withC, withoutC) { return w + (hasBatchim(w) ? withC : withoutC); }
+  /* 한자 표기 + 한글 독음 기준 조사 — 癸卯(계묘)는 / 乙丑(을축)은 처럼 표기는 한자, 조사는 독음으로 */
+  function josaHan(hanja, read, withC, withoutC) {
+    const r = String(read || '');
+    if (!r) return hanja + withoutC;
+    return hanja + josa(r, withC, withoutC).slice(r.length);
+  }
+
+  /* ---------- 오행 최다 · 최소 판정 ----------
+     화면에 표시하는 pct(가중 %)와 항상 같은 결론이 나오도록 한 곳에서 계산한다.
+     · 최다 = pct 최대 (동률이면 글자 수 많은 쪽 → 목·화·토·금·수 순)
+     · 최소 = 최다를 뺀 나머지 중 pct 최소 (동률이면 글자 수 적은 쪽)
+     · 0%로 비어 있는 오행이 있으면 그중 pct가 가장 낮은 것을 최소로 삼는다
+     → 최다와 최소는 절대 같은 오행이 되지 않는다 */
+  function elemExtremes(chart) {
+    const pct = chart.pct || {}, cnt = chart.counts || {};
+    let strong = ELEMENTS[0];
+    ELEMENTS.forEach(el => {
+      const p = pct[el] || 0, best = pct[strong] || 0;
+      if (p > best || (p === best && (cnt[el] || 0) > (cnt[strong] || 0))) strong = el;
+    });
+    const rest = ELEMENTS.filter(el => el !== strong);
+    let weak = rest[0];
+    rest.forEach(el => {
+      const p = pct[el] || 0, worst = pct[weak] || 0;
+      if (p < worst || (p === worst && (cnt[el] || 0) < (cnt[weak] || 0))) weak = el;
+    });
+    const missing = ELEMENTS.filter(el => (cnt[el] || 0) === 0);
+    return {
+      strong: strong, weak: weak,
+      strongPct: pct[strong] || 0, weakPct: pct[weak] || 0,
+      missing: missing,
+      empty: missing.indexOf(weak) >= 0
+    };
+  }
 
   function deepRead(chart) {
     const dm = chart.dayMaster;
@@ -863,6 +899,9 @@
     const yong = chart.yongsin.elem, hee = chart.yongsin.hee;
     const L = LUCKY[yong];
     const H = ELEMENTS_HANJA;
+    /* 최다·최소 오행은 화면 퍼센티지와 같은 기준으로 한 번만 계산한다 */
+    const ext = elemExtremes(chart);
+    const strongEl = ext.strong, thinEl = ext.weak;
 
     /* 나를 받쳐 주는 자리 / 쓰는 자리 */
     const sup = [], drain = [];
@@ -887,11 +926,9 @@
       '일간 ' + dm.hanja + '(' + dm.ko + ') ' + dm.elem + ' — ' + ELEM_DEEP[dm.elem].name + '의 기운으로 태어났습니다. 여덟 글자에서 나를 받쳐 주는 쪽은 ' + top(sup) + ', 나를 쓰는 쪽은 ' + top(drain) + '입니다. 이 배치로 기운은 ' + chart.strengthKo + '(' + chart.strengthRatio + '%)입니다. ' + strengthBody +
       ' 월지 ' + chart.pillars.month.branchName + '(' + chart.pillars.month.branchKo + ')의 자리는 ' + chart.stages.month + ' — ' + STAGE_DEEP[chart.stages.month] + '.',
       (function () {
-        const strongEl = ELEMENTS.slice().sort((a, b) => pct[b] - pct[a])[0];
-        const thinEl = ELEMENTS.slice().sort((a, b) => pct[a] - pct[b])[0];
         const yy = chart.yinyang;
         return '오행은 ' + ELEMENTS.map(el => el + ' ' + pct[el] + '%').join(', ') + '로 놓여 있습니다. ' + strongEl + ' 기운이 가장 두터운데, 이 기운은 ' + ELEM_DEEP[strongEl].gift + '입니다. 다만 넘치면 ' + ELEM_DEEP[strongEl].over + '. ' +
-          (chart.missing.length ? thinEl + ' 기운이 아예 비어 있어 ' : thinEl + ' 기운이 ' + pct[thinEl] + '%로 가장 얇아 ') + ELEM_DEEP[thinEl].lack + '. ' +
+          (ext.empty ? thinEl + ' 기운이 아예 비어 있어 ' : thinEl + ' 기운이 ' + pct[thinEl] + '%로 가장 얇아 ') + ELEM_DEEP[thinEl].lack + '. ' +
           '음양은 양 ' + yy.yangPct + '% · 음 ' + yy.yinPct + '%로 ' + (yy.yangPct >= 65 ? '행동이 생각보다 앞서는 사람입니다. 몸이 먼저 나가고 마음이 뒤따라옵니다.' : yy.yinPct >= 65 ? '생각과 감정이 먼저 움직이는 사람입니다. 안에서 정리된 뒤에야 밖으로 나옵니다.' : '행동과 생각의 속도가 비슷해 판단이 흔들리지 않습니다.') + '';
       })(),
       '이 사주의 중심은 ' + yong + '(' + H[ELEMENTS.indexOf(yong)] + ')입니다. ' + chart.yongsin.reason + '. 일상에서는 색으로 ' + L.color + ', 맛으로 ' + L.taste + ', 방향으로 ' + L.dir + ', 시간으로는 ' + josa(L.time, '을', '를') + ' 권합니다. 옷과 소품, 식탁, 책상 배치, 약속 시간까지 이 결로 맞춰 보세요. 일로는 ' + ELEM_DEEP[yong].job + ' 쪽이 물이 잘 흐르는 길입니다. 희신 ' + hee + '도 함께 쓰면 좋은데, 결정을 내릴 때 ' + yong + '·' + hee + ' 기운이 강한 사람을 곁에 두면 판단이 흔들리지 않습니다. ' + chart.yongsin.care + '.'
@@ -986,15 +1023,13 @@
     ];
 
     /* ---- 건강 ---- */
-    const thinEl = ELEMENTS.slice().sort((a, b) => c[a] - c[b])[0];
-    const strongEl = ELEMENTS.slice().sort((a, b) => c[b] - c[a])[0];
     const weakStages = [['년지', chart.stages.year], ['월지', chart.stages.month], ['일지', chart.stages.day]].concat(chart.stages.hour ? [['시지', chart.stages.hour]] : []).filter(s => ['병', '사', '묘', '절'].indexOf(s[1]) >= 0);
-    const healthP1 = '몸의 약한 자리는 ' + thinEl + '(' + H[ELEMENTS.indexOf(thinEl)] + ') — ' + ELEM_DEEP[thinEl].organ + '입니다. ' + (chart.missing.indexOf(thinEl) >= 0 ? '이 오행이 아예 비어 있어 회복이 남보다 느린 자리입니다. ' : '가장 얇게 놓인 자리라 피로가 먼저 도착합니다. ') + '반대로 ' + strongEl + ' 기운이 넘쳐 ' + ELEM_DEEP[strongEl].over + '. ' + (weakStages.length ? weakStages[0][0] + '가 ' + weakStages[0][1] + ' 자리에 있어 그 자리의 기운이 상하기 쉽습니다 — ' + (weakStages[0][0] === '년지' ? '초년의 습관' : weakStages[0][0] === '월지' ? '사회생활' : weakStages[0][0] === '일지' ? '생활과 관계' : '노후와 부업') + '에서 무리가 쌓이면 몸으로 옵니다.' : '');
+    const healthP1 = '몸의 약한 자리는 ' + thinEl + '(' + H[ELEMENTS.indexOf(thinEl)] + ') — ' + ELEM_DEEP[thinEl].organ + '입니다. ' + (ext.empty ? '이 오행이 아예 비어 있어 회복이 남보다 느린 자리입니다. ' : '가장 얇게 놓인 자리라 피로가 먼저 도착합니다. ') + '반대로 ' + strongEl + ' 기운이 넘쳐 ' + ELEM_DEEP[strongEl].over + '. ' + (weakStages.length ? weakStages[0][0] + '가 ' + weakStages[0][1] + ' 자리에 있어 그 자리의 기운이 상하기 쉽습니다 — ' + (weakStages[0][0] === '년지' ? '초년의 습관' : weakStages[0][0] === '월지' ? '사회생활' : weakStages[0][0] === '일지' ? '생활과 관계' : '노후와 부업') + '에서 무리가 쌓이면 몸으로 옵니다.' : '');
     const healthP2 = '이 사주의 회복법은 약이 아니라 순서입니다. ' + ELEM_DEEP[thinEl].care + '부터 시작해 보세요. ' + (thinEl === '수' ? '물을 자주, 조금씩. 잠들기 전 30분은 화면을 내려놓으세요.' : thinEl === '목' ? '아침 햇빛을 10분 쬐고, 몸을 옆으로 길게 늘이는 스트레칭을 하세요.' : thinEl === '화' ? '해가 있을 때 15분 걷고, 밤에는 방을 어둡게 두세요.' : thinEl === '토' ? '끼니를 거르지 말고, 식후 10분 걷기를 습관으로 두세요.' : '숨을 길게 쉬는 운동(걷기·수영)과 잠들기 전 방 정리가 이 사주의 보약입니다.') + ' 몸이 보내는 신호는 대개 ' + ELEM_DEEP[thinEl].organ + '에서 먼저 옵니다. 그 자리가 반복해서 아프면 사주 해석보다 진료가 먼저입니다.';
     const healthTips = [
       '잠자는 시간을 먼저 고정하고 나머지 일정을 맞추세요. 이 사주는 수면이 기본값입니다.',
       '증상이 반복되면 참지 말고 검진을 받으세요. 이 내용은 참고용입니다.',
-      '카페인은 오후 2시 이후로 미루지 마세요. 이 사주는 밤의 각성이 다음 날 기운을 크게 깎습니다.',
+      '카페인 섭취는 오후 4시 이전으로 제한하고, 밤 각성을 피하세요. 이 사주는 밤의 각성이 다음 날 기운을 크게 깎습니다.',
       '한 달에 하루는 일정을 비우세요. 비운 날이 다음 달의 체력을 만듭니다.'
     ];
 
@@ -1025,7 +1060,7 @@
     jdn, toJD, sunLongitude, jdToDate, findTermJD, formatTermTime,
     newMoonJD, jdnToYmd, lunarToSolar, solarToLunar, lunarLeapMonths, lunarYearMonths, SIZI_NAMES,
     buildChart, getToday, describeDay, todayReading, tenGod, relation, stageOf, hash,
-    deepRead, moneyLeaks, josa, ELEM_DEEP, GOD_SIT, STAGE_DEEP, REL_SIT, LOVE_SIT,
+    deepRead, moneyLeaks, josa, josaHan, ELEM_DEEP, GOD_SIT, STAGE_DEEP, REL_SIT, LOVE_SIT, elemExtremes,
     stemElem: s => ELEMENTS[STEM_ELEM[s]],
     branchElem: b => ELEMENTS[BRANCH_ELEM[b]],
     branchMainStem: b => BRANCH_MAIN_STEM[b],

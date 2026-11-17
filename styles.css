@@ -922,6 +922,52 @@ body::before {
 
 .rp-note { margin-top: 20px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .06); font-size: 10px; color: #5C5850; line-height: 1.7; }
 .rp-actions { display: flex; gap: 8px; margin-top: 18px; }
+.rp-sum {
+  margin: 12px 0 10px; padding: 13px 14px; border-radius: 16px;
+  border: 1px solid rgba(212, 175, 55, .34);
+  background: linear-gradient(160deg, rgba(212, 175, 55, .12), rgba(255, 255, 255, .02) 62%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
+}
+.rp-sum-kicker {
+  display: inline-block; margin-bottom: 7px;
+  font-family: var(--serif); font-size: 11.5px; letter-spacing: .04em; color: var(--gold-lt);
+}
+.rp-sum-list { margin: 0; padding: 0 0 0 4px; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.rp-sum-list li {
+  position: relative; padding-left: 14px;
+  font-size: 11.5px; line-height: 1.72; color: #E4DCCB;
+}
+.rp-sum-list li::before {
+  content: ''; position: absolute; left: 0; top: 8px;
+  width: 5px; height: 5px; border-radius: 50%; background: rgba(212, 175, 55, .75);
+}
+.rp-sum-list b { color: #F6EEDC; font-weight: 600; }
+
+.rp-nav {
+  display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+}
+.rp-nav-btn {
+  padding: 6px 11px; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .04);
+  font-family: var(--sans); font-size: 10.5px; letter-spacing: .02em; color: #D6CEBE;
+  transition: border-color .2s, color .2s, background .2s;
+}
+.rp-nav-btn:hover, .rp-nav-btn:active {
+  border-color: rgba(212, 175, 55, .55); color: var(--gold-lt); background: rgba(212, 175, 55, .10);
+}
+
+.rp-buch {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  margin: 16px 0 4px; padding: 14px 13px; border-radius: 16px;
+  border: 1px dashed rgba(212, 175, 55, .30);
+  background: rgba(212, 175, 55, .05);
+  text-align: center;
+}
+.rp-buch-title { font-family: var(--serif); font-size: 12.5px; color: var(--gold-lt); letter-spacing: .02em; }
+.rp-buch-desc { font-size: 10px; line-height: 1.6; color: #9C968A; }
+.rp-buch .btn-ghost { width: 100%; margin-top: 2px; }
 .rp-actions > * { flex: 1; }
 
 /* 오늘 페이지 */
@@ -1210,26 +1256,40 @@ body::before {
 .y27-mini-row { display: flex; flex-wrap: wrap; gap: 3px 10px; margin-top: 7px; font-size: 9.5px; color: var(--ink-3); }
 .y27-mini-row b { color: var(--gold-lt); font-weight: 600; }
 
-/* 블러 잠금 + 결제 유도 카드 */
+/* 잠금 상태 — 유료 본문은 DOM에 없다. 티저 2~3줄 + 빈 자리 표시 + 결제 카드만 보인다. */
 .pay-wrap { position: relative; margin-top: 6px; }
-.pay-body { transition: filter .32s ease; }
-.pay-wrap.is-locked .pay-body {
-  filter: blur(5px) saturate(.92);
-  max-height: 470px; min-height: 300px; overflow: hidden;
-  pointer-events: none; user-select: none;
-  -webkit-mask-image: linear-gradient(180deg, #000 62%, rgba(0, 0, 0, .2) 100%);
-  mask-image: linear-gradient(180deg, #000 62%, rgba(0, 0, 0, .2) 100%);
+.pay-body { transition: none; }
+.pay-wrap.is-locked .pay-body { filter: none; max-height: none; min-height: 0; }
+.pay-teaser {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 13px 14px; border-radius: 14px;
+  border: 1px dashed rgba(212, 175, 55, .30);
+  background: linear-gradient(180deg, rgba(212, 175, 55, .07), rgba(255, 255, 255, .015));
 }
+.pay-teaser p { margin: 0; font-size: 11.5px; line-height: 1.7; color: #CFC7B6; }
+.pay-teaser p:first-child { color: #F0E7D3; }
+.pay-skel {
+  display: flex; flex-direction: column; gap: 9px;
+  margin: 12px 0 4px; padding: 4px 2px;
+}
+.pay-skel i {
+  display: block; height: 9px; border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .11), rgba(255, 255, 255, .05));
+}
+.pay-skel i:nth-child(1) { width: 96%; }
+.pay-skel i:nth-child(2) { width: 88%; }
+.pay-skel i:nth-child(3) { width: 92%; }
+.pay-skel i:nth-child(4) { width: 74%; }
+.pay-skel i:nth-child(5) { width: 84%; }
 .pay-wrap.is-open .pay-body { filter: none; }
 .pay-card {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  z-index: 4; width: calc(100% - 22px); max-width: 330px;
+  position: relative; z-index: 2;
+  width: 100%; max-width: 100%; margin: 14px 0 4px;
   display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center;
   padding: 16px 15px 14px; border-radius: 18px;
-  max-height: calc(100% - 18px); overflow-y: auto; -webkit-overflow-scrolling: touch;
   border: 1px solid rgba(212, 175, 55, .38);
   background: linear-gradient(180deg, rgba(24, 26, 34, .985), rgba(11, 12, 17, .995));
-  box-shadow: 0 26px 60px -18px rgba(0, 0, 0, .95), inset 0 1px 0 rgba(255, 255, 255, .06);
+  box-shadow: 0 18px 46px -22px rgba(0, 0, 0, .9), inset 0 1px 0 rgba(255, 255, 255, .06);
 }
 .pay-kicker {
   font-size: 9px; letter-spacing: .16em; color: var(--gold);
@@ -1337,7 +1397,6 @@ body::before {
     filter: none !important; max-height: none !important; min-height: 0 !important;
     overflow: visible !important; -webkit-mask-image: none !important; mask-image: none !important;
   }
-  .pay-wrap.is-locked .pay-body { filter: blur(5px) !important; max-height: 300px !important; overflow: hidden !important; }
   .rp-question, .rp-title, .rp-para, .rp-lead,
   .y27-line, .y27-half, .y27-pick, .mini-item, .lucky-item, .pl,
   .el-card, .rp-caution, .y27-samjae, .y27-leak, .y27-guin-item, .y27-sal-card { break-inside: avoid; }
@@ -1652,6 +1711,18 @@ body::before {
 .biz-info dt { flex: 0 0 auto; min-width: 74px; color: #6B665C; letter-spacing: .02em; }
 .biz-info dd { margin: 0; color: #57534C; word-break: break-all; }
 .foot-copy { margin: 0; font-size: 9px; letter-spacing: .04em; color: #423F39; }
+.foot-biz {
+  margin: 0 0 12px; padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, .07); border-radius: 8px;
+  background: rgba(255, 255, 255, .02);
+  font-size: 9.5px; line-height: 1.7; color: #7A756C; letter-spacing: .01em;
+}
+.biz-pre {
+  margin: 0 0 10px; padding: 9px 11px;
+  border: 1px solid rgba(212, 175, 55, .22); border-radius: 9px;
+  background: rgba(212, 175, 55, .05);
+  font-size: 10px; line-height: 1.7; color: #B7AF9F;
+}
 
 /* ============================================================
    이용약관 · 환불규정 · 개인정보처리방침 모달

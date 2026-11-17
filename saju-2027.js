@@ -248,26 +248,26 @@
       ];
       story.push(headV[v] + ' 내 일간 ' + dm.hanja + '에게 ' + E.josa(god, '은', '는') + ' ' + gs.sit + '이고, 이 달의 주제는 ' + gs.scene + '입니다.');
       const secondV = [
-        base.no + '월 ' + base.hanja + '은 월지 본기의 ' + branchGod + '까지 겹쳐 ' + E.josa(bs.sit, '이', '가') + ' 한 겹 더해지고, ' + dm.hanja + ' 일간의 12운성은 ' + stage + ' — ' + E.STAGE_DEEP[stage] + '.',
+        base.no + '월 ' + E.josaHan(base.hanja, base.ko, '은', '는') + ' 월지 본기의 ' + branchGod + '까지 겹쳐 ' + E.josa(bs.sit, '이', '가') + ' 한 겹 더해지고, ' + dm.hanja + ' 일간의 12운성은 ' + stage + ' — ' + E.STAGE_DEEP[stage] + '.',
         base.no + '월의 월지 본기는 ' + E.josa(branchGod, '이', '가') + ' 한 겹 더 얹힙니다 — ' + bs.sit + '. ' + dm.ko + ' 일간의 운성은 ' + stage + ', ' + E.STAGE_DEEP[stage] + '.',
         '게다가 ' + base.no + '월 ' + base.hanja + '의 지지는 ' + branchGod + ' 자리라 ' + E.josa(bs.sit, '이', '가') + ' 함께 걸립니다. ' + dm.hanja + ' 일간의 운성은 ' + stage + ' — ' + E.STAGE_DEEP[stage] + '.'
       ];
       story.push(secondV[v]);
       const noYearV = [
         base.no + '월(' + base.hanja + ')은 2027년 未토와 충·합이 없습니다. ' + dm.hanja + ' 일간에게 이 달은 해의 기운이 흔들지 않고 월운 자체로만 움직입니다.',
-        '올해의 未토는 ' + base.no + '월 ' + base.hanja + '을 건드리지 않습니다. ' + dm.hanja + ' 일간의 흐름은 이 달의 간지로만 결정되고 해의 기운은 잠잠합니다.',
+        '올해의 未토는 ' + base.no + '월 ' + E.josaHan(base.hanja, base.ko, '을', '를') + ' 건드리지 않습니다. ' + dm.hanja + ' 일간의 흐름은 이 달의 간지로만 결정되고 해의 기운은 잠잠합니다.',
         '未토와 ' + base.no + '월 ' + base.hanja + ' 사이에는 아무 작용이 없습니다. ' + dm.ko + ' 일간에게 이 달은 해의 도움도 방해도 없이 제 몫으로 굴러갑니다.'
       ];
       story.push(relYear.length
-        ? base.no + '월 ' + base.hanja + '은 ' + dm.hanja + '(' + dm.ko + ') 일간에게 2027년 未토와 ' + flatRel(relYear) + ' 관계입니다. ' + REL_SCENE[relYear[0]] + (relYear.length > 1 ? ' 여기에 ' + relYear.slice(1).map(r => (E.REL_SIT[r] || r)).join(' · ') + '까지 겹쳐 같은 방향의 부담이 한 번 더 옵니다.' : '')
+        ? base.no + '월 ' + E.josaHan(base.hanja, base.ko, '은', '는') + ' ' + dm.hanja + '(' + dm.ko + ') 일간에게 2027년 未토와 ' + flatRel(relYear) + ' 관계입니다. ' + REL_SCENE[relYear[0]] + (relYear.length > 1 ? ' 여기에 ' + relYear.slice(1).map(r => (E.REL_SIT[r] || r)).join(' · ') + '까지 겹쳐 같은 방향의 부담이 한 번 더 옵니다.' : '')
         : noYearV[v]);
       const noMineV = [
         '내 일지 ' + chart.pillars.day.hanja + '와는 부딪히지도 붙지도 않아, ' + base.no + '월에는 생활의 리듬을 그대로 지킬 수 있습니다.',
-        '내 일지 ' + chart.pillars.day.hanja + '(' + chart.pillars.day.branchKo + ') 쪽과 ' + base.no + '월 ' + base.hanja + '은 아무 작용이 없습니다. 생활의 큰 틀은 흔들리지 않으니 평소대로 가시면 됩니다.',
+        '내 일지 ' + chart.pillars.day.hanja + '(' + chart.pillars.day.branchKo + ') 쪽과 ' + base.no + '월 ' + E.josaHan(base.hanja, base.ko, '은', '는') + ' 아무 작용이 없습니다. 생활의 큰 틀은 흔들리지 않으니 평소대로 가시면 됩니다.',
         base.no + '월은 내 자리(' + chart.pillars.day.hanja + ')와 조용한 달입니다 — 크게 얻을 것도 잃을 것도 없이 담담하게 지나갑니다.'
       ];
       story.push(relMine.length
-        ? '내 일지 ' + chart.pillars.day.hanja + ' 쪽과 ' + base.no + '월 ' + base.hanja + '은 ' + flatRel(relMine) + ' — ' + MINE_SCENE[relMine[0]] + (relMine.length > 1 ? ' ' + relMine.slice(1).map(r => (E.REL_SIT[r] || r)).join(' · ') + '까지 겹쳐 마음 쓸 일이 한 가지 더 생깁니다.' : '')
+        ? '내 일지 ' + chart.pillars.day.hanja + ' 쪽과 ' + base.no + '월 ' + E.josaHan(base.hanja, base.ko, '은', '는') + ' ' + flatRel(relMine) + ' — ' + MINE_SCENE[relMine[0]] + (relMine.length > 1 ? ' ' + relMine.slice(1).map(r => (E.REL_SIT[r] || r)).join(' · ') + '까지 겹쳐 마음 쓸 일이 한 가지 더 생깁니다.' : '')
         : noMineV[v]);
       if (base.branchElem === yongEl) story.push(base.no + '월 ' + base.hanja + '의 월지가 용신 ' + E.josa(yongEl, '과', '와') + ' 같은 기운이라 ' + dm.hanja + ' 일간인 내가 편해집니다. 같은 일을 해도 피로가 덜하고 판단이 빨라집니다.');
       else if (base.branchElem === heeEl) story.push(base.no + '월에는 희신 ' + heeEl + ' 기운이 실려 ' + dm.hanja + ' 일간의 주변에 도움이 따라옵니다. 누군가의 소개나 제안이 실제 이익으로 이어집니다.');

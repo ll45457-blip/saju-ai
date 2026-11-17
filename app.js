@@ -488,7 +488,7 @@
     }
     const chart = E.buildChart(state.profile);
     const r = E.todayReading(chart, t);
-    r.myNote = '나의 일간 ' + chart.dayMaster.hanja + '(' + chart.dayMaster.ko + ') ' + chart.dayMaster.elem + '과 오늘 일진 ' + t.pillar.hanja + '이 만나면 ' + r.god + '의 자리가 됩니다. ' + (r.combine ? '특히 일지끼리 합(合)하는 날이라 인연과 약속이 따라오기 쉽습니다.' : r.clash ? '일지가 오늘 지지와 충(沖)하는 날이라 무리한 이동과 계약은 조심하세요.' : '큰 충돌 없이 흘러가는 날입니다.');
+    r.myNote = '나의 일간 ' + chart.dayMaster.hanja + '(' + chart.dayMaster.ko + ') ' + chart.dayMaster.elem + '과 오늘 일진 ' + E.josaHan(t.pillar.hanja, t.pillar.ko, '이', '가') + ' 만나면 ' + r.god + '의 자리가 됩니다. ' + (r.combine ? '특히 일지끼리 합(合)하는 날이라 인연과 약속이 따라오기 쉽습니다.' : r.clash ? '일지가 오늘 지지와 충(沖)하는 날이라 무리한 이동과 계약은 조심하세요.' : '큰 충돌 없이 흘러가는 날입니다.');
     $('#todayWidgetWrap').innerHTML =
       '<div class="block-head"><h2>오늘의 운세</h2><span class="block-sub">' + t.dateStr + '</span></div>' +
       todayHTML(t, r, false, chart);
@@ -515,7 +515,7 @@
     }
     const chart = E.buildChart(state.profile);
     const r = E.todayReading(chart, t);
-    r.myNote = '나의 일간 ' + chart.dayMaster.hanja + '(' + chart.dayMaster.ko + ') ' + chart.dayMaster.elem + '과 오늘 일진 ' + t.pillar.hanja + '이 만나 ' + r.god + '의 자리입니다. ' + (r.combine ? '일지가 합(合)하는 날로, 만남과 약속에 힘이 실립니다.' : r.clash ? '일지가 충(沖)하는 날로, 계약·이동·약속 변경은 조심스럽게.' : '큰 자극 없이 흘러가니 평소의 리듬을 지키면 충분합니다.');
+    r.myNote = '나의 일간 ' + chart.dayMaster.hanja + '(' + chart.dayMaster.ko + ') ' + chart.dayMaster.elem + '과 오늘 일진 ' + E.josaHan(t.pillar.hanja, t.pillar.ko, '이', '가') + ' 만나 ' + r.god + '의 자리입니다. ' + (r.combine ? '일지가 합(合)하는 날로, 만남과 약속에 힘이 실립니다.' : r.clash ? '일지가 충(沖)하는 날로, 계약·이동·약속 변경은 조심스럽게.' : '큰 자극 없이 흘러가니 평소의 리듬을 지키면 충분합니다.');
     wrap.innerHTML = profileBannerHTML(chart) + todayHTML(t, r, true, chart) +
       '<div class="block" style="margin-top:18px"><div class="rp-note">' + esc(calendarNote(chart.input)) + ' · ' + esc(D.REPORT.mockNote) + '</div></div>';
     const pe = $('#todayPage [data-prof-edit]');
@@ -536,7 +536,7 @@
     const list = $('#archiveList');
     $('#archiveCount').textContent = state.history.length ? state.history.length + '건' : '';
     if (!state.history.length) {
-      list.innerHTML = '<div class="arch-empty">아직 본 사주가 없어요.<br /><b>무료 사주 6종</b>이나 <b>질문즉답</b>부터 시작해 보세요.<br /><button class="btn-gold" data-nav="home">홈으로 가기</button></div>';
+      list.innerHTML = '<div class="arch-empty">아직 본 사주가 없어요.<br /><b>무료 사주 8종</b>이나 <b>질문즉답</b>부터 시작해 보세요.<br /><button class="btn-gold" data-nav="home">홈으로 가기</button></div>';
       return;
     }
     list.innerHTML = state.history.map(h => {
@@ -874,11 +874,24 @@
     store.set(K_SCOPES, state.unlocked);
   }
 
-  /* ---------------- 유료 잠금 퍼널 (맛보기 → 블러 잠금 → 래피드 결제 · 열람 코드 → PDF) ---------------- */
+  /* ---------------- 유료 잠금 퍼널 (맛보기 → 잠금 티저 → 래피드 결제 · 열람 코드 → PDF) ---------------- */
+  function latpeedLinks() {
+    const c = window.WOLHA_LATPEED || {};
+    if (c.links && typeof c.links === 'object') return c.links;
+    if (c.url) return { newyear: c.url };   // 구 단일 URL 형태 호환
+    return {};
+  }
   function latpeedConf() {
     const c = window.WOLHA_LATPEED || {};
-    return { url: (c.url || '').trim(), trialOpen: !!c.trialOpen };
+    return { links: latpeedLinks(), trialOpen: !!c.trialOpen };
   }
+  /* 상품별 결제 링크 — 가격이 맞는 전용 상품이 없으면 빈 문자열. 가격이 다른 상품으로 보내지 않는다. */
+  function latpeedLinkFor(kind) {
+    const links = latpeedLinks();
+    const scope = KIND_SCOPE[kind] || kind;
+    return String(links[kind] || links[scope] || '').trim();
+  }
+  const NO_LINK_NOTE = '현재 2027 신년운세(6,900원) 결제만 먼저 열려 있습니다 · 열람 코드가 있으시면 아래에 입력해 주세요';
 
   function payCardHTML(o) {
     return '<div class="pay-card">' +
@@ -902,11 +915,26 @@
       '</div>';
   }
 
+  /* 잠금 상태의 본문 — 실제 유료 본문은 HTML/DOM에 넣지 않는다 (F12로도 보이지 않게).
+     티저 2~3줄과 빈 자리 표시만 두고, 열람 코드가 풀린 순간에만 본문을 계산해 넣는다. */
+  function lockedTeaserHTML(o) {
+    const lines = (o && o.teaser && o.teaser.length ? o.teaser : [
+      '이 아래부터는 여덟 글자를 하나씩 짚은 심층 풀이입니다.',
+      '내 사주 하나만 놓고 쓴 본문이라, 사람마다 문장이 모두 다릅니다.',
+      '받으신 열람 코드를 입력하면 이 자리에서 바로 펼쳐집니다.'
+    ]).slice(0, 3);
+    return '<div class="pay-teaser">' + lines.map(t => '<p>' + esc(t) + '</p>').join('') + '</div>' +
+      '<div class="pay-skel" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>';
+  }
+
   function payWrapHTML(o) {
     const open = isUnlocked(o.kind);
+    const inner = open
+      ? (typeof o.inner === 'function' ? o.inner() : (o.inner || ''))
+      : lockedTeaserHTML(o);
     return '<div class="pay-wrap' + (open ? ' is-open' : ' is-locked') + '" data-pay="' + o.kind +
       '" data-price="' + (o.price || 0) + '" data-label="' + esc(o.label || '') + '">' +
-      '<div class="pay-body">' + o.inner + '</div>' +
+      '<div class="pay-body">' + inner + '</div>' +
       (open ? '' : payCardHTML(o)) +
       '</div>';
   }
@@ -915,16 +943,32 @@
     return '<div class="rp-toolbar"><button type="button" class="pdf-btn" data-pdf hidden>📄 PDF 파일 저장하기 <small>인쇄 · 보관</small></button></div>';
   }
 
-  function bindPay(root, kind) {
+  /* 잠금이 풀린 뒤 결과지를 다시 그린다 — 본문은 이때 처음 계산되어 DOM에 들어간다.
+     시트 스크롤 위치를 지키고 결제/본문 자리로 이동시킨다. */
+  let sheetRebuilding = false;
+  function rerenderSheet(build, kind) {
+    if (sheetRebuilding) return;
+    const body = $('#sheetBody');
+    const top = body ? body.scrollTop : 0;
+    sheetRebuilding = true;
+    try { build(); } finally { sheetRebuilding = false; }
+    if (!body) return;
+    body.scrollTop = top;
+    const w = kind ? body.querySelector('[data-pay="' + kind + '"]') : null;
+    if (w && w.scrollIntoView) { try { w.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { } }
+  }
+
+  function bindPay(root, kind, reload) {
     const show = () => $$('[data-pdf]', root).forEach(b => { b.hidden = false; });
     const wrap = root.querySelector('.pay-wrap');
     if (!wrap || wrap.classList.contains('is-open')) { show(); return; }
 
-    const L = latpeedConf();
     const meta = () => ({ content_kind: kind, content_label: wrap.dataset.label || '', value: +wrap.dataset.price || 0 });
     const codeIn = wrap.querySelector('.pay-code-input');
 
     const openCard = () => {
+      /* 유료 본문은 잠금이 풀린 순간에만 계산해 넣는다 (재렌더) */
+      if (typeof reload === 'function') { reload(); return; }
       wrap.classList.remove('is-locked');
       wrap.classList.add('is-open');
       const card = wrap.querySelector('.pay-card');
@@ -958,9 +1002,11 @@
 
     const go = wrap.querySelector('.pay-latpeed');
     if (go) go.addEventListener('click', () => {
-      trackEvent('click_latpeed', meta());
-      if (L.url) { window.open(L.url, '_blank', 'noopener'); return; }
-      showToast('래피드 결제 링크 연결 전입니다. 받으신 열람 코드를 아래에 입력해 주세요');
+      const link = latpeedLinkFor(kind);
+      trackEvent('click_latpeed', Object.assign(meta(), { has_link: !!link }));
+      if (link) { window.open(link, '_blank', 'noopener'); return; }
+      /* 이 상품은 아직 전용 결제 상품이 없다 — 가격이 다른 상품으로 보내지 않고 안내만 한다 */
+      showToast(NO_LINK_NOTE);
       if (codeIn) { codeIn.focus(); try { codeIn.scrollIntoView({ block: 'center' }); } catch (e) { } }
     });
 
@@ -1003,6 +1049,220 @@
 
   function disclaimerHTML() {
     return '<div class="rp-disclaimer">' + esc(D.REPORT.disclaimer) + '</div>';
+  }
+
+  /* ---------------- 리포트 목차 점프 · 3줄 총평 ---------------- */
+  const RP_SECTIONS = [
+    { id: 'rp-manse', label: '만세력' },
+    { id: 'rp-elem', label: '오행' },
+    { id: 'rp-money', label: '재물' },
+    { id: 'rp-love', label: '연애' },
+    { id: 'rp-health', label: '건강' },
+    { id: 'rp-todo', label: '지금 할 일' }
+  ];
+
+  function reportNavHTML() {
+    return '<nav class="rp-nav" aria-label="리포트 목차">' +
+      RP_SECTIONS.map(s2 => '<button type="button" class="rp-nav-btn" data-jump="' + s2.id + '">' + s2.label + '</button>').join('') +
+      '</nav>';
+  }
+
+  /* 해당 섹션으로 부드럽게 이동. 잠긴 섹션이면 결제 카드로 보낸다. */
+  function jumpToSection(root, id, fallbackKind) {
+    const body = root || $('#sheetBody');
+    if (!body) return;
+    const t = body.querySelector('#' + id);
+    const el = t || (fallbackKind ? body.querySelector('[data-pay="' + fallbackKind + '"]') : null);
+    if (!el) return;
+    try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { }
+  }
+
+  /* 상단 3줄 총평 — 도사·선녀 이름을 달고, 오행 퍼센티지와 같은 결론만 적는다 */
+  function summaryCardHTML(chart, c) {
+    const dm = chart.dayMaster;
+    const group = D.COPY.godGroup[dominantGodGroup(chart)];
+    const ext = E.elemExtremes(chart);
+    const lines = [
+      '중심은 <b>' + dm.hanja + '(' + dm.ko + ') · ' + dm.elem + ' 일간</b> — ' + chart.strengthKo + ' ' + chart.strengthRatio + '%, ' + group.name + '이 강한 구조입니다.',
+      '오행은 <b>' + ext.strong + ' ' + chart.pct[ext.strong] + '%</b>가 가장 두텁고 <b>' + ext.weak + ' ' + chart.pct[ext.weak] + '%</b>' + (ext.empty ? '로 비어 있습니다.' : '로 가장 얇습니다.'),
+      '이 사주에 필요한 기운은 <b>' + chart.yongsin.elem + '</b> — ' + esc(chart.yongsin.care) + '.'
+    ];
+    return '<section class="rp-sum">' +
+      '<span class="rp-sum-kicker">' + esc(c.name) + '의 핵심 총평 3줄</span>' +
+      '<ol class="rp-sum-list">' + lines.map(l => '<li>' + l + '</li>').join('') + '</ol>' +
+      '</section>';
+  }
+
+  /* ---------------- 9:16 인스타 스토리용 부적 카드 ---------------- */
+  function buchCardHTML() {
+    return '<section class="rp-buch">' +
+      '<b class="rp-buch-title">인스타 스토리용 부적 카드</b>' +
+      '<span class="rp-buch-desc">내 여덟 글자와 키워드만 담았습니다 · 1080×1920 PNG</span>' +
+      '<button type="button" class="btn-ghost wide" id="rpBuch">📱 인스타 스토리용 부적 카드 저장 (9:16)</button>' +
+      '</section>';
+  }
+
+  function buchHashtags(chart) {
+    const dm = chart.dayMaster;
+    const ext = E.elemExtremes(chart);
+    return ['#월하사주', '#' + dm.elem + '일간', '#' + ext.strong + '기운'];
+  }
+
+  function drawBuchCard(chart, c) {
+    const W = 1080, H = 1920;
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const g = cv.getContext('2d');
+    if (!g) return cv;
+    const gold = '#D4AF37', goldLt = '#EBD9A2', cream = '#F7EFDD', dim = 'rgba(247,239,221,.62)';
+    const serif = '"Noto Serif KR", "Nanum Myeongjo", serif';
+    const sans = '"Noto Sans KR", "Apple SD Gothic Neo", sans-serif';
+    const elColor = el => E.ELEMENT_COLOR[el] || goldLt;
+
+    /* 배경 */
+    const bg = g.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#0A0B12');
+    bg.addColorStop(0.55, '#0D0C15');
+    bg.addColorStop(1, '#120E18');
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+
+    /* 별 — 사주 값으로 결정되는 고정 배치 */
+    let seed = (chart.dayMaster.stem + 1) * 977 + chart.pillars.day.branch * 131 + (chart.pillars.month.branch + 1) * 37;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+    for (let i = 0; i < 110; i++) {
+      const x = rnd() * W, y = rnd() * (H * 0.82), r = rnd() * 2.2 + 0.6;
+      g.fillStyle = 'rgba(247,239,221,' + (0.08 + rnd() * 0.55).toFixed(2) + ')';
+      g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    }
+
+    /* 테두리 */
+    g.strokeStyle = 'rgba(212,175,55,.55)'; g.lineWidth = 3;
+    g.strokeRect(44, 44, W - 88, H - 88);
+    g.strokeStyle = 'rgba(212,175,55,.16)'; g.lineWidth = 1;
+    g.strokeRect(62, 62, W - 124, H - 124);
+
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+
+    /* 달 */
+    const moonY = 300, moonR = 86;
+    const halo = g.createRadialGradient(W / 2, moonY, moonR * 0.6, W / 2, moonY, moonR * 2.4);
+    halo.addColorStop(0, 'rgba(212,175,55,.22)'); halo.addColorStop(1, 'rgba(212,175,55,0)');
+    g.fillStyle = halo; g.beginPath(); g.arc(W / 2, moonY, moonR * 2.4, 0, Math.PI * 2); g.fill();
+    const mg = g.createRadialGradient(W / 2 - 24, moonY - 24, 12, W / 2, moonY, moonR);
+    mg.addColorStop(0, '#FFF9E8'); mg.addColorStop(0.62, '#F2E0AE'); mg.addColorStop(1, '#C08F2A');
+    g.beginPath(); g.arc(W / 2, moonY, moonR, 0, Math.PI * 2); g.fillStyle = mg; g.fill();
+
+    /* 브랜드 */
+    g.fillStyle = gold; g.font = '600 34px ' + serif;
+    g.fillText('月 下 四 柱', W / 2, 470);
+    g.fillStyle = dim; g.font = '300 26px ' + sans;
+    g.fillText(D.BRAND.name, W / 2, 520);
+
+    /* 이름 · 생년월일 */
+    const p = chart.input || {};
+    g.fillStyle = cream; g.font = '600 52px ' + serif;
+    g.fillText((p.name || '나의 사주'), W / 2, 620);
+    g.fillStyle = dim; g.font = '300 28px ' + sans;
+    g.fillText(birthLabel(p) + ' · ' + siziName(p.hour) + ' · ' + (p.gender === 'female' ? '여' : '남'), W / 2, 676);
+
+    /* 여덟 글자 */
+    g.fillStyle = 'rgba(212,175,55,.7)'; g.font = '500 24px ' + sans;
+    g.fillText('여 덟 글 자', W / 2, 770);
+    const pls = [['년주', chart.pillars.year], ['월주', chart.pillars.month], ['일주', chart.pillars.day], ['시주', chart.pillars.hour]];
+    const colW = 208, startX = 92, colGap = 12;
+    pls.forEach((pair, i) => {
+      const x = startX + i * (colW + colGap) + colW / 2;
+      const isDay = pair[0] === '일주';
+      g.fillStyle = isDay ? 'rgba(212,175,55,.10)' : 'rgba(255,255,255,.035)';
+      roundRect(g, startX + i * (colW + colGap), 806, colW, 300, 22);
+      g.fill();
+      g.strokeStyle = isDay ? 'rgba(212,175,55,.55)' : 'rgba(255,255,255,.10)';
+      g.lineWidth = isDay ? 2 : 1;
+      roundRect(g, startX + i * (colW + colGap), 806, colW, 300, 22);
+      g.stroke();
+      g.fillStyle = dim; g.font = '400 22px ' + sans;
+      g.fillText(pair[0], x, 846);
+      if (!pair[1]) {
+        g.fillStyle = 'rgba(247,239,221,.35)'; g.font = '400 40px ' + serif;
+        g.fillText('·', x, 950); g.fillText('·', x, 1030);
+        g.fillStyle = 'rgba(247,239,221,.35)'; g.font = '300 20px ' + sans;
+        g.fillText('시간 모름', x, 1082);
+        return;
+      }
+      g.font = '700 84px ' + serif;
+      g.fillStyle = elColor(pair[1].stemElem);
+      g.fillText(pair[1].stemName, x, 950);
+      g.fillStyle = elColor(pair[1].branchElem);
+      g.fillText(pair[1].branchName, x, 1042);
+      g.fillStyle = dim; g.font = '300 22px ' + sans;
+      g.fillText(pair[1].ko, x, 1086);
+    });
+
+    /* 키워드 */
+    const ext = E.elemExtremes(chart);
+    const dm = chart.dayMaster;
+    g.fillStyle = 'rgba(212,175,55,.55)';
+    g.fillRect(W / 2 - 150, 1180, 300, 1);
+    g.fillStyle = cream; g.font = '500 30px ' + sans;
+    g.fillText(dm.hanja + ' ' + dm.elem + ' 일간 · ' + chart.strengthKo + ' ' + chart.strengthRatio + '%', W / 2, 1246);
+    g.fillStyle = dim; g.font = '300 28px ' + sans;
+    g.fillText('가장 두터운 기운 ' + ext.strong + ' ' + chart.pct[ext.strong] + '% · 필요한 기운 ' + chart.yongsin.elem, W / 2, 1304);
+    g.fillStyle = 'rgba(247,239,221,.5)'; g.font = '300 26px ' + sans;
+    g.fillText(ganjiText(chart), W / 2, 1362);
+
+    /* 해시태그 */
+    g.fillStyle = gold; g.font = '400 30px ' + sans;
+    g.fillText(buchHashtags(chart).join('   '), W / 2, 1560);
+
+    /* 안내 */
+    g.fillStyle = 'rgba(247,239,221,.38)'; g.font = '300 22px ' + sans;
+    g.fillText('명리학 전통 해석을 바탕으로 한 참고용 콘텐츠입니다', W / 2, 1770);
+    g.fillText(D.BRAND.name + ' · ' + D.BRAND.hanja, W / 2, 1812);
+
+    return cv;
+  }
+
+  function roundRect(g, x, y, w, h, r) {
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    g.closePath();
+  }
+
+  function ganjiText(chart) {
+    const p = chart.pillars;
+    return p.year.hanja + ' ' + p.month.hanja + ' ' + p.day.hanja + (p.hour ? ' ' + p.hour.hanja : '');
+  }
+
+  function saveBuchCard(chart, c) {
+    let cv;
+    try { cv = drawBuchCard(chart, c); } catch (e) { showToast('부적 카드를 그리지 못했습니다'); return; }
+    const name = ((chart.input && chart.input.name) || '사주').replace(/[\\/:*?"<>|\s]/g, '');
+    const file = '월하사주_부적카드_' + name + '.png';
+    const dl = url => {
+      const a = document.createElement('a');
+      a.href = url; a.download = file;
+      document.body.appendChild(a); a.click(); a.remove();
+    };
+    try {
+      if (cv.toBlob) {
+        cv.toBlob(b => {
+          if (!b) { showToast('이미지를 저장하지 못했습니다. 다시 시도해 주세요'); return; }
+          const url = URL.createObjectURL(b);
+          dl(url);
+          setTimeout(() => { try { URL.revokeObjectURL(url); } catch (e) { } }, 5000);
+          showToast('부적 카드를 저장했어요 · 인스타 스토리에 올려 보세요');
+        }, 'image/png');
+        return;
+      }
+      dl(cv.toDataURL('image/png'));
+      showToast('부적 카드를 저장했어요 · 인스타 스토리에 올려 보세요');
+    } catch (e) {
+      showToast('이미지를 저장하지 못했습니다. 다시 시도해 주세요');
+    }
   }
 
   /* ---------------- 결과 상단 프로필 배너 (이름·생년월일·성별) ---------------- */
@@ -1088,8 +1348,11 @@
       category: o.category || 'fate', report_type: o.typeLabel || '질문즉답',
       value: c.price || 0
     });
-    bindPay($('#sheetBody'), 'report');
+    bindPay($('#sheetBody'), 'report', () => rerenderSheet(() => openReportSheetNow(o), 'report'));
     bindPdf($('#sheetBody'), 'report');
+    $$('[data-jump]', $('#sheetBody')).forEach(b => b.addEventListener('click', () => jumpToSection($('#sheetBody'), b.dataset.jump, 'report')));
+    const buch = $('#rpBuch');
+    if (buch) buch.addEventListener('click', () => saveBuchCard(chart, c));
     const goto = $('#rpTo2027');
     if (goto) goto.addEventListener('click', () => { closeSheet(); y2027Open('newyear', chart); });
 
@@ -1212,46 +1475,47 @@
       '<p class="rp-para"><strong>' + esc(group.name) + '이 강한 구조</strong> — ' + esc(group.trait) + '</p>' +
       '<p class="rp-para">' + esc(C.strength[chart.strength]) + ' ' + esc(chart.yongsin.reason) + '. 그래서 <strong>' + chart.yongsin.elem + '(' + E.ELEMENTS_HANJA[E.ELEMENTS.indexOf(chart.yongsin.elem)] + ')</strong> 오행이 도움이 되며, ' + esc(RX.yongCare(chart)) + '</p>';
 
-    /* 14~18 — 여덟 글자에서 직접 생성 (고정 문구 없음) */
-    const rxCore = RX.core(chart, cat);
-    const rxTime = RX.timing(chart, cat);
-    const rxAdv = RX.advice(chart, cat);
-    const rxCau = RX.caution(chart, cat);
+    /* 행운 (18) — 무료 공개 구간 */
     const rxLucky = RX.lucky(chart);
-    const rxToday = reading ? RX.today(chart, reading) : null;
-
-    const coreHTML = '<p class="rp-lead">' + esc(rxCore.lead) + '</p>' +
-      rxCore.paras.map(p => '<p class="rp-para">' + esc(p) + '</p>').join('');
-
-    const timingHTML = '<ul class="rp-list">' + rxTime.items.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>' +
-      '<p class="rp-para">' + esc(rxTime.para) + '</p>';
-
-    const adviceHTML = '<ul class="rp-list advice">' + rxAdv.map(a => '<li>' + esc(a) + '</li>').join('') + '</ul>';
-
-    const cautionHTML = rxCau.map((t, i) => '<div class="rp-caution"' + (i ? ' style="margin-top:8px"' : '') + '>' + esc(t) + '</div>').join('') +
-      (rxToday ? '<div class="rp-caution" style="margin-top:8px">오늘은 <b>' + esc(reading.god) + '의 날</b> — ' + esc(rxToday.head) + '. ' + esc(reading.note) + '</div>' : '');
-
-    /* 행운 (18) */
     const luckyHTML = '<div class="lucky-grid">' + rxLucky.map(o =>
       '<div class="lucky-item"><span>' + esc(o.k) + '</span><b>' + esc(o.v) + '</b></div>').join('') + '</div>';
 
-    const deepBlock = (sec, tips) => sec.paras.map(p => '<p class="rp-para">' + esc(p) + '</p>').join('') +
-      '<ul class="rp-list advice">' + (tips || sec.tips).map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>' +
-      (sec.voice ? '<p class="rp-voice">' + esc(sec.voice) + '</p>' : '');
+    /* 9~17 — 유료 본문. 잠금 상태에서는 이 함수를 부르지 않으므로 계산도 DOM 삽입도 일어나지 않는다. */
+    function paidInnerHTML() {
+      const rxCore = RX.core(chart, cat);
+      const rxTime = RX.timing(chart, cat);
+      const rxAdv = RX.advice(chart, cat);
+      const rxCau = RX.caution(chart, cat);
+      const rxToday = reading ? RX.today(chart, reading) : null;
 
-    const paidInner =
-      '<div class="rp-title"><span>9. 여덟 글자의 뼈대</span></div>' +
-      '<p class="rp-para">' + esc(dx.nature[0]) + '</p>' +
-      '<p class="rp-para">' + esc(dx.nature[1]) + '</p>' +
-      '<p class="rp-para">' + esc(dx.nature[2]) + '</p>' +
-      '<div class="rp-title"><span>10. 재물 — 그릇과 돈의 습관</span></div>' + deepBlock(dx.money, RX.tips(chart, 'money')) +
-      '<div class="rp-title"><span>11. 일과 직장 — 어디서 힘이 나는가</span></div>' + deepBlock(dx.work, RX.tips(chart, 'work')) +
-      '<div class="rp-title"><span>12. 연애·관계 — 반복되는 패턴</span></div>' + deepBlock(dx.love, RX.tips(chart, 'love')) +
-      '<div class="rp-title"><span>13. 건강과 체력 — 약한 자리</span></div>' + deepBlock(dx.health, RX.tips(chart, 'health')) +
-      '<div class="rp-title"><span>14. 질문에 대한 답</span></div>' + coreHTML +
-      '<div class="rp-title"><span>15. 시기와 흐름</span></div>' + timingHTML +
-      '<div class="rp-title"><span>16. 지금 할 일</span></div>' + adviceHTML +
-      '<div class="rp-title"><span>17. 조심할 점</span></div>' + cautionHTML;
+      const coreHTML = '<p class="rp-lead">' + esc(rxCore.lead) + '</p>' +
+        rxCore.paras.map(p => '<p class="rp-para">' + esc(p) + '</p>').join('');
+
+      const timingHTML = '<ul class="rp-list">' + rxTime.items.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>' +
+        '<p class="rp-para">' + esc(rxTime.para) + '</p>';
+
+      const adviceHTML = '<ul class="rp-list advice">' + rxAdv.map(a => '<li>' + esc(a) + '</li>').join('') + '</ul>';
+
+      const cautionHTML = rxCau.map((t, i) => '<div class="rp-caution"' + (i ? ' style="margin-top:8px"' : '') + '>' + esc(t) + '</div>').join('') +
+        (rxToday ? '<div class="rp-caution" style="margin-top:8px">오늘은 <b>' + esc(reading.god) + '의 날</b> — ' + esc(rxToday.head) + '. ' + esc(reading.note) + '</div>' : '');
+
+      const deepBlock = (sec, tips) => sec.paras.map(p => '<p class="rp-para">' + esc(p) + '</p>').join('') +
+        '<ul class="rp-list advice">' + (tips || sec.tips).map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>' +
+        (sec.voice ? '<p class="rp-voice">' + esc(sec.voice) + '</p>' : '');
+
+      return '<div class="rp-title"><span>9. 여덟 글자의 뼈대</span></div>' +
+        '<p class="rp-para">' + esc(dx.nature[0]) + '</p>' +
+        '<p class="rp-para">' + esc(dx.nature[1]) + '</p>' +
+        '<p class="rp-para">' + esc(dx.nature[2]) + '</p>' +
+        '<div class="rp-title" id="rp-money"><span>10. 재물 — 그릇과 돈의 습관</span></div>' + deepBlock(dx.money, RX.tips(chart, 'money')) +
+        '<div class="rp-title"><span>11. 일과 직장 — 어디서 힘이 나는가</span></div>' + deepBlock(dx.work, RX.tips(chart, 'work')) +
+        '<div class="rp-title" id="rp-love"><span>12. 연애·관계 — 반복되는 패턴</span></div>' + deepBlock(dx.love, RX.tips(chart, 'love')) +
+        '<div class="rp-title" id="rp-health"><span>13. 건강과 체력 — 약한 자리</span></div>' + deepBlock(dx.health, RX.tips(chart, 'health')) +
+        '<div class="rp-title"><span>14. 질문에 대한 답</span></div>' + coreHTML +
+        '<div class="rp-title"><span>15. 시기와 흐름</span></div>' + timingHTML +
+        '<div class="rp-title" id="rp-todo"><span>16. 지금 할 일</span></div>' + adviceHTML +
+        '<div class="rp-title"><span>17. 조심할 점</span></div>' + cautionHTML;
+    }
 
     return '' +
       profileBannerHTML(chart) +
@@ -1260,13 +1524,15 @@
       '<span>' + esc(c.role) + ' · ' + chart.dayMaster.hanja + chart.dayMaster.elem + ' ' + chart.strengthKo + '</span></div>' +
       '<span class="rp-stamp">' + esc(D.BRAND.name) + ' 정통 만세력</span></div>' +
       pdfBarHTML() +
+      summaryCardHTML(chart, c) +
+      reportNavHTML() +
       '<p class="rp-voice">' + esc(personOpen(chart, dx.voice.open)) + '</p>' +
 
       (o.question ? '<div class="rp-question"><b>질문</b>' + esc(o.question) + '</div>' : '') +
 
       '<div class="y27-free"><span class="y27-free-kicker">무료 공개</span>' +
-      '<div class="rp-title"><span>1. 사주팔자 · 만세력</span></div>' + pillarsHTML +
-      '<div class="rp-title"><span>2. 오행 분포 · 음양</span></div>' + elemHTML +
+      '<div class="rp-title" id="rp-manse"><span>1. 사주팔자 · 만세력</span></div>' + pillarsHTML +
+      '<div class="rp-title" id="rp-elem"><span>2. 오행 분포 · 음양</span></div>' + elemHTML +
       '<div class="rp-title"><span>3. 음양 비율</span></div>' + yinyangHTML +
       '<div class="rp-title"><span>4. 십신 분포</span></div>' + godHTML +
       '<div class="rp-title"><span>5. 십이운성</span></div>' + unseongHTML +
@@ -1275,20 +1541,23 @@
       '<div class="rp-title"><span>8. 타고난 결</span></div>' + natureHTML +
       '</div>' +
 
-      '<div class="rp-title"><span>질문 요약</span></div>' +
-      '<p class="rp-lead">' + esc(rxCore.lead) + '</p>' +
-
       payWrapHTML({
         kind: 'report', price: c.price,
         label: esc(c.name) + ' 심층 리포트 전체 열기',
         desc: '재물 · 직장 · 연애 · 건강 네 갈래의 심층 풀이, 질문에 대한 깊은 답, 시기별 행동 지침까지 — 이 사주 하나만 놓고 쓴 본문입니다.',
-        inner: paidInner
+        teaser: [
+          '9번부터 17번까지는 이 사주의 재물·일·연애·건강을 한 갈래씩 깊게 짚은 본문입니다.',
+          '질문에 대한 답과 시기별 행동 지침도 여기에 들어 있습니다.',
+          '받으신 열람 코드를 입력하면 이 자리에서 바로 펼쳐집니다.'
+        ],
+        inner: paidInnerHTML
       }) +
 
       '<div class="rp-title"><span>18. 행운 포인트</span></div>' + luckyHTML +
       '<div class="rp-cta"><b>2027 정미년, 내 12개월은?</b><span>2027년 월운표와 좋은 달·조심할 달을 같은 사주로 이어서 풀어 드립니다.</span><button class="btn-gold wide" id="rpTo2027">2027 정미년 12개월 신년운세 →</button></div>' +
 
       pdfBarHTML() +
+      buchCardHTML() +
       '<div class="rp-actions"><button class="btn-ghost" id="rpClose">닫기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 파일 저장하기</button><button class="btn-gold" id="rpSave">보관함 저장</button></div>' +
       disclaimerHTML() +
       '<div class="rp-note">' + esc(calendarNote(chart.input)) + ' · ' + esc(D.REPORT.noTimeNote) + '<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
@@ -1516,7 +1785,7 @@
     };
   }
 
-  /* ---------------- 무료 6종 / 기타 이벤트 ---------------- */
+  /* ---------------- 무료 8종 / 기타 이벤트 ---------------- */
   function bindMisc() {
     document.addEventListener('click', e => {
       const l = e.target.closest('[data-legal]');
@@ -1579,7 +1848,7 @@
     const y = Y27.build(chart2);
     openSheet(item.title, y2027HTML(item, chart2, y));
     bindProfileEdit($('#sheetBody'), next => y2027Sheet(kind, next, opts), chart2);
-    bindPay($('#sheetBody'), item.id);
+    bindPay($('#sheetBody'), item.id, () => rerenderSheet(() => y2027SheetNow(kind, chart, opts), item.id));
     bindPdf($('#sheetBody'), item.id);
     const cl = $('#y27Close'); if (cl) cl.addEventListener('click', closeSheet);
     const hm = $('#y27Home');
@@ -1753,6 +2022,8 @@
       '<p class="rp-lead">2027 정미년의 천간 <b>丁(음화)</b>과 지지 <b>未(음토)</b>가 내 사주와 만나면, 천간은 내게 <b>' + y.yearGod + '</b>의 자리가 됩니다. ' +
       '아래는 이 사주팔자에 2027년의 절기를 하나씩 맞춰 본 풀이입니다.</p>';
 
+    /* 유료 본문은 잠금이 풀린 순간에만 만든다 (DOM에 미리 넣지 않는다) */
+    const paidBody = () => {
     let body = '';
 
     if (item.kind === 'newyear') {
@@ -1851,11 +2122,16 @@
         y27Share(y.reunion.head, '내 일지 ' + chart.pillars.day.hanja + ' · 2027년에 문이 열리는 달 ' + (y.reunion.open.join('·') || '없음'));
     }
 
+      return body;
+    };
+
     return profileBannerHTML(chart) + head + preview +
       (paid ? payWrapHTML({
         kind: item.id, price: item.price,
-        label: esc(item.title) + ' 전체 열기', desc: y27PayDesc(item.kind), inner: body
-      }) : body) +
+        label: esc(item.title) + ' 전체 열기', desc: y27PayDesc(item.kind),
+        teaser: ['이 아래는 2027 정미년 12개월을 이 사주에 하나씩 맞춰 본 본문입니다.', '달마다의 이유와 방어 문장이 전부 여기에 있습니다.', '받으신 열람 코드를 입력하면 이 자리에서 바로 펼쳐집니다.'],
+        inner: paidBody
+      }) : paidBody()) +
       '<div class="rp-title"><span>행운 포인트</span></div>' + y27Lucky(chart) +
       pdfBarHTML() +
       '<div class="rp-actions"><button class="btn-ghost" id="y27Close">닫기</button><button class="btn-ghost" id="y27Home">2027 전체 보기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 파일 저장하기</button><button class="btn-gold" id="y27Save">보관함 저장</button></div>' +
@@ -2066,7 +2342,7 @@
     const pM = res.peaceMonths.length ? res.peaceMonths.map(n => n + '월').join(' · ') : '없음';
     const rx = rxc.rx;
 
-    const body =
+    const paidBody = () =>
       '<div class="rp-title"><span>일간 — 두 사람의 중심</span></div><p class="rp-lead">' + esc(res.say.gan) + '</p>' +
       '<div class="rp-title"><span>일지 — 부부의 자리</span></div><p class="rp-para">' + esc(res.say.ji) + '</p>' +
       '<div class="rp-title"><span>열여섯 글자의 지지 관계</span></div><p class="rp-para">' + esc(res.say.cross) + '</p>' +
@@ -2081,7 +2357,9 @@
       '<div class="rp-title"><span>점수 구성</span></div><div class="cp-parts detail">' + res.parts.map(p => '<i class="' + (p.v.charAt(0) === '+' ? 'up' : 'down') + '">' + esc(p.k) + ' ' + esc(p.v) + '</i>').join('') + '</div>';
 
     return head + free +
-      payWrapHTML({ kind: 'compat', price: 9900, label: '두 사람의 심층 궁합 전체 열기', desc: '일간·일지·16글자 관계 · 속궁합 · 결혼 시기 · 다툼과 화해의 달 · 처방전', inner: body }) +
+      payWrapHTML({ kind: 'compat', price: 9900, label: '두 사람의 심층 궁합 전체 열기', desc: '일간·일지·16글자 관계 · 속궁합 · 결혼 시기 · 다툼과 화해의 달 · 처방전',
+        teaser: ['두 사람의 일간·일지가 만나는 자리부터 다툼과 화해의 달까지 이어집니다.', '결혼 시기와 두 사람의 처방전도 이 본문에만 있습니다.', '받으신 열람 코드를 입력하면 이 자리에서 바로 펼쳐집니다.'],
+        inner: paidBody }) +
       pdfBarHTML() +
       '<div class="rp-actions"><button class="btn-ghost" id="cpClose">닫기</button><button class="btn-ghost" id="cpAgain">상대 바꿔 보기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 파일 저장하기</button><button class="btn-gold" id="cpSave">보관함 저장</button></div>' +
       disclaimerHTML() +
@@ -2100,7 +2378,7 @@
     const res = P.buildCompat(A, B);
     const title = '정밀 궁합 · ' + (A.input.name || '나') + ' · ' + (B.input.name || '상대');
     openSheet(title, compatHTML(res));
-    bindPay($('#sheetBody'), 'compat');
+    bindPay($('#sheetBody'), 'compat', () => rerenderSheet(() => compatSheetNow(A, B), 'compat'));
     bindPdf($('#sheetBody'), 'compat');
     bindProfileEdit($('#sheetBody'), () => openCompatForm({}));
     const cl = $('#cpClose'); if (cl) cl.addEventListener('click', closeSheet);
@@ -2153,7 +2431,7 @@
       '<div class="du-low"><span>조심해서 넘길 10년</span><b>' + d.caution.ageFrom + '~' + d.caution.ageTo + '세 · ' + d.caution.hanja + '</b><i>' + d.caution.stemGod + ' 대운 · ' + d.caution.stage + '</i><p>' + esc(RX.daeunCard(c, d.caution).life) + '</p></div>' +
       '<p class="rp-para" style="margin-top:10px">' + esc(d.goldenNote) + '</p></div>';
 
-    const body =
+    const paidBody = () =>
       '<div class="rp-title"><span>지금 내 대운</span></div>' +
       (d.current
         ? '<div class="du-now"><b>' + d.current.ageFrom + '~' + d.current.ageTo + '세 · ' + d.current.hanja + ' ' + d.current.ko + '</b><span>' + d.current.stemGod + ' · ' + d.current.branchGod + ' · ' + d.current.stage + ' · ' + d.current.yearFrom + '~' + d.current.yearTo + '년</span><p>' + esc(RX.daeunCard(c, d.current).flow) + '</p><p>' + esc(RX.daeunCard(c, d.current).money) + '</p><p>' + esc(RX.daeunCard(c, d.current).work) + '</p></div>'
@@ -2172,7 +2450,9 @@
       '<ul class="rp-list advice">' + RX.daeunTips(c).map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>';
 
     return head + free +
-      payWrapHTML({ kind: 'daeun', price: 4900, label: '10년 대운 전체 풀이 열기', desc: '대운 8개의 재물·커리어·인생 전략 · 지금 대운의 의미 · 대운을 쓰는 순서', inner: body }) +
+      payWrapHTML({ kind: 'daeun', price: 4900, label: '10년 대운 전체 풀이 열기', desc: '대운 8개의 재물·커리어·인생 전략 · 지금 대운의 의미 · 대운을 쓰는 순서',
+        teaser: ['10년마다의 재물·커리어·인생 전략이 이 아래에 이어집니다.', '지금 대운의 의미와 대운을 쓰는 순서도 함께 있습니다.', '받으신 열람 코드를 입력하면 이 자리에서 바로 펼쳐집니다.'],
+        inner: paidBody }) +
       pdfBarHTML() +
       '<div class="rp-actions"><button class="btn-ghost" id="duClose">닫기</button><button class="btn-ghost" id="duAgain">내 정보 수정</button><button class="btn-ghost" data-pdf hidden>📄 PDF 파일 저장하기</button><button class="btn-gold" id="duSave">보관함 저장</button></div>' +
       disclaimerHTML() +
@@ -2192,7 +2472,7 @@
     const d = P.buildDaeun(c);
     trackEvent('open_daeun', { content_kind: 'daeun' });
     openSheet('10년 대운 · ' + (c.input.name || '나의') + ' 인생 흐름', daeunHTML(c, d));
-    bindPay($('#sheetBody'), 'daeun');
+    bindPay($('#sheetBody'), 'daeun', () => rerenderSheet(() => daeunSheetNow(chart), 'daeun'));
     bindPdf($('#sheetBody'), 'daeun');
     bindProfileEdit($('#sheetBody'), next => daeunSheet(next), c);
     const cl = $('#duClose'); if (cl) cl.addEventListener('click', closeSheet);
@@ -2230,6 +2510,7 @@
   }
 
   function glPickCard(day, key, chart, idx, compact) {
+    const RX = window.SAJU_RX;
     const label = { contract: '계약·매매', job: '이직·면접', move: '이사·개업' }[key];
     const tips = P.TIPS[key];
     const why = glWhy(day, chart, key);
@@ -2281,7 +2562,7 @@
       '<p class="rp-para">' + desc + ' ' + esc('내 일간 ' + dm.hanja + '(' + dm.ko + dm.elem + ')에 용신 ' + c.yongsin.elem + '·내 일지 ' + c.pillars.day.hanja + ' 기준으로도 같은 날이 가장 힘을 받습니다.') + '</p>' +
       g.picks[key].map((d, i) => glPickCard(d, key, c, i)).join('');
 
-    const body =
+    const paidBody = () =>
       purposeBlock('contract', '① 계약 · 매매', '도장을 찍는 날은 서류의 운이 아니라 사람의 운을 봅니다. 아래 날들은 내 일지와 맺어지거나 천을귀인·정재가 함께 오는 날입니다.') +
       purposeBlock('job', '② 이직 · 면접', '면접과 지원은 정관(正官)이 서는 날에 이름이 오릅니다. 상관이 관을 보는 날은 말이 앞서니 비켜 두세요.') +
       purposeBlock('move', '③ 이사 · 개업', '이사는 내 자리가 옮겨지는 일이라 일지와 부딪히는 날을 가장 조심합니다. 문을 여는 날은 식신·재성이 함께 오는 날이 좋습니다.') +
@@ -2293,7 +2574,9 @@
       '<div class="rp-caution">' + esc('길일은 “이 날이면 무조건 된다”는 뜻이 아닙니다. ' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간에 용신 ' + c.yongsin.elem + '인 이 사주는 같은 계약이라도 준비가 덜 된 날은 그 날의 기운을 쓰지 못합니다. 서류와 조건을 먼저 끝내 두고, 그 위에 ' + (g.picks.contract[0] ? g.picks.contract[0].m + '월 ' + g.picks.contract[0].d + '일' : '좋은 날') + '을 얹으세요.') + '</div>';
 
     return head + free +
-      payWrapHTML({ kind: 'gilil', price: 4900, label: '2027 길일 전체 열기', desc: '목적별 추천일과 이유 · 피할 날 · 달마다의 길일 · 도장 찍을 때의 팁', inner: body }) +
+      payWrapHTML({ kind: 'gilil', price: 4900, label: '2027 길일 전체 열기', desc: '목적별 추천일과 이유 · 피할 날 · 달마다의 길일 · 도장 찍을 때의 팁',
+        teaser: ['계약·이직·이사 목적별 추천일과 그 이유가 이 아래에 이어집니다.', '피해야 할 날과 달마다의 길일도 함께 있습니다.', '받으신 열람 코드를 입력하면 이 자리에서 바로 펼쳐집니다.'],
+        inner: paidBody }) +
       pdfBarHTML() +
       '<div class="rp-actions"><button class="btn-ghost" id="glClose">닫기</button><button class="btn-ghost" id="glAgain">내 정보 수정</button><button class="btn-ghost" data-pdf hidden>📄 PDF 파일 저장하기</button><button class="btn-gold" id="glSave">보관함 저장</button></div>' +
       disclaimerHTML() +
@@ -2313,7 +2596,7 @@
     const g = P.buildGilil(c, 2027);
     trackEvent('open_gilil', { content_kind: 'gilil' });
     openSheet('2027 길일 · 계약·이직·이사', gililHTML(c, g));
-    bindPay($('#sheetBody'), 'gilil');
+    bindPay($('#sheetBody'), 'gilil', () => rerenderSheet(() => gililSheetNow(chart), 'gilil'));
     bindPdf($('#sheetBody'), 'gilil');
     bindProfileEdit($('#sheetBody'), next => gililSheet(next), c);
     const cl = $('#glClose'); if (cl) cl.addEventListener('click', closeSheet);
@@ -2333,25 +2616,16 @@
 
 
   /* ---------------- 법적 고지: 이용약관 · 환불규정 · 개인정보처리방침 ---------------- */
+  /* 사업자 등록 전 — 대괄호 플레이스홀더를 두지 않고 진행 상황만 밝힌다 (가짜 번호 생성 금지) */
   const BIZ = {
-    name: '[상호명]',
-    ceo: '[대표자명]',
-    regNo: '[사업자등록번호]',
-    mailNo: '[통신판매업 신고번호]',
-    addr: '[사업장 주소]',
-    contact: '[고객센터 이메일/연락처]',
+    preOpen: true,
+    notice: '월하사주 · 사업자 등록 진행 중 (등록 완료 즉시 상호·대표자·사업자등록번호·통신판매업 신고번호를 게시합니다)',
+    contactNote: '고객센터는 사업자 등록 완료 후 사이트 하단에 게시합니다',
     effective: '2026년 11월 17일'
   };
 
   function bizInfoHTML() {
-    return '<dl class="biz-info legal-biz">' +
-      '<div><dt>상호</dt><dd>' + esc(BIZ.name) + '</dd></div>' +
-      '<div><dt>대표</dt><dd>' + esc(BIZ.ceo) + '</dd></div>' +
-      '<div><dt>사업자등록번호</dt><dd>' + esc(BIZ.regNo) + '</dd></div>' +
-      '<div><dt>통신판매업 신고</dt><dd>' + esc(BIZ.mailNo) + '</dd></div>' +
-      '<div><dt>사업장 주소</dt><dd>' + esc(BIZ.addr) + '</dd></div>' +
-      '<div><dt>고객센터</dt><dd>' + esc(BIZ.contact) + '</dd></div>' +
-      '</dl>';
+    return '<p class="biz-pre">' + esc(BIZ.notice) + '</p>';
   }
 
   const LEGAL = {
@@ -2414,7 +2688,7 @@
 
           '<h4 class="legal-h">제12조 (사업자 정보)</h4>' +
           bizInfoHTML() +
-          '<p class="legal-p legal-small">사업자 등록 전 표기이며, 등록 완료 후 위 정보가 채워집니다.</p>';
+          '<p class="legal-p legal-small">' + esc(BIZ.contactNote) + '. 사업자 등록이 완료되면 위 정보가 게시됩니다.</p>';
       }
     },
 
@@ -2444,7 +2718,7 @@
           '제4호의 경우 이용자는 콘텐츠를 공급받은 날부터 3개월 이내, 그 사실을 안 날 또는 알 수 있었던 날부터 30일 이내에 청약철회를 할 수 있습니다. (같은 법 제17조 제3항)</p>' +
 
           '<h4 class="legal-h">5. 환불의 절차와 기간</h4>' +
-          '<p class="legal-p">1. 환불은 고객센터(' + esc(BIZ.contact) + ')로 결제일·결제수단·사유를 알려 신청합니다.<br />' +
+          '<p class="legal-p">1. 환불은 ' + esc(BIZ.contactNote) + ' — 사업자 등록 완료 후 공지되는 고객센터로 결제일·결제수단·사유를 알려 신청합니다.<br />' +
           '2. 회사는 신청을 받은 날부터 3영업일 이내에 접수 사실을 알리고, 3영업일 이내에 결제 수단과 같은 방법으로 환불합니다. 카드 결제는 카드사 취소 절차에 따라 반영 시점이 달라질 수 있습니다.<br />' +
           '3. 이용자가 제공한 정보가 사실과 달라 콘텐츠가 잘못 제공된 경우, 회사는 정정된 정보로 콘텐츠를 다시 제공할 수 있습니다.</p>' +
 
@@ -2494,7 +2768,7 @@
           '<p class="legal-p">HTTPS 통신, 서버 미전송 구조, 기기 단위 저장을 통해 정보를 보호합니다.</p>' +
 
           '<h4 class="legal-h">9. 개인정보 보호책임자</h4>' +
-          '<p class="legal-p">성명: [성명] · 연락처: ' + esc(BIZ.contact) + ' (사업자 등록 후 기재)</p>' +
+          '<p class="legal-p">개인정보 보호책임자: 사업자 등록 완료 후 사이트 하단에 게시합니다.</p>' +
 
           '<h4 class="legal-h">10. 방침의 변경</h4>' +
           '<p class="legal-p">본 방침이 변경되는 경우 시행일 7일 전에 사이트에 공지하며, 중요한 변경은 30일 전에 공지합니다. 서버 저장·결제 기능을 도입하는 경우 본 방침을 갱신합니다.</p>' +
@@ -2548,7 +2822,9 @@
     window.WOLHA_APP = {
       reportHTML: reportHTML, y2027HTML: y2027HTML, compatHTML: compatHTML,
       daeunHTML: daeunHTML, gililHTML: gililHTML, todayHTML: todayHTML,
-      charById: charById, isUnlocked: isUnlocked, parseCode: parseCode
+      charById: charById, isUnlocked: isUnlocked, parseCode: parseCode,
+      grantAll: grantAll, grantScope: grantScope, state: state,
+      paidSectionTitles: ['9. 여덟 글자의 뼈대', '10. 재물', '11. 일과 직장', '12. 연애', '13. 건강과 체력', '14. 질문에 대한 답', '15. 시기와 흐름', '16. 지금 할 일', '17. 조심할 점']
     };
     return;
   }

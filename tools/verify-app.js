@@ -12,6 +12,8 @@ var people = [
 var CATS = ['money', 'exam', 'love', 'reunion', 'work', 'fate'];
 var charts = people.map(function (p) { return E.buildChart(p); });
 var W = window.WOLHA_APP;
+/* 잠금 상태에서는 유료 본문을 DOM에 넣지 않는다 — 해석 문장 비교를 위해 전체 열람 상태로 만든다 */
+if (W.grantAll) W.grantAll();
 
 function clean(html) {
   return String(html)

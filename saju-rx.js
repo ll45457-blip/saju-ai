@@ -136,8 +136,10 @@ window.SAJU_RX = (function () {
       .forEach(function (s) { if (SAL[s[1]]) salHits.push({ name: s[1], where: s[0] }); });
     var daySal = chart.sinsal.day && SAL[chart.sinsal.day] ? chart.sinsal.day : (salHits[0] ? salHits[0].name : '지살');
 
-    var strongEl = E.ELEMENTS.slice().sort(function (a, b) { return chart.pct[b] - chart.pct[a]; })[0];
-    var thinEl = E.ELEMENTS.slice().sort(function (a, b) { return chart.pct[a] - chart.pct[b]; })[0];
+    /* 오행 최다·최소는 엔진의 단일 판정(elemExtremes)을 쓴다 — 화면 퍼센티지와 같은 결론 */
+    var ext = E.elemExtremes ? E.elemExtremes(chart) : null;
+    var strongEl = ext ? ext.strong : E.ELEMENTS.slice().sort(function (a, b) { return chart.pct[b] - chart.pct[a]; })[0];
+    var thinEl = ext ? ext.weak : E.ELEMENTS.slice().sort(function (a, b) { return chart.pct[a] - chart.pct[b]; })[0];
     var cheon = chart.gwisin.cheoneul;
 
     var f = {
@@ -461,7 +463,7 @@ window.SAJU_RX = (function () {
       return [
         '잠자는 시간을 먼저 고정하세요. ' + f.dmKey + ' 사주에 용신 ' + f.yong + '의 시간(' + YONG[f.yong].time + ')이 회복 시간입니다.',
         E.ELEM_DEEP[f.thinEl].care + ' — ' + E.josa(f.thinEl, '이', '가') + ' ' + f.pct[f.thinEl] + '%로 가장 얇은 자리입니다.',
-        '카페인은 ' + (f.yinPct > f.yangPct ? '오후 2시' : '오후 4시') + ' 이후로 미루세요. 음양 ' + f.yangPct + ':' + f.yinPct + '의 ' + f.dmKey + ' 사주는 밤의 각성이 다음 날 기운을 크게 깎습니다.',
+        '카페인 섭취는 오후 4시 이전으로 제한하고, 밤 각성을 피하세요. 음양 ' + f.yangPct + ':' + f.yinPct + '의 ' + f.dmKey + ' 사주는 밤의 각성이 다음 날 기운을 크게 깎습니다.',
         '한 달에 하루는 일정을 비우세요. ' + f.dayStage + '의 일지에 ' + f.dom + ' ' + f.domN + '개의 그늘이 겹치는 시기에는 비운 날이 체력을 만듭니다.'
       ];
     }

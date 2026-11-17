@@ -349,7 +349,7 @@
   function daeunScore(chart, stemEl, branchEl, stage, stemGod, branchGod) {
     const yong = chart.yongsin.elem, hee = chart.yongsin.hee;
     const helper = ELEM[(ELEM.indexOf(yong) + 4) % 5];      // 용신을 살리는 기운
-    const strongest = ELEM.slice().sort((x, y) => (chart.pct[y] || 0) - (chart.pct[x] || 0))[0];
+    const strongest = (E.elemExtremes ? E.elemExtremes(chart).strong : ELEM.slice().sort((x, y) => (chart.pct[y] || 0) - (chart.pct[x] || 0))[0]);
     let s = 52;
     [stemEl, branchEl].forEach(el => {
       if (el === yong) s += 9;
