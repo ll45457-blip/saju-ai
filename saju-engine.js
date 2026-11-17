@@ -185,7 +185,7 @@
       pillar: p,
       ganji: p.ganji,
       termName: TERMS[termIdx],
-      termLong: termStartLong,
+      termLong: termStartLong % 360,
       termStart: startJD ? jdToDate(startJD + 9 / 24) : null,
       weekday: ['일', '월', '화', '수', '목', '금', '토'][new Date(y, m - 1, d).getDay()]
     };

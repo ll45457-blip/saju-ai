@@ -258,7 +258,7 @@
       '<div class="lucky-item"><span>조심할 것</span><b>' + esc(godC.avoid) + '</b></div>' +
       '</div></div>' +
       '<div class="block"><div class="rp-title"><span>키워드</span></div><div class="chips wrap">' + kw + '</div></div>' +
-      '<div class="block"><div class="rp-title"><span>오늘 조심할 점</span></div><div class="rp-caution">' + esc(godC.avoid) + ' — 특히 ' + esc(godC.head) + '라는 흐름 안에서는 이것이 하루의 기운을 새게 합니다.</div></div>' +
+      '<div class="block"><div class="rp-title"><span>오늘 조심할 점</span></div><div class="rp-caution">' + esc(godC.avoid) + ' — 특히 “' + esc(godC.head) + '”이라는 흐름 안에서는 이것이 하루의 기운을 새게 합니다.</div></div>' +
       '<div class="block" style="text-align:center"><button class="btn-ghost" data-nav="ask">' + esc(D.CHARACTERS[0].name) + '에게 오늘의 고민 물어보기 →</button></div>';
   }
 
