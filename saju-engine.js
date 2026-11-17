@@ -383,7 +383,7 @@
       list: yyList, yang: yangCount, yin: yinCount,
       yangPct: Math.round(yangCount / yyList.length * 100),
       yinPct: 100 - Math.round(yangCount / yyList.length * 100),
-      note: '지지는 본기(정기) 천간의 음양으로 계산합니다'
+      note: '지지는 본기(정기) 천간의 음양을 따릅니다'
     };
 
     return {
@@ -808,12 +808,21 @@
       '한 달에 하루는 일정을 비우세요. 비운 날이 다음 달의 체력을 만듭니다.'
     ];
 
+    const voice = {
+      open: '여덟 글자를 다 세우고 한참 들여다봤습니다. 같은 날 태어나도 시진 하나로 다른 사람이 되는데, 이 사주는 ' + dm.elem + ' 일간에 ' + chart.strengthKo + '한 뼈대가 먼저 눈에 들어옵니다. 급한 마음에 결론부터 궁금하시겠지만, 순서대로 가야 제대로 보입니다. 아래로 한 장씩 넘기면서 읽어 보세요.',
+      money: '제가 사주를 볼 때 늘 드리는 말이 있습니다. 버는 법을 아는 사람은 많은데, 지키는 법을 아는 사람은 드물어요. 이 사주는 그 둘 사이에서 갈립니다. 통장 하나만 더 파세요. 이름 붙여서, 손대지 않는 계좌로요. 그거 하나로 1년 뒤가 달라집니다.',
+      work: '일 이야기는 늘 조심스럽습니다. 사주가 대신 결정해 줄 수는 없으니까요. 다만 한 가지만 말씀드리면, 이 사주는 남이 정해 준 자리에 오래 있으면 병이 납니다. 지금 자리에서 결정권을 하나라도 더 쥐어 보세요. 그게 이직보다 먼저입니다.',
+      love: '연애는 사주보다 사람이 먼저입니다. 그래도 이 사주를 보면 늘 같은 자리에서 넘어지더군요. 좋아하는 마음을 아끼다가 때를 놓치는 것. 다음에 마음이 가는 사람이 생기면, 한 번은 먼저 말해 보세요. 그 한마디가 이 사주의 숙제를 풉니다.',
+      health: '몸은 거짓말을 안 합니다. 사주에서 약한 자리는 대개 스무 살 무렵부터 신호를 보내는데, 젊어서는 그걸 무시하고 삽니다. 지금부터라도 잠을 먼저 챙기세요. 다른 건 다 미뤄도 잠은 못 미룹니다.'
+    };
+
     return {
       nature: nature,
-      money: { paras: [moneyP1, moneyP2, moneyP3], tips: moneyTips },
-      work: { paras: [workP1, workP2, workP3], tips: workTips },
-      love: { paras: [loveP1, loveP2, loveP3], tips: loveTips },
-      health: { paras: [healthP1, healthP2], tips: healthTips },
+      voice: voice,
+      money: { paras: [moneyP1, moneyP2, moneyP3], tips: moneyTips, voice: voice.money },
+      work: { paras: [workP1, workP2, workP3], tips: workTips, voice: voice.work },
+      love: { paras: [loveP1, loveP2, loveP3], tips: loveTips, voice: voice.love },
+      health: { paras: [healthP1, healthP2], tips: healthTips, voice: voice.health },
       style: style.key,
       yong: yong, hee: hee, thinEl: thinEl, strongEl: strongEl
     };

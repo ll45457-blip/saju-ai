@@ -251,14 +251,22 @@
       if (base.branchElem === yongEl) story.push('월지가 용신 ' + E.josa(yongEl, '과', '와') + ' 같은 기운이라 이 달은 내가 편해집니다. 같은 일을 해도 피로가 덜하고 판단이 빨라집니다.');
       else if (base.branchElem === heeEl) story.push('희신 ' + heeEl + ' 기운이 실려 주변의 도움이 따라오는 달입니다. 누군가의 소개나 제안이 실제 이익으로 이어집니다.');
       else if (base.branchElem === dm.elem) story.push('내 기운(' + dm.elem + ')이 겹치는 달이라 의욕은 앞서는데 결과는 늦습니다. 혼자 결정하기보다 한 번 검토를 거치세요.');
-      story.push('그래서 이 달은 ' + (verdict === '추진' ? '밀어붙여도 좋은 달입니다. ' : verdict === '균형' ? '절반은 진행하고 절반은 확인하는 달입니다. ' : '확인과 방어가 먼저인 달입니다. ')
-        + gs.tip + '.');
+      const PUSH = ['이 달은 밀어붙여 보세요. ', '이 달만큼은 앞으로 나가셔도 됩니다. ', '힘을 실어도 좋은 달입니다. '];
+      const BAL = ['절반만 나가고 나머지 절반은 확인에 쓰세요. ', '한 걸음 나가고 한 걸음 멈추는 달입니다. ', '서두르지 말고 확인하며 가세요. '];
+      const DEF = ['이 달은 지키는 쪽이 이깁니다. ', '새로 벌이지 말고 정리에 쓰세요. ', '물러서서 확인하는 것이 이 달의 정답입니다. '];
+      const OPEN = PUSH[base.no % 3];
+      const verdictLine = verdict === '추진' ? PUSH[base.no % 3] : (verdict === '균형' ? BAL[base.no % 3] : DEF[base.no % 3]);
+      story.push((verdict === '추진' ? '그래서 ' : '') + verdictLine + gs.tip + '.'
+        + (verdict === '방어' && score < 48 ? ' 이런 달에 큰 결정을 하면 대개 일이 두 번 꼬입니다. 한 번 접어 두는 것도 실력입니다.' : ''));
 
+      const PUSH_T = ['흐름이 순해 미뤄 둔 일을 꺼내기 좋습니다.', '막혀 있던 일이 풀리는 달입니다.', '이 달에 건 일은 대개 붙습니다.'];
+      const BAL_T = ['나머지 절반은 확인과 정리에 두면 이 달이 손해 없이 지나갑니다.', '결정은 한 번 미루세요. 확인하는 쪽이 남는 장사입니다.', '계획만 세워 두고 실행은 다음 달로 넘겨도 늦지 않습니다.'];
+      const DEF_T = ['새로 벌이지 말고 확인과 정리에 쓰세요.', '속도를 늦추세요. 이 달에 벌인 일은 대개 손이 더 갑니다.', '숨을 고르는 달입니다. 미뤄 둔 정리부터 하세요.'];
       const pick = verdict === '추진'
-        ? (ACTION[god] || '평소의 일') + '에 힘이 실립니다. ' + (relMine.indexOf('합') >= 0 ? '내 일지와 합해 사람이 붙으니 미뤄 둔 연락과 제안을 이 달에 꺼내세요.' : relYear.indexOf('합') >= 0 ? '올해의 未토와 합해 거래와 계약이 맺어지기 좋습니다.' : '흐름이 순해 미뤄 둔 일을 꺼내기 좋습니다.')
+        ? (ACTION[god] || '평소의 일') + '에 힘이 실립니다. ' + (relMine.indexOf('합') >= 0 ? '내 일지와 합해 사람이 붙으니 미뤄 둔 연락과 제안을 이 달에 꺼내세요.' : relYear.indexOf('합') >= 0 ? '올해의 未토와 합해 거래와 계약이 맺어지기 좋습니다.' : PUSH_T[base.no % 3])
         : verdict === '균형'
-          ? E.josa(ACTION[god] || '평소의 일', '은', '는') + ' 절반만 진행하세요. 나머지 절반은 확인과 정리에 두면 이 달이 손해 없이 지나갑니다.'
-          : (negs.length ? flatRel(negs) + ' 관계가 겹쳐 ' : '기운이 빠지는 달이라 ') + '새로 벌이지 말고 확인과 정리에 쓰세요. ' + gs.tip + '.';
+          ? E.josa(ACTION[god] || '평소의 일', '은', '는') + ' 절반만 진행하세요. ' + BAL_T[base.no % 3]
+          : (negs.length ? flatRel(negs) + ' 관계가 겹쳐 ' : '기운이 빠지는 달이라 ') + DEF_T[base.no % 3] + ' ' + gs.tip + '.';
 
       return {
         no: base.no, idx: base.idx, hanja: base.hanja, ko: base.ko,

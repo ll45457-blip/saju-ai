@@ -299,7 +299,7 @@
       wrap.innerHTML = '<div class="today-hero"><div class="th-date">' + t.dateStr + ' ' + t.weekday + '요일</div>' +
         '<div class="th-ganji">' + t.pillar.hanja + '</div><div class="th-sub">' + t.pillar.ko + '일</div>' +
         '<div class="th-term">절기 ' + esc(t.termName) + (t.termStart ? ' · ' + esc(t.termName) + ' ' + E.formatTermTime(t.termStart) + ' (근사)' : '') + '</div></div>' +
-        '<div class="arch-empty" style="margin-top:16px">생년월일을 등록하면<br /><b>오늘의 일진이 내 사주와 만나는 자리</b>까지 계산해 드려요.<br /><button class="btn-gold" id="todayGoProfile">생년월일 입력하기</button></div>';
+        '<div class="arch-empty" style="margin-top:16px">생년월일을 등록하면<br /><b>오늘의 일진이 내 사주와 만나는 자리</b>까지 읽어 드려요.<br /><button class="btn-gold" id="todayGoProfile">생년월일 입력하기</button></div>';
       $('#todayGoProfile').addEventListener('click', () => openBirthForm({ title: '오늘의 운세', onDone: () => showView('today') }));
       return;
     }
@@ -466,7 +466,7 @@
       }
       let chart;
       try { chart = E.buildChart(input); } catch (err) {
-        $('#bfNote').textContent = '계산 중 문제가 생겼어요: ' + err.message; $('#bfNote').classList.add('warn'); return;
+        $('#bfNote').textContent = '날짜를 세다가 문제가 생겼어요: ' + err.message; $('#bfNote').classList.add('warn'); return;
       }
       if ($('#bfRemember').checked) {
         state.profile = input; store.set(K_PROFILE, input);
@@ -618,7 +618,7 @@
       '</div>' +
       '<div class="pl-legend">한자 위·아래 = 천간·지지 / 색 = 오행(목 청록 · 화 적홍 · 토 황금 · 금 은회 · 수 남색)<br />배지 = 십성 · 십이운성 · 십이신살(년지 삼합 기준)</div>' +
       '<div class="rp-id" style="margin-top:9px"><span>' + chart.ganji + '</span><span>' + chart.ganjiKo + '</span>' +
-      (noTime ? '<span class="pill">시간 미입력 · 3주 계산</span>' : '') + '</div>';
+      (noTime ? '<span class="pill">시간 미입력 · 세 기둥으로 봄</span>' : '') + '</div>';
 
     /* 오행 차트 */
     const totalW = ELEMENTS_TOTAL(chart);
@@ -676,7 +676,7 @@
       .concat(chart.sinsal.hour ? [['시주', chart.sinsal.hour]] : []);
     const sinsalHTML = '<div class="mini-grid">' + sinsalList.map(s =>
       '<div class="mini-item"><span>' + s[0] + '</span><b>' + s[1] + '</b><em>' + (s[1].indexOf('도화') >= 0 ? '사람을 끄는 힘' : s[1] === '역마살' ? '움직이는 기운' : s[1] === '화개살' ? '혼자 깊어지는 자리' : '') + '</em></div>').join('') + '</div>' +
-      '<p class="rp-note" style="margin-top:6px">십이신살은 년지 삼합을 기준으로 계산합니다(겁살·재살·천살·지살·년살·월살·망신·장성·반안·역마·육해·화개).</p>';
+      '<p class="rp-note" style="margin-top:6px">십이신살은 년지 삼합을 기준으로 봅니다(겁살·재살·천살·지살·년살·월살·망신·장성·반안·역마·육해·화개).</p>';
     const natureHTML = '<p class="rp-lead"><span class="em">' + esc(dm.key) + ' · ' + esc(dm.name) + '</span>의 사주입니다.</p>' +
       '<p class="rp-para">' + esc(dm.text) + '</p>' +
       '<p class="rp-para"><strong>' + esc(group.name) + '이 강한 구조</strong> — ' + esc(group.trait) + '</p>' +
@@ -714,7 +714,8 @@
       '</div>';
 
     const deepBlock = sec => sec.paras.map(p => '<p class="rp-para">' + esc(p) + '</p>').join('') +
-      '<ul class="rp-list advice">' + sec.tips.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>';
+      '<ul class="rp-list advice">' + sec.tips.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>' +
+      (sec.voice ? '<p class="rp-voice">' + esc(sec.voice) + '</p>' : '');
 
     const paidInner =
       '<div class="rp-title"><span>9. 오행의 결 — 넘치는 것과 비어 있는 것</span></div>' +
@@ -735,6 +736,7 @@
       '<span>' + esc(c.role) + ' · ' + chart.dayMaster.hanja + chart.dayMaster.elem + ' ' + chart.strengthKo + '</span></div>' +
       '<span class="rp-stamp">' + esc(D.BRAND.name) + ' 정통 만세력</span></div>' +
       pdfBarHTML() +
+      '<p class="rp-voice">' + esc(dx.voice.open) + '</p>' +
 
       (o.question ? '<div class="rp-question"><b>질문</b>' + esc(o.question) + '</div>' : '') +
 
@@ -756,12 +758,12 @@
       payWrapHTML({
         kind: 'report', price: c.price, list: c.listPrice,
         label: esc(c.name) + ' 심층 리포트 전체 열기',
-        desc: '재물 · 직장 · 연애 · 건강 네 갈래의 심층 풀이, 질문에 대한 깊은 답, 시기별 행동 지침까지 — 이 사주로만 계산한 본문입니다.',
+        desc: '재물 · 직장 · 연애 · 건강 네 갈래의 심층 풀이, 질문에 대한 깊은 답, 시기별 행동 지침까지 — 이 사주 하나만 놓고 쓴 본문입니다.',
         inner: paidInner
       }) +
 
       '<div class="rp-title"><span>18. 행운 포인트</span></div>' + luckyHTML +
-      '<div class="rp-cta"><b>2027 정미년, 내 12개월은?</b><span>2027년 월운표와 좋은 달·조심할 달을 같은 사주로 바로 계산합니다.</span><button class="btn-gold wide" id="rpTo2027">2027 정미년 12개월 신년운세 →</button></div>' +
+      '<div class="rp-cta"><b>2027 정미년, 내 12개월은?</b><span>2027년 월운표와 좋은 달·조심할 달을 같은 사주로 이어서 풀어 드립니다.</span><button class="btn-gold wide" id="rpTo2027">2027 정미년 12개월 신년운세 →</button></div>' +
 
       '<div class="rp-actions"><button class="btn-ghost" id="rpClose">닫기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="rpSave">보관함 저장</button></div>' +
       '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · ' + esc(D.REPORT.noTimeNote) + '<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
@@ -1104,14 +1106,15 @@
       '<span>' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간 · ' + chart.pillars.year.hanja + ' ' +
       chart.pillars.month.hanja + ' ' + chart.pillars.day.hanja + (chart.pillars.hour ? ' ' + chart.pillars.hour.hanja : '') + '</span>' +
       '<em class="y27-tag">' + (item.price ? won(item.price) + '원' : '무료') + ' · ' + esc(item.badge) + '</em></div></div>' +
-      pdfBarHTML();
+      pdfBarHTML() +
+      '<p class="rp-voice">2027년 책력과 내 여덟 글자를 나란히 놓고 달마다 짚어 봤습니다. 좋은 달이 반짝하고 오는 해는 아니에요. 대신 이 해는 버티는 사람이 이깁니다. 달마다 왜 그런지, 무엇을 조심해야 하는지 하나씩 말씀드릴게요.</p>';
 
     const preview = paid
-      ? '<div class="y27-free"><span class="y27-free-kicker">무료 맛보기 · 내 사주로 계산</span>' +
+      ? '<div class="y27-free"><span class="y27-free-kicker">무료 맛보기 · 여덟 글자로 먼저 짚어 봄</span>' +
       y27Mini(chart) + y27Preview(item, chart, y) + '</div>'
       : '<div class="y27-free"><span class="y27-free-kicker">전체 무료 공개</span>' + y27Mini(chart) + '</div>' +
       '<p class="rp-lead">2027 정미년의 천간 <b>丁(음화)</b>과 지지 <b>未(음토)</b>가 내 사주와 만나면, 천간은 내게 <b>' + y.yearGod + '</b>의 자리가 됩니다. ' +
-      '아래는 실제 만세력으로 계산한 2027년 풀이입니다.</p>';
+      '아래는 이 사주팔자에 2027년의 절기를 하나씩 맞춰 본 풀이입니다.</p>';
 
     let body = '';
 

@@ -1111,3 +1111,16 @@ body::before {
   .y27-share em { color: #5E5A52 !important; }
   .btn-gold, .btn-ghost { display: none !important; }
 }
+
+/* 상담가의 한마디 */
+.rp-voice {
+  margin: 12px 0 8px; padding: 11px 13px 11px 14px;
+  border-left: 2px solid rgba(212, 175, 55, .55);
+  border-radius: 0 12px 12px 0;
+  background: linear-gradient(90deg, rgba(212, 175, 55, .075), rgba(255, 255, 255, .012));
+  font-family: var(--serif); font-size: 12.5px; line-height: 1.88;
+  color: #E8DFCB; letter-spacing: -.005em;
+}
+@media print {
+  .rp-voice { background: #FFFDF7 !important; border-left: 3px solid #9C7A22 !important; color: #1b1a17 !important; }
+}
