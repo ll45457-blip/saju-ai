@@ -261,9 +261,9 @@
       const story = [];
       const v = base.no % 3;
       const headV = [
-        base.no + '월(' + base.hanja + ', ' + base.startLabel + (base.no === 1 ? ' ' + E.plain('절입') : ' 절입') + ') — 하늘에는 ' + base.stemKo + base.stemElem + '(' + god + '), 땅에는 ' + base.branchKo + base.branchElem + ' — ' + branchGod + ' 자리가 앉는 달입니다.',
-        base.no + '월(' + base.hanja + ', ' + base.startLabel + (base.no === 1 ? ' ' + E.plain('절입') : ' 절입') + ') — 천간은 ' + base.stemKo + base.stemElem + '(' + god + '), 지지는 ' + base.branchKo + base.branchElem + '라 ' + branchGod + ' 자리가 깔립니다.',
-        base.no + '월(' + base.hanja + ', ' + base.startLabel + (base.no === 1 ? ' ' + E.plain('절입') : ' 절입') + ') — 이 달의 간지는 ' + base.stemKo + base.stemElem + '(' + god + ') 위에 ' + base.branchKo + base.branchElem + '(' + branchGod + ')' + E.josa(branchGod, '이', '가') + ' 앉았습니다.'
+        base.no + '월(' + base.hanja + ', ' + base.startLabel + ' 절입' + ') — 하늘에는 ' + base.stemKo + base.stemElem + '(' + god + '), 땅에는 ' + base.branchKo + base.branchElem + ' — ' + branchGod + ' 자리가 앉는 달입니다.',
+        base.no + '월(' + base.hanja + ', ' + base.startLabel + ' 절입' + ') — 천간은 ' + base.stemKo + base.stemElem + '(' + god + '), 지지는 ' + base.branchKo + base.branchElem + '라 ' + branchGod + ' 자리가 깔립니다.',
+        base.no + '월(' + base.hanja + ', ' + base.startLabel + ' 절입' + ') — 이 달의 간지는 ' + base.stemKo + base.stemElem + '(' + god + ') 위에 ' + base.branchKo + base.branchElem + '(' + branchGod + ')' + E.josa(branchGod, '이', '가').slice(branchGod.length) + ' 앉았습니다.'
       ];
       story.push(headV[v] + ' 내 일간 ' + dm.hanja + '에게 ' + E.josa(god, '은', '는') + ' ' + gs.sit + '이고, 이 달의 주제는 ' + gs.scene + '입니다.');
       const secondV = [
@@ -300,9 +300,9 @@
         + (verdict === '방어' && score < 48 ? ' 이런 달에 큰 결정을 하면 대개 일이 두 번 꼬입니다. 한 번 접어 두는 것도 실력입니다.' : ''));
       /* 생활 장면 — 그 달에 실제로 겪을 일과 바로 할 일 */
       const LEAD = ['생활로 옮기면 이렇습니다. ', '이 달을 하루로 바꿔 보면, ', '이 달의 생활 장면은 이렇습니다. '];
-      if (base.no === 1) LEAD[base.no % 3] = E.plain('월운') + '은 절입일을 기준으로 새 달이 시작되니, 매달 첫 주에 그 달 계획을 세우세요. ';
+      if (base.no === 1) LEAD[base.no % 3] = E.plain('월운') + '은 ' + E.plain('절입') + '을 기준으로 달이 바뀌니, 매달 첫 주에 그 달 계획을 세우세요. ';
       story.push(LEAD[base.no % 3] + (MONTH_SCENE[god] || MONTH_SCENE.정인) + ' ' + MONTH_TIP[verdict]
-        + ' 이 달의 흐름은 ' + score + '점이고, 내 일지 ' + chart.pillars.day.branchName + '(' + chart.pillars.day.branchKo + ')와는 ' + (relMine.length ? relMine.join('·') : '아무 작용도 없는 자리') + '입니다.');
+        + ' 이 달의 흐름은 ' + score + '점이고, 내 일지 ' + chart.pillars.day.branchName + '(' + chart.pillars.day.branchKo + ')' + E.josa(chart.pillars.day.branchKo, '과', '와') + '는 ' + (relMine.length ? relMine.join('·') : '아무 작용도 없는 자리') + '입니다.');
 
       const PUSH_T = ['흐름이 순해 미뤄 둔 일을 꺼내기 좋습니다.', '막혀 있던 일이 풀리는 달입니다.', '이 달에 건 일은 대개 붙습니다.'];
       const BAL_T = ['나머지 절반은 확인과 정리에 두면 이 달이 손해 없이 지나갑니다.', '결정은 한 번 미루세요. 확인하는 쪽이 남는 장사입니다.', '계획만 세워 두고 실행은 다음 달로 넘겨도 늦지 않습니다.'];
