@@ -13,9 +13,22 @@
   const ELCLS = { 목: 'e-mok', 화: 'e-hwa', 토: 'e-to', 금: 'e-geum', 수: 'e-su' };
   const STAGE_NOTE = { 장생: '시작과 생기', 목욕: '감정의 파동', 관대: '사회적 성장', 건록: '자립과 실력', 제왕: '힘의 정점', 쇠: '완만한 하강', 병: '점검과 회복', 사: '비움과 정리', 묘: '저장과 축적', 절: '전환점', 태: '잉태와 준비', 양: '보호와 성장' };
 
+  /* 순환 참조·함수처럼 저장할 수 없는 값을 덜어 내는 replacer — 저장 실패를 조용히 삼키지 않는다 */
+  function jsonDrop() {
+    const seen = new WeakSet();
+    return function (key, val) {
+      if (typeof val === 'function' || typeof val === 'bigint' || typeof val === 'symbol') return undefined;
+      if (val && typeof val === 'object') { if (seen.has(val)) return undefined; seen.add(val); }
+      return val;
+    };
+  }
   const store = {
     get(k, fb) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch (e) { return fb; } },
-    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } }
+    set(k, v) {
+      try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { }
+      try { localStorage.setItem(k, JSON.stringify(v, jsonDrop())); return true; } catch (e2) { }
+      return false;
+    }
   };
   const K_PROFILE = 'wolha_profile_v1';
   const K_HISTORY = 'wolha_history_v1';
@@ -528,7 +541,14 @@
     entry.savedAt = new Date().toISOString();
     state.history.unshift(entry);
     if (state.history.length > 60) state.history.length = 60;
-    store.set(K_HISTORY, state.history);
+    let ok = store.set(K_HISTORY, state.history);
+    if (!ok) {
+      /* 계산된 차트·풀이를 통째로 담다 실패하면 가벼운 형태로 다시 저장한다(다시 열 때 생년월일로 재계산) */
+      entry.chart = entry.chart && entry.chart.input ? entry.chart.input : entry.chart;
+      entry.reading = null;
+      ok = store.set(K_HISTORY, state.history);
+    }
+    return ok;
   }
 
   function renderArchive() {
@@ -586,8 +606,12 @@
         '<div class="rp-note">운세 기록은 그날의 일진 기준입니다. 오늘의 운세는 홈 위젯에서 다시 확인하세요.</div>');
       return;
     }
+    /* 저장이 무거워 차트 대신 생년월일만 남은 기록은 여기서 다시 세운다 */
+    let ch = h.chart;
+    if (ch && !ch.pillars) { try { ch = E.buildChart(ch); } catch (e) { ch = null; } }
+    if (!ch) { showToast('이 기록을 다시 열 수 없어요'); return; }
     openReportSheet({
-      chart: h.chart, reading: h.reading || null, question: h.question || '', category: h.category,
+      chart: ch, reading: h.reading || null, question: h.question || '', category: h.category,
       charId: h.charId, title: h.title, typeLabel: h.typeLabel, silent: true
     });
   }
@@ -1481,14 +1505,14 @@
     if (closeBtn) closeBtn.addEventListener('click', closeSheet);
     const saveBtn = $('#rpSave');
     if (saveBtn) saveBtn.addEventListener('click', () => {
-      saveHistory({
+      const savedOK = saveHistory({
         kind: 'report', typeLabel: o.typeLabel, title: o.title, question: o.question,
         category: o.category, charId: o.charId, chart: chart, reading: o.reading || null,
         dateLabel: (new Date().getMonth() + 1) + '월 ' + new Date().getDate() + '일',
         summary: reportSummary(chart, o.category)
       });
-      showToast(D.REPORT.savedToast);
-      saveBtn.disabled = true; saveBtn.textContent = '보관함에 저장됨';
+      showToast(savedOK ? D.REPORT.savedToast : '저장하지 못했어요 · 잠시 뒤 다시 시도해 주세요');
+      saveBtn.disabled = savedOK; saveBtn.textContent = savedOK ? '보관함에 저장됨' : '다시 저장';
     });
     if (!o.silent) { /* 자동 저장 대신 수동 저장 버튼 제공 */ }
   }
@@ -1979,15 +2003,15 @@
     });
     const sv = $('#y27Save');
     if (sv) sv.addEventListener('click', () => {
-      saveHistory({
+      const savedOK = saveHistory({
         kind: 'y2027', y: kind, typeLabel: '2027 정미년', title: item.title,
         question: '', category: item.kind === 'moneyleak' || item.kind === 'calendar' ? 'money' : item.kind === 'reunion' ? 'reunion' : 'fate',
         charId: item.charId, chart: chart,
         dateLabel: (new Date().getMonth() + 1) + '월 ' + new Date().getDate() + '일',
         summary: Y27.summary(chart, kind)
       });
-      showToast(D.REPORT.savedToast);
-      sv.disabled = true; sv.textContent = '보관함에 저장됨';
+      showToast(savedOK ? D.REPORT.savedToast : '저장하지 못했어요 · 잠시 뒤 다시 시도해 주세요');
+      sv.disabled = savedOK; sv.textContent = savedOK ? '보관함에 저장됨' : '다시 저장';
     });
   }
 
@@ -2511,15 +2535,15 @@
     const ag = $('#cpAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openCompatForm({}); });
     const sv = $('#cpSave');
     if (sv) sv.addEventListener('click', () => {
-      saveHistory({
+      const savedOK = saveHistory({
         kind: 'compat', typeLabel: '정밀 궁합', charId: 'yeonhwa', category: 'love',
         title: (A.input.name || '나') + ' · ' + (B.input.name || '상대') + ' 궁합', question: '',
         chart: A.input, partner: B.input,
         dateLabel: (new Date().getMonth() + 1) + '월 ' + new Date().getDate() + '일',
         summary: res.score + '점 · ' + res.grade.label
       });
-      showToast(D.REPORT.savedToast);
-      sv.disabled = true; sv.textContent = '보관함에 저장됨';
+      showToast(savedOK ? D.REPORT.savedToast : '저장하지 못했어요 · 잠시 뒤 다시 시도해 주세요');
+      sv.disabled = savedOK; sv.textContent = savedOK ? '보관함에 저장됨' : '다시 저장';
     });
   }
 
@@ -2605,14 +2629,14 @@
     const ag = $('#duAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openBirthForm({ title: '내 정보 수정', onDone: n => daeunSheet(n) }); });
     const sv = $('#duSave');
     if (sv) sv.addEventListener('click', () => {
-      saveHistory({
+      const savedOK = saveHistory({
         kind: 'daeun', typeLabel: '10년 대운', charId: 'cheongwol', category: 'fate',
         title: '10년 대운 · ' + (c.input.name || '나'), question: '', chart: c.input,
         dateLabel: (new Date().getMonth() + 1) + '월 ' + new Date().getDate() + '일',
         summary: d.dirText + ' · 대운수 ' + d.su.text + ' · 전성기 ' + d.golden.map(g => g.ageFrom + '세').join('·')
       });
-      showToast(D.REPORT.savedToast);
-      sv.disabled = true; sv.textContent = '보관함에 저장됨';
+      showToast(savedOK ? D.REPORT.savedToast : '저장하지 못했어요 · 잠시 뒤 다시 시도해 주세요');
+      sv.disabled = savedOK; sv.textContent = savedOK ? '보관함에 저장됨' : '다시 저장';
     });
   }
 
@@ -2728,14 +2752,14 @@
     const ag = $('#glAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openBirthForm({ title: '내 정보 수정', onDone: n => gililSheet(n) }); });
     const sv = $('#glSave');
     if (sv) sv.addEventListener('click', () => {
-      saveHistory({
+      const savedOK = saveHistory({
         kind: 'gilil', typeLabel: '2027 길일', charId: 'baekho', category: 'work',
         title: '2027 계약·이직·이사 길일', question: '', chart: c.input,
         dateLabel: (new Date().getMonth() + 1) + '월 ' + new Date().getDate() + '일',
         summary: '계약 ' + (g.picks.contract[0] ? (g.picks.contract[0].m + '월 ' + g.picks.contract[0].d + '일') : '–') + ' · 이직 ' + (g.picks.job[0] ? (g.picks.job[0].m + '월 ' + g.picks.job[0].d + '일') : '–') + ' · 이사 ' + (g.picks.move[0] ? (g.picks.move[0].m + '월 ' + g.picks.move[0].d + '일') : '–')
       });
-      showToast(D.REPORT.savedToast);
-      sv.disabled = true; sv.textContent = '보관함에 저장됨';
+      showToast(savedOK ? D.REPORT.savedToast : '저장하지 못했어요 · 잠시 뒤 다시 시도해 주세요');
+      sv.disabled = savedOK; sv.textContent = savedOK ? '보관함에 저장됨' : '다시 저장';
     });
   }
 
