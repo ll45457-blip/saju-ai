@@ -760,7 +760,7 @@
     const today = o.reading ? o.reading.today : null;
     const html = reportHTML({ chart: chart, char: c, question: o.question, category: o.category, today: today, typeLabel: o.typeLabel });
 
-    openSheet(c.name + '의 리포트', html, null);
+    openSheet((chart.input && chart.input.name ? chart.input.name + '님 · ' : '') + c.name + '의 리포트', html, null);
     bindProfileEdit($('#sheetBody'), next => {
       const again = Object.assign({}, o, { chart: next });
       if (o.reading) again.reading = E.todayReading(next);
@@ -1829,7 +1829,7 @@
   function gililHTML(c, g) {
     const dm = c.dayMaster;
     const head = profileBannerHTML(c) + '<div class="du-top">' +
-      '<div><b>2027 정미년 · ' + esc((c.input.name || '나')) + '님의 길일</b><span>' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간 · 일지 ' + c.pillars.day.hanja + '(' + c.pillars.day.animal + ') · 용신 ' + c.yongsin.elem + '</span></div>' +
+      '<div><b>2027 정미년 · ' + (c.input.name ? esc(c.input.name) + '님' : '나') + '의 길일</b><span>' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간 · 일지 ' + c.pillars.day.hanja + '(' + c.pillars.day.animal + ') · 용신 ' + c.yongsin.elem + '</span></div>' +
       '<em>계약 · 이직 · 이사</em></div>' +
       pdfBarHTML() +
       '<p class="rp-voice">' + esc(personOpen(c, g.open)) + '</p>';
