@@ -431,7 +431,7 @@
       : hasHee
         ? '내게 필요한 ' + chart.yongsin.elem + ' 기운이 대운에 직접 오지는 않지만, 이를 도와주는 ' + chart.yongsin.hee + ' 기운이 들어오는 10년이 있습니다. 그 시기가 힘이 실리는 황금기입니다.'
         : '이 사주는 큰 기운이 대운에서 크게 터지지 않는 구조입니다. 그래서 황금기는 “기운이 몰려오는 때”가 아니라 “내가 쌓은 것이 힘을 받는 때”입니다. 아래 표에서 형(刑)과 십성이 가장 좋은 자리를 황금기로 잡았습니다.';
-    const goldenScene = '전성기 10년은 어느 날 갑자기 오지 않습니다. 그 대운이 시작되는 해 1월에 그 10년에 할 일 하나를 종이에 적어 두세요 — ' + chart.dayMaster.hanja + '(' + chart.dayMaster.ko + ') 일간에 ' + chart.strengthKo + ' ' + chart.strengthRatio + '%인 이 사주는 글로 남긴 목표에만 오래 매달립니다.';
+    const goldenScene = '전성기 10년은 어느 날 갑자기 오지 않습니다. 그 대운이 시작되는 해 1월에 그 10년에 할 일 하나를 종이에 적어 두세요 — ' + chart.dayMaster.hanja + '(' + chart.dayMaster.ko + ') 일간에 ' + chart.strengthKo + '인 이 사주는 글로 남긴 목표에만 오래 매달립니다.';
 
     function line(d) {
       const dec = DECADE[d.stemGod] || DECADE['비견'];

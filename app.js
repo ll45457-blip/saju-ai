@@ -1204,7 +1204,7 @@
     const group = D.COPY.godGroup[dominantGodGroup(chart)];
     const ext = E.elemExtremes(chart);
     const lines = [
-      '중심은 <b>' + dm.hanja + '(' + dm.ko + ') · ' + dm.elem + ' 일간</b> — ' + chart.strengthKo + ' ' + chart.strengthRatio + '%, ' + group.name + '이 강한 구조입니다.',
+      '중심은 <b>' + dm.hanja + '(' + dm.ko + ') · ' + dm.elem + ' 일간</b> — ' + chart.strengthKo + ', ' + group.name + '이 강한 구조입니다.',
       '오행은 <b>' + ext.strong + ' ' + chart.pct[ext.strong] + '%</b>가 가장 두텁고 <b>' + ext.weak + ' ' + chart.pct[ext.weak] + '%</b>' + (ext.empty ? '로 비어 있습니다.' : '로 가장 얇습니다.'),
       '이 사주에 필요한 기운은 <b>' + chart.yongsin.elem + '</b> — ' + esc(chart.yongsin.care) + '.'
     ];
@@ -1295,11 +1295,11 @@
       const x = startX + i * (colW + colGap) + colW / 2;
       const isDay = pair[0] === '일주';
       g.fillStyle = isDay ? 'rgba(212,175,55,.10)' : 'rgba(255,255,255,.035)';
-      roundRect(g, startX + i * (colW + colGap), 806, colW, 300, 22);
+      roundRect(g, startX + i * (colW + colGap), 806, colW, 320, 22);
       g.fill();
       g.strokeStyle = isDay ? 'rgba(212,175,55,.55)' : 'rgba(255,255,255,.10)';
       g.lineWidth = isDay ? 2 : 1;
-      roundRect(g, startX + i * (colW + colGap), 806, colW, 300, 22);
+      roundRect(g, startX + i * (colW + colGap), 806, colW, 320, 22);
       g.stroke();
       g.fillStyle = dim; g.font = '400 22px ' + sans;
       g.fillText(pair[0], x, 846);
@@ -1307,16 +1307,16 @@
         g.fillStyle = 'rgba(247,239,221,.35)'; g.font = '400 40px ' + serif;
         g.fillText('·', x, 950); g.fillText('·', x, 1030);
         g.fillStyle = 'rgba(247,239,221,.35)'; g.font = '300 20px ' + sans;
-        g.fillText('시간 모름', x, 1082);
+        g.fillText('시간 모름', x, 1104);
         return;
       }
       g.font = '700 84px ' + serif;
       g.fillStyle = elColor(pair[1].stemElem);
       g.fillText(pair[1].stemName, x, 950);
       g.fillStyle = elColor(pair[1].branchElem);
-      g.fillText(pair[1].branchName, x, 1042);
-      g.fillStyle = dim; g.font = '300 22px ' + sans;
-      g.fillText(pair[1].ko, x, 1086);
+      g.fillText(pair[1].branchName, x, 1040);
+      g.fillStyle = dim; g.font = '300 20px ' + sans;
+      g.fillText(pair[1].ko, x, 1104);
     });
 
     /* 키워드 */
@@ -1325,7 +1325,7 @@
     g.fillStyle = 'rgba(212,175,55,.55)';
     g.fillRect(W / 2 - 150, 1180, 300, 1);
     g.fillStyle = cream; g.font = '500 30px ' + sans;
-    g.fillText(dm.hanja + ' ' + dm.elem + ' 일간 · ' + chart.strengthKo + ' ' + chart.strengthRatio + '%', W / 2, 1246);
+    g.fillText(dm.hanja + ' ' + dm.elem + ' 일간 · ' + chart.strengthKo, W / 2, 1246);
     g.fillStyle = dim; g.font = '300 28px ' + sans;
     g.fillText('가장 두터운 기운 ' + ext.strong + ' ' + chart.pct[ext.strong] + '% · 필요한 기운 ' + chart.yongsin.elem, W / 2, 1304);
     g.fillStyle = 'rgba(247,239,221,.5)'; g.font = '300 26px ' + sans;
@@ -1548,7 +1548,7 @@
     }).join('') + '</div>' +
       '<div class="stat-row">' +
       '<div class="stat"><span>일간</span><b class="gold">' + chart.dayMaster.hanja + ' (' + chart.dayMaster.ko + ') ' + chart.dayMaster.elem + '</b></div>' +
-      '<div class="stat"><span>형세</span><b>' + chart.strengthKo + ' (' + chart.strengthRatio + ')</b></div>' +
+      '<div class="stat"><span>형세</span><b>' + chart.strengthKo + '</b></div>' +
       '<div class="stat"><span>용신</span><b class="gold">' + chart.yongsin.elem + ' · 희신 ' + chart.yongsin.hee + '</b></div></div>' +
       (chart.missing.length ? '<div class="rp-caution" style="margin-top:10px">' + esc(C.missing[chart.missing[0]]) + '</div>' : '');
 
@@ -2088,7 +2088,7 @@
       (p.hour ? cell('시주', p.hour) : '<div class="mini-pl is-empty"><span>시주</span><b>·</b><b>·</b></div>') + '</div>' +
       '<div class="y27-mini-row">' +
       '<span>일간 <b>' + chart.dayMaster.hanja + ' ' + chart.dayMaster.elem + '</b></span>' +
-      '<span>형세 <b>' + chart.strengthKo + ' ' + chart.strengthRatio + '%</b></span>' +
+      '<span>형세 <b>' + chart.strengthKo + '</b></span>' +
       '<span>용신 <b>' + chart.yongsin.elem + '</b></span>' +
       '<span>음양 <b>' + yy.yangPct + ':' + yy.yinPct + '</b></span>' +
       '</div></div>';
@@ -2161,7 +2161,7 @@
     if (item.kind === 'samjae') {
       body =
         '<div class="rp-title"><span>삼재 판정</span></div>' +
-        '<div class="y27-samjae ' + (y.samjae.is ? 'on' : 'off') + '"><b>' + esc(y.samjae.head) + '</b><p>' + esc(y.samjae.body + ' ' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간은 ' + chart.strengthKo + ' ' + chart.strengthRatio + '%에 용신이 ' + E.josa(chart.yongsin.elem, '이라', '라') + ', 삼재의 작용이 ' + (chart.strength === 'weak' ? '몸과 체력 쪽으로 먼저 나타납니다.' : chart.strength === 'strong' ? '사람과 자리다툼 쪽으로 먼저 나타납니다.' : '생활의 리듬이 흔들리는 쪽으로 나타납니다.')) + '</p>' +
+        '<div class="y27-samjae ' + (y.samjae.is ? 'on' : 'off') + '"><b>' + esc(y.samjae.head) + '</b><p>' + esc(y.samjae.body + ' ' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간은 ' + chart.strengthKo + '이고 용신이 ' + E.josa(chart.yongsin.elem, '이라', '라') + ', 삼재의 작용이 ' + (chart.strength === 'weak' ? '몸과 체력 쪽으로 먼저 나타납니다.' : chart.strength === 'strong' ? '사람과 자리다툼 쪽으로 먼저 나타납니다.' : '생활의 리듬이 흔들리는 쪽으로 나타납니다.')) + '</p>' +
         '<ul class="rp-list advice">' + RX.y27(f, 'samjae', y).todo.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul></div>' +
         '<div class="rp-title"><span>내 지지 ↔ 未 분석</span></div>' + y27YearRel(y) +
         '<div class="rp-title"><span>2027년 충·형이 오는 달</span></div>' + y27RiskMonths(y) +
@@ -2694,7 +2694,6 @@
       purposeBlock('move', '③ 이사 · 개업', '이사는 내 자리가 옮겨지는 일이라 일지와 부딪히는 날을 가장 조심합니다. 문을 여는 날은 식신·재성이 함께 오는 날이 좋습니다.') +
       '<div class="rp-title"><span>2027년에 피할 날</span></div>' +
       '<div class="gl-avoid-wrap">' + g.avoid.map(d => '<div class="gl-avoid"><b>' + d.m + '월 ' + d.d + '일 (' + d.weekday + ') ' + d.hanja + '</b><span>' + d.bad.map(b => BADWHY[b] || b).join(' ') + '</span></div>').join('') + '</div>' +
-      '<div class="rp-title"><span>달마다의 길일과 피할 날</span></div>' + glMonthCards(g) +
       '<div class="rp-title"><span>도장 찍을 때의 팁</span></div>' +
       '<ul class="rp-list advice">' + [0, 1, 2].map(i => '<li>' + esc(RX.gililTip(c, 'contract', i)) + '</li>').join('') + '</ul>' +
       '<div class="rp-caution">' + esc('길일은 “이 날이면 무조건 된다”는 뜻이 아닙니다. ' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간에 용신 ' + c.yongsin.elem + '인 이 사주는 같은 계약이라도 준비가 덜 된 날은 그 날의 기운을 쓰지 못합니다. 서류와 조건을 먼저 끝내 두고, 그 위에 ' + (g.picks.contract[0] ? g.picks.contract[0].m + '월 ' + g.picks.contract[0].d + '일' : '좋은 날') + '을 얹으세요.') + '</div>';

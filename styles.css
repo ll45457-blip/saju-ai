@@ -881,7 +881,7 @@ body::before {
 .elem-name { width: 34px; flex: 0 0 34px; font-family: var(--serif); font-size: 12.5px; color: var(--ink-2); }
 .elem-bar { flex: 1; height: 9px; border-radius: 999px; background: rgba(255, 255, 255, .06); overflow: hidden; }
 .elem-bar i { display: block; height: 100%; border-radius: 999px; transition: width .8s cubic-bezier(.22, .61, .36, 1); }
-.elem-val { width: 44px; flex: 0 0 44px; text-align: right; font-size: 10.5px; color: var(--ink-3); }
+.elem-val { width: 62px; flex: 0 0 62px; text-align: right; font-size: 10.5px; color: var(--ink-3); white-space: nowrap; }
 .elem-val b { color: var(--ink); font-weight: 500; }
 
 .stat-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }

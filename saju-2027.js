@@ -268,20 +268,20 @@
       story.push(headV[v] + ' 내 일간 ' + dm.hanja + '에게 ' + E.josa(god, '은', '는') + ' ' + gs.sit + '이고, 이 달의 주제는 ' + gs.scene + '입니다.');
       const secondV = [
         base.no + '월 ' + E.josaHan(base.hanja, base.ko, '은', '는') + ' 월지 본기의 ' + branchGod + '까지 겹쳐 ' + E.josa(bs.sit, '이', '가') + ' 한 겹 더해지고, ' + dm.hanja + ' 일간의 12운성은 ' + stage + ' — ' + E.STAGE_DEEP[stage] + '.',
-        base.no + '월의 월지 본기는 ' + E.josa(branchGod, '이', '가') + ' 한 겹 더 얹힙니다 — ' + bs.sit + '. ' + dm.ko + ' 일간의 운성은 ' + stage + ', ' + E.STAGE_DEEP[stage] + '.',
+        base.no + '월의 월지 본기는 ' + E.josa(branchGod, '이', '가') + ' 한 겹 더 얹힙니다 — ' + bs.sit + '. ' + dm.hanja + '(' + dm.ko + ') 일간의 운성은 ' + stage + ', ' + E.STAGE_DEEP[stage] + '.',
         '게다가 ' + base.no + '월 ' + base.hanja + '의 지지는 ' + branchGod + ' 자리라 ' + E.josa(bs.sit, '이', '가') + ' 함께 걸립니다. ' + dm.hanja + ' 일간의 운성은 ' + stage + ' — ' + E.STAGE_DEEP[stage] + '.'
       ];
       story.push(secondV[v]);
       const noYearV = [
         base.no + '월(' + base.hanja + ')은 2027년 未토와 충·합이 없습니다. ' + dm.hanja + ' 일간에게 이 달은 해의 기운이 흔들지 않고 월운 자체로만 움직입니다.',
         '올해의 未토는 ' + base.no + '월 ' + E.josaHan(base.hanja, base.ko, '을', '를') + ' 건드리지 않습니다. ' + dm.hanja + ' 일간의 흐름은 이 달의 간지로만 결정되고 해의 기운은 잠잠합니다.',
-        '未토와 ' + base.no + '월 ' + base.hanja + ' 사이에는 아무 작용이 없습니다. ' + dm.ko + ' 일간에게 이 달은 해의 도움도 방해도 없이 제 몫으로 굴러갑니다.'
+        '未토와 ' + base.no + '월 ' + base.hanja + ' 사이에는 아무 작용이 없습니다. ' + dm.hanja + '(' + dm.ko + ') 일간에게 이 달은 해의 도움도 방해도 없이 제 몫으로 굴러갑니다.'
       ];
       story.push(relYear.length
         ? base.no + '월 ' + E.josaHan(base.hanja, base.ko, '은', '는') + ' ' + dm.hanja + '(' + dm.ko + ') 일간에게 2027년 未토와 ' + flatRel(relYear) + ' 관계입니다. ' + REL_SCENE[relYear[0]] + (relYear.length > 1 ? ' 여기에 ' + relYear.slice(1).map(r => (E.REL_SIT[r] || r)).join(' · ') + '까지 겹쳐 같은 방향의 부담이 한 번 더 옵니다.' : '')
         : noYearV[v]);
       const noMineV = [
-        '내 일지 ' + chart.pillars.day.hanja + '와는 부딪히지도 붙지도 않아, ' + base.no + '월에는 생활의 리듬을 그대로 지킬 수 있습니다.',
+        E.josaHan(chart.pillars.day.hanja, chart.pillars.day.branchKo, '과', '와') + '는 부딪히지도 붙지도 않아, ' + base.no + '월에는 생활의 리듬을 그대로 지킬 수 있습니다.',
         '내 일지 ' + chart.pillars.day.hanja + '(' + chart.pillars.day.branchKo + ') 쪽과 ' + base.no + '월 ' + E.josaHan(base.hanja, base.ko, '은', '는') + ' 아무 작용이 없습니다. 생활의 큰 틀은 흔들리지 않으니 평소대로 가시면 됩니다.',
         base.no + '월은 내 자리(' + chart.pillars.day.hanja + ')와 조용한 달입니다 — 크게 얻을 것도 잃을 것도 없이 담담하게 지나갑니다.'
       ];
@@ -290,19 +290,19 @@
         : noMineV[v]);
       if (base.branchElem === yongEl) story.push(base.no + '월 ' + base.hanja + '의 월지가 용신 ' + E.josa(yongEl, '과', '와') + ' 같은 기운이라 ' + dm.hanja + ' 일간인 내가 편해집니다. 같은 일을 해도 피로가 덜하고 판단이 빨라집니다.');
       else if (base.branchElem === heeEl) story.push(base.no + '월에는 희신 ' + heeEl + ' 기운이 실려 ' + dm.hanja + ' 일간의 주변에 도움이 따라옵니다. 누군가의 소개나 제안이 실제 이익으로 이어집니다.');
-      else if (base.branchElem === dm.elem) story.push('내 기운(' + dm.elem + ')이 ' + base.no + '월 ' + base.hanja + '에 겹치는 달이라 ' + dm.ko + ' 일간은 의욕은 앞서는데 결과는 늦습니다. 혼자 결정하기보다 한 번 검토를 거치세요.');
-      const PUSH = ['이 달은 밀어붙여 보세요. ', '이 달만큼은 앞으로 나가셔도 됩니다. ', '힘을 실어도 좋은 달입니다. '];
-      const BAL = ['절반만 나가고 나머지 절반은 확인에 쓰세요. ', '한 걸음 나가고 한 걸음 멈추는 달입니다. ', '서두르지 말고 확인하며 가세요. '];
-      const DEF = ['이 달은 지키는 쪽이 이깁니다. ', '새로 벌이지 말고 정리에 쓰세요. ', '물러서서 확인하는 것이 이 달의 정답입니다. '];
+      else if (base.branchElem === dm.elem) story.push('내 기운(' + dm.elem + ')이 ' + base.no + '월 ' + base.hanja + '에 겹치는 달이라 ' + dm.hanja + '(' + dm.ko + ') 일간은 의욕은 앞서는데 결과는 늦습니다. 혼자 결정하기보다 한 번 검토를 거치세요.');
+      const PUSH = ['밀어붙이면 됩니다. ', '앞으로 나가셔도 됩니다. ', '힘을 실어도 좋습니다. '];
+      const BAL = ['절반만 나가고 나머지 절반은 확인에 쓰세요. ', '한 걸음 나가고 한 걸음 멈추는 때입니다. ', '서두르지 말고 확인하며 가세요. '];
+      const DEF = ['지키는 쪽이 이깁니다. ', '새로 벌이기보다 정리에 쓰는 편이 좋습니다. ', '물러서서 확인하는 것이 정답입니다. '];
       const OPEN = PUSH[base.no % 3];
       const verdictLine = verdict === '추진' ? PUSH[base.no % 3] : (verdict === '균형' ? BAL[base.no % 3] : DEF[base.no % 3]);
-      story.push(base.no + '월 ' + base.hanja + ' ' + dm.hanja + ' 일간은 ' + (verdict === '추진' ? '그래서 ' : '') + verdictLine + gs.tip + '.'
+      story.push(base.no + '월 ' + base.hanja + ' — ' + dm.hanja + ' 일간에게 이 달은 ' + verdictLine + gs.tip + '.'
         + (verdict === '방어' && score < 48 ? ' 이런 달에 큰 결정을 하면 대개 일이 두 번 꼬입니다. 한 번 접어 두는 것도 실력입니다.' : ''));
       /* 생활 장면 — 그 달에 실제로 겪을 일과 바로 할 일 */
       const LEAD = ['생활로 옮기면 이렇습니다. ', '이 달을 하루로 바꿔 보면, ', '이 달의 생활 장면은 이렇습니다. '];
       if (base.no === 1) LEAD[base.no % 3] = E.plain('월운') + '은 ' + E.plain('절입') + '을 기준으로 달이 바뀌니, 매달 첫 주에 그 달 계획을 세우세요. ';
       story.push(LEAD[base.no % 3] + (MONTH_SCENE[god] || MONTH_SCENE.정인) + ' ' + MONTH_TIP[verdict]
-        + ' 이 달의 흐름은 ' + score + '점이고, 내 일지 ' + chart.pillars.day.branchName + '(' + chart.pillars.day.branchKo + ')' + E.josa(chart.pillars.day.branchKo, '과', '와') + '는 ' + (relMine.length ? relMine.join('·') : '아무 작용도 없는 자리') + '입니다.');
+        + ' 이 달의 흐름은 ' + score + '점이고, 내 일지 ' + E.josaHan(chart.pillars.day.branchName + '(' + chart.pillars.day.branchKo + ')', chart.pillars.day.branchKo, '과', '와') + '는 ' + (relMine.length ? relMine.join('·') : '아무 작용도 없는 자리') + '입니다.');
 
       const PUSH_T = ['흐름이 순해 미뤄 둔 일을 꺼내기 좋습니다.', '막혀 있던 일이 풀리는 달입니다.', '이 달에 건 일은 대개 붙습니다.'];
       const BAL_T = ['나머지 절반은 확인과 정리에 두면 이 달이 손해 없이 지나갑니다.', '결정은 한 번 미루세요. 확인하는 쪽이 남는 장사입니다.', '계획만 세워 두고 실행은 다음 달로 넘겨도 늦지 않습니다.'];
@@ -401,12 +401,12 @@
       if (g.재성 === 0) out.push({ title: '들어오는 길이 좁은 그릇', why: '재성 0개 — 벌이의 통로가 하나뿐입니다', fix: '수입원을 하나 더 만들되 손에 익은 기술(식상)에서 파생시키세요. 새 분야는 실패 확률이 큽니다.' });
       if (g.재성 >= 3) out.push({ title: '손이 커지는 그릇', why: '재성 ' + g.재성 + '개 — 기회도 많지만 나가는 길도 많습니다', fix: '수입의 10%는 손대지 않는 계좌로 자동이체. 들어온 돈은 48시간 묶어 두는 규칙을 쓰세요.' });
       if (g.식상 <= 1 && g.인성 >= 2) out.push({ title: '생각이 길어 실행이 늦는 구멍', why: '인성 ' + g.인성 + '개 · 식상 ' + g.식상 + '개 — 준비만 하다 때를 놓칩니다', fix: '완벽해지기 전에 팔아 보세요. 초안·샘플을 먼저 내놓는 것이 이 사주의 지름길입니다.' });
-      if (chart.strength === 'weak') out.push({ title: '체력·건강 유지비로 새는 돈', why: '신약 ' + chart.strengthRatio + '% 구조 — ' + dm.hanja + ' 일간의 몸이 지출의 하수구가 됩니다', fix: '병원비·휴식비는 아끼지 말고, 대신 밤 문화·과식 지출을 줄이세요. ' + chart.pillars.day.hanja + ' 일지의 ' + chart.gods.dayBranch + '이 그 지출을 키웁니다.' });
+      if (chart.strength === 'weak') out.push({ title: '체력·건강 유지비로 새는 돈', why: '신약 구조 — ' + dm.hanja + ' 일간의 몸이 지출의 하수구가 됩니다', fix: '병원비·휴식비는 아끼지 말고, 대신 밤 문화·과식 지출을 줄이세요. ' + chart.pillars.day.hanja + ' 일지의 ' + chart.gods.dayBranch + '이 그 지출을 키웁니다.' });
       if (c.토 >= 3) out.push({ title: '고정비·집·차로 새는 돈', why: '토(土) ' + c.토 + '자 — 자리를 잡는 지출이 큽니다', fix: '구독·관리비·할부를 한 장에 적어 보세요. 고정비 3개를 끊으면 그대로 저축이 됩니다.' });
       if (c.수 >= 3) out.push({ title: '구독·충동·유흥으로 새는 돈', why: '수(水) ' + c.수 + '자 — 흘러가는 지출이 많습니다', fix: '결제 전 하루 묵히기, 구독은 분기마다 정리하기. 이 두 가지로 새는 돈이 절반이 됩니다.' });
       if (c.화 >= 3) out.push({ title: '관계·모임·선물로 새는 돈', why: '화(火) ' + c.화 + '자 — 사람을 향한 지출이 뜨겁습니다', fix: '모임은 월 2회로 정하고 선물은 금액 상한을 먼저 정하세요.' });
       if (!out.length) out.push({ title: '새는 곳이 적은 그릇', why: '오행과 십신이 고르게 놓였습니다', fix: '문제는 막는 힘보다 버는 힘입니다. 수입의 통로를 하나 더 여는 데 집중하세요.' });
-      while (out.length < 2) out.push({ title: '결제 습관의 구멍', why: '지출 기록이 없는 것이 가장 큰 구멍입니다 — ' + dm.hanja + dm.elem + ' ' + chart.strengthKo + ' ' + chart.strengthRatio + '%의 사주에서 ' + c.수 + '수·' + c.화 + '화가 그 습관을 만듭니다', fix: '한 달만 결제 내역을 한 파일에 모아 보세요. 보이는 순간 새는 곳이 줄어듭니다. ' + chart.ganji + ' 기준으로는 고정비부터 확인하세요.' });
+      while (out.length < 2) out.push({ title: '결제 습관의 구멍', why: '지출 기록이 없는 것이 가장 큰 구멍입니다 — ' + dm.hanja + dm.elem + ' ' + chart.strengthKo + '인 사주에서 ' + c.수 + '수·' + c.화 + '화가 그 습관을 만듭니다', fix: '한 달만 결제 내역을 한 파일에 모아 보세요. 보이는 순간 새는 곳이 줄어듭니다. ' + chart.ganji + ' 기준으로는 고정비부터 확인하세요.' });
       return out.slice(0, 3);
     })();
 
