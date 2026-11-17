@@ -29,7 +29,7 @@ window.SAJU_DATA = (function () {
       fields: ['연애', '인연', '속마음', '재회'],
       accent: '#F0A6C0',
       accent2: '#C86B93',
-      price: 4900,
+      price: 5900,
       rating: 4.9,
       reviews: 12847,
       badge: '연애 심층',
@@ -62,7 +62,7 @@ window.SAJU_DATA = (function () {
       fields: ['신년운세', '오늘의 운세', '액운', '택일'],
       accent: '#F6C86A',
       accent2: '#E0902B',
-      price: 4900,
+      price: 5900,
       rating: 4.8,
       reviews: 20391,
       badge: '오늘 운세',
@@ -95,7 +95,7 @@ window.SAJU_DATA = (function () {
       fields: ['재물운', '사업', '큰 대운', '투자'],
       accent: '#E8B84B',
       accent2: '#B07A18',
-      price: 4900,
+      price: 5900,
       rating: 4.9,
       reviews: 9632,
       badge: '재물 심층',
@@ -128,7 +128,7 @@ window.SAJU_DATA = (function () {
       fields: ['정통 명리', '인생 흐름', '궁합', '대운'],
       accent: '#9FB6E8',
       accent2: '#5A78B8',
-      price: 4900,
+      price: 5900,
       rating: 5.0,
       reviews: 6821,
       badge: '정통 명리',
@@ -161,7 +161,7 @@ window.SAJU_DATA = (function () {
       fields: ['직업', '이직', '시험', '승부운'],
       accent: '#8FB4E8',
       accent2: '#3C5F9E',
-      price: 4900,
+      price: 5900,
       rating: 4.8,
       reviews: 7104,
       badge: '직업 심층',
@@ -235,14 +235,14 @@ window.SAJU_DATA = (function () {
         id: 'newyear', kind: 'newyear', icon: '🎍', badge: '2027 대표', charId: 'geumbangul',
         title: '2027 정미년 12개월 신년운세',
         sub: '좋은 달 · 조심할 달 + 방어 리포트',
-        price: 6900,
+        price: 14900,
         bullets: ['2027년 1월~12월 월운표 (십성·12운성·충합형)', '내게 좋은 달 3 · 조심할 달 3 직접 짚어 드림', '조심할 달마다 실전 방어 문장']
       },
       {
         id: 'samjae', kind: 'samjae', icon: '🛡️', badge: '리스크', charId: 'cheongwol',
         title: '2027 삼재 · 충살 방어',
         sub: '내 지지와 未토의 충·형·파 판정',
-        price: 4900,
+        price: 5900,
         bullets: ['삼재 해당 여부 · 몇 년차인지', '년지·월지·일지·시지별 충·형·파 해 분석', '삼재 3원칙과 조심할 달']
       },
       {
@@ -263,14 +263,14 @@ window.SAJU_DATA = (function () {
         id: 'calendar', kind: 'calendar', icon: '📅', badge: '2030 직장인', charId: 'baekho',
         title: '2027 재물 · 이직 · 1인 사업 타이밍',
         sub: '3개 트랙 월별 캘린더',
-        price: 4900,
+        price: 5900,
         bullets: ['재물 문 열리는 달', '이직·승진에 유리한 달', '1인 사업·부업을 시작할 달']
       },
       {
         id: 'reunion', kind: 'reunion', icon: '💌', badge: '소액 입문', charId: 'yeonhwa',
         title: '그 사람 속마음 & 2027 재회 가능성',
         sub: '인연의 문이 열리는 달까지',
-        price: 4900,
+        price: 5900,
         bullets: ['일지 합·충으로 보는 2027 인연', '연락이 올 달 · 마찰이 생길 달', '첫 연락의 타이밍과 문장']
       }
     ]

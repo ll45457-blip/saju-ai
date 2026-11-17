@@ -892,17 +892,33 @@
     return String(links[kind] || links[scope] || '').trim();
   }
 
-  /* ---------------- 3티어 상품 (래피드 3종과 1:1 — 단일가, 정가 취소선·할인율 표기 없음) ---------------- */
+  /* ---------------- 3티어 상품 (래피드 3종과 1:1 — 단일가, 정가 취소선·할인율 표기 없음) ----------------
+     각 티어가 실제로 여는 범위(scopes)를 함께 둔다. 결제한 상품과 열리는 리포트가 어긋나지 않도록
+     기본 선택은 '이 리포트를 실제로 여는 가장 낮은 티어'로 정한다 (궁합·대운·길일은 T3 전체 열람). */
   const PAY_TIERS = [
-    { id: 't1', name: '연화선녀의 속마음 & 도화살 심층 비책', desc: '특정 1개 고민(연애/재물/이직) 심층 분석', price: 5900, badge: '' },
-    { id: 't2', name: '2027 정미년 12개월 월별 대운 종합 리포트', desc: '2027년 1월~12월 월별 운세 흐름 + 재물/애정/건강 총망라', price: 14900, badge: '⭐ BEST 추천' },
-    { id: 't3', name: '월하사주 평생 원국 풀이 + 맞춤 사주 요약 카드', desc: '초년·중년·말년 평생 대운 분석 + 고화질 요약 카드', price: 29000, badge: '👑 PREMIUM' }
+    { id: 't1', name: '연화선녀의 속마음 & 도화살 심층 비책', desc: '특정 1개 고민(연애/재물/이직) 심층 분석',
+      scopeNote: '기본 리포트 · 삼재 · 재물 · 재회 열람', scopes: ['report'], price: 5900, badge: '' },
+    { id: 't2', name: '2027 정미년 12개월 월별 대운 종합 리포트', desc: '2027년 1월~12월 월별 운세 흐름 + 재물/애정/건강 총망라',
+      scopeNote: '2027 특별관 전체 열람', scopes: ['y2027'], price: 14900, badge: '⭐ BEST 추천' },
+    { id: 't3', name: '월하사주 평생 원국 풀이 + 맞춤 사주 요약 카드', desc: '초년·중년·말년 평생 대운 분석 + 고화질 요약 카드',
+      scopeNote: '궁합 · 대운 · 길일까지 전체 열람', scopes: ['all'], price: 29000, badge: '👑 PREMIUM' }
   ];
-  const PAY_TIER_DEFAULT = 't2';
   function payTierById(id) {
     for (let i = 0; i < PAY_TIERS.length; i++) if (PAY_TIERS[i].id === id) return PAY_TIERS[i];
     return null;
   }
+  /* 이 티어가 이 콘텐츠(kind)를 실제로 열 수 있는지 — 열람 코드 스코프 기준 */
+  function payTierCovers(t, kind) {
+    if (!t) return false;
+    if (t.scopes.indexOf('all') >= 0) return true;
+    const s = KIND_SCOPE[kind] || kind;
+    return t.scopes.indexOf(s) >= 0;
+  }
+  function coveringTierFor(kind) {
+    for (let i = 0; i < PAY_TIERS.length; i++) if (payTierCovers(PAY_TIERS[i], kind)) return PAY_TIERS[i];
+    return payTierById('t3');
+  }
+  function defaultTierFor(kind) { return coveringTierFor(kind).id; }
   function latpeedTierLinks() {
     const c = window.WOLHA_LATPEED || {};
     return (c.tiers && typeof c.tiers === 'object') ? c.tiers : {};
@@ -913,17 +929,21 @@
   }
   const NO_LINK_NOTE = '래피드 결제 링크 연결 전입니다 · 받으신 열람 코드를 아래에 입력해 주세요';
 
-  function payTiersHTML() {
+  function payTiersHTML(kind) {
+    const sel = defaultTierFor(kind);
     return '<div class="pay-tiers" role="radiogroup" aria-label="리포트 선택">' +
-      PAY_TIERS.map(function (t, i) {
-        const on = t.id === PAY_TIER_DEFAULT;
+      PAY_TIERS.map(function (t) {
+        const on = t.id === sel;
+        const covers = payTierCovers(t, kind);
         return '<button type="button" class="pay-tier' + (on ? ' is-on' : '') + '" role="radio" aria-checked="' + (on ? 'true' : 'false') + '" data-tier="' + t.id + '"' +
+          (covers ? ' data-cover="1"' : '') +
           (on ? '' : ' tabindex="-1"') + '>' +
           '<span class="pt-radio" aria-hidden="true"></span>' +
           '<span class="pt-main">' +
           (t.badge ? '<span class="pt-badge">' + t.badge + '</span>' : '') +
           '<b class="pt-name">' + t.name + '</b>' +
           '<span class="pt-desc">' + t.desc + '</span>' +
+          '<span class="pt-scope' + (covers ? ' is-cover' : '') + '">' + (covers ? '이 리포트 열람 ✓ · ' : '') + t.scopeNote + '</span>' +
           '</span>' +
           '<span class="pt-price">' + won(t.price) + '원</span>' +
           '</button>';
@@ -931,13 +951,20 @@
       '</div>';
   }
 
+  /* 선택한 티어가 지금 리포트를 열지 않을 때 보여 줄 안내 — 결제 후 '안 열리는' 상황을 막는다 */
+  function payScopeWarnText(t, kind) {
+    if (payTierCovers(t, kind)) return '';
+    const good = coveringTierFor(kind);
+    return '이 상품으로는 지금 보고 계신 리포트가 열리지 않습니다 · 이 리포트를 열려면 ' + won(good.price) + '원 상품을 선택해 주세요';
+  }
+
   function payCardHTML(o) {
-    const d = payTierById(PAY_TIER_DEFAULT);
+    const d = payTierById(defaultTierFor(o.kind));
     return '<div class="pay-card" data-tier="' + d.id + '">' +
       '<span class="pay-kicker">여기서부터 심층 풀이</span>' +
       '<b class="pay-c-title">' + o.label + '</b>' +
       '<p class="pay-c-desc">' + o.desc + '</p>' +
-      payTiersHTML() +
+      payTiersHTML(o.kind) +
       '<ul class="pay-benefits">' +
       '<li><i>✓</i>내 사주 맞춤 심층 풀이 전체 열람</li>' +
       '<li><i>✓</i>소장용 PDF 파일 저장</li>' +
@@ -945,6 +972,7 @@
       '</ul>' +
       '<div class="pay-c-price"><b>' + won(d.price) + '원</b></div>' +
       '<button type="button" class="btn-gold wide pay-latpeed">' + won(d.price) + '원으로 열람 코드 받기 (래피드)</button>' +
+      '<span class="pay-scope-warn" hidden></span>' +
       '<div class="pay-code-row">' +
       '<input type="text" class="pay-code-input" inputmode="text" autocomplete="off" spellcheck="false" aria-label="열람 코드" placeholder="받으신 열람 코드를 입력하세요" />' +
       '<button type="button" class="pay-code-go">열람</button>' +
@@ -972,9 +1000,9 @@
     const inner = open
       ? (typeof o.inner === 'function' ? o.inner() : (o.inner || ''))
       : lockedTeaserHTML(o);
-    const d = payTierById(PAY_TIER_DEFAULT);
+    const d = payTierById(defaultTierFor(o.kind));
     return '<div class="pay-wrap' + (open ? ' is-open' : ' is-locked') + '" data-pay="' + o.kind +
-      '" data-price="' + d.price + '" data-tier="' + d.id + '" data-label="' + esc(o.label || '') + '">' +
+      '" data-price="' + d.price + '" data-tier="' + d.id + '" data-kind="' + o.kind + '" data-label="' + esc(o.label || '') + '">' +
       '<div class="pay-body">' + inner + '</div>' +
       (open ? '' : payCardHTML(o)) +
       '</div>';
@@ -1004,15 +1032,26 @@
     const wrap = root.querySelector('.pay-wrap');
     if (!wrap || wrap.classList.contains('is-open')) { show(); return; }
 
-    const meta = () => ({ content_kind: kind, content_label: wrap.dataset.label || '', tier: wrap.dataset.tier || PAY_TIER_DEFAULT, value: +wrap.dataset.price || 0 });
+    const meta = () => ({ content_kind: kind, content_label: wrap.dataset.label || '', tier: wrap.dataset.tier || defaultTierFor(kind), value: +wrap.dataset.price || 0 });
     const codeIn = wrap.querySelector('.pay-code-input');
 
-    /* 3티어 선택 — 선택한 티어의 가격·CTA 문구·래피드 결제 링크가 함께 바뀐다 */
+    /* 3티어 선택 — 선택한 티어의 가격·CTA 문구·래피드 결제 링크가 함께 바뀌고,
+       지금 리포트를 열지 않는 티어를 고르면 그 자리에서 경고를 보여 준다 */
     const tierBtns = $$('.pay-tier', wrap);
     const priceEl = wrap.querySelector('.pay-c-price b');
     const ctaBtn = wrap.querySelector('.pay-latpeed');
+    const warnEl = wrap.querySelector('.pay-scope-warn');
+    const ctaLabel = t => payTierCovers(t, kind)
+      ? won(t.price) + '원으로 열람 코드 받기 (래피드)'
+      : won(t.price) + '원 상품 보기 · 이 리포트는 열리지 않음';
+    const showWarn = t => {
+      if (!warnEl) return;
+      const msg = payScopeWarnText(t, kind);
+      warnEl.textContent = msg;
+      warnEl.hidden = !msg;
+    };
     const selectTier = (id, silent) => {
-      const t = payTierById(id) || payTierById(PAY_TIER_DEFAULT);
+      const t = payTierById(id) || payTierById(defaultTierFor(kind));
       tierBtns.forEach(b => {
         const on = b.dataset.tier === t.id;
         b.classList.toggle('is-on', on);
@@ -1024,8 +1063,9 @@
       const card = wrap.querySelector('.pay-card');
       if (card) card.dataset.tier = t.id;
       if (priceEl) priceEl.textContent = won(t.price) + '원';
-      if (ctaBtn) ctaBtn.textContent = won(t.price) + '원으로 열람 코드 받기 (래피드)';
-      if (!silent) trackEvent('select_tier', { content_kind: kind, tier: t.id, value: t.price });
+      if (ctaBtn) ctaBtn.textContent = ctaLabel(t);
+      showWarn(t);
+      if (!silent) trackEvent('select_tier', { content_kind: kind, tier: t.id, value: t.price, covers: payTierCovers(t, kind) });
     };
     tierBtns.forEach(b => b.addEventListener('click', () => selectTier(b.dataset.tier)));
     tierBtns.forEach((b, i) => b.addEventListener('keydown', e => {
@@ -1074,9 +1114,17 @@
 
     const go = wrap.querySelector('.pay-latpeed');
     if (go) go.addEventListener('click', () => {
-      const tierId = wrap.dataset.tier || PAY_TIER_DEFAULT;
+      const tierId = wrap.dataset.tier || defaultTierFor(kind);
+      const tier = payTierById(tierId) || coveringTierFor(kind);
       const link = latpeedLinkForTier(tierId);
-      trackEvent('click_latpeed', Object.assign(meta(), { has_link: !!link }));
+      trackEvent('click_latpeed', Object.assign(meta(), { has_link: !!link, covers: payTierCovers(tier, kind) }));
+      /* 지금 리포트를 열지 않는 상품으로 가는 길목에서는 먼저 멈춰 세운다 */
+      if (!payTierCovers(tier, kind) && !wrap.__scopeWarned) {
+        wrap.__scopeWarned = true;
+        showToast(payScopeWarnText(tier, kind));
+        if (warnEl) { warnEl.hidden = false; try { warnEl.scrollIntoView({ block: 'center' }); } catch (e) { } }
+        return;
+      }
       if (link) { window.open(link, '_blank', 'noopener'); return; }
       /* 이 티어는 아직 래피드 상품이 없다 — 가격이 다른 상품으로 보내지 않고 안내만 한다 */
       showToast(NO_LINK_NOTE);
@@ -1615,7 +1663,7 @@
       '</div>' +
 
       payWrapHTML({
-        kind: 'report', price: c.price,
+        kind: 'report',
         label: esc(c.name) + ' 심층 리포트 전체 열기',
         desc: '재물 · 직장 · 연애 · 건강 네 갈래의 심층 풀이, 질문에 대한 깊은 답, 시기별 행동 지침까지 — 이 사주 하나만 놓고 쓴 본문입니다.',
         teaser: [
@@ -2200,7 +2248,7 @@
 
     return profileBannerHTML(chart) + head + preview +
       (paid ? payWrapHTML({
-        kind: item.id, price: item.price,
+        kind: item.id,
         label: esc(item.title) + ' 전체 열기', desc: y27PayDesc(item.kind),
         teaser: ['이 아래는 2027 정미년 12개월을 이 사주에 하나씩 맞춰 본 본문입니다.', '달마다의 이유와 방어 문장이 전부 여기에 있습니다.', '받으신 열람 코드를 입력하면 이 자리에서 바로 펼쳐집니다.'],
         inner: paidBody
@@ -2430,7 +2478,7 @@
       '<div class="rp-title"><span>점수 구성</span></div><div class="cp-parts detail">' + res.parts.map(p => '<i class="' + (p.v.charAt(0) === '+' ? 'up' : 'down') + '">' + esc(p.k) + ' ' + esc(p.v) + '</i>').join('') + '</div>';
 
     return head + free +
-      payWrapHTML({ kind: 'compat', price: 9900, label: '두 사람의 심층 궁합 전체 열기', desc: '일간·일지·16글자 관계 · 속궁합 · 결혼 시기 · 다툼과 화해의 달 · 처방전',
+      payWrapHTML({ kind: 'compat', label: '두 사람의 심층 궁합 전체 열기', desc: '일간·일지·16글자 관계 · 속궁합 · 결혼 시기 · 다툼과 화해의 달 · 처방전',
         teaser: ['두 사람의 일간·일지가 만나는 자리부터 다툼과 화해의 달까지 이어집니다.', '결혼 시기와 두 사람의 처방전도 이 본문에만 있습니다.', '받으신 열람 코드를 입력하면 이 자리에서 바로 펼쳐집니다.'],
         inner: paidBody }) +
       pdfBarHTML() +
@@ -2523,7 +2571,7 @@
       '<ul class="rp-list advice">' + RX.daeunTips(c).map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>';
 
     return head + free +
-      payWrapHTML({ kind: 'daeun', price: 4900, label: '10년 대운 전체 풀이 열기', desc: '대운 8개의 재물·커리어·인생 전략 · 지금 대운의 의미 · 대운을 쓰는 순서',
+      payWrapHTML({ kind: 'daeun', label: '10년 대운 전체 풀이 열기', desc: '대운 8개의 재물·커리어·인생 전략 · 지금 대운의 의미 · 대운을 쓰는 순서',
         teaser: ['10년마다의 재물·커리어·인생 전략이 이 아래에 이어집니다.', '지금 대운의 의미와 대운을 쓰는 순서도 함께 있습니다.', '받으신 열람 코드를 입력하면 이 자리에서 바로 펼쳐집니다.'],
         inner: paidBody }) +
       pdfBarHTML() +
@@ -2647,7 +2695,7 @@
       '<div class="rp-caution">' + esc('길일은 “이 날이면 무조건 된다”는 뜻이 아닙니다. ' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간에 용신 ' + c.yongsin.elem + '인 이 사주는 같은 계약이라도 준비가 덜 된 날은 그 날의 기운을 쓰지 못합니다. 서류와 조건을 먼저 끝내 두고, 그 위에 ' + (g.picks.contract[0] ? g.picks.contract[0].m + '월 ' + g.picks.contract[0].d + '일' : '좋은 날') + '을 얹으세요.') + '</div>';
 
     return head + free +
-      payWrapHTML({ kind: 'gilil', price: 4900, label: '2027 길일 전체 열기', desc: '목적별 추천일과 이유 · 피할 날 · 달마다의 길일 · 도장 찍을 때의 팁',
+      payWrapHTML({ kind: 'gilil', label: '2027 길일 전체 열기', desc: '목적별 추천일과 이유 · 피할 날 · 달마다의 길일 · 도장 찍을 때의 팁',
         teaser: ['계약·이직·이사 목적별 추천일과 그 이유가 이 아래에 이어집니다.', '피해야 할 날과 달마다의 길일도 함께 있습니다.', '받으신 열람 코드를 입력하면 이 자리에서 바로 펼쳐집니다.'],
         inner: paidBody }) +
       pdfBarHTML() +

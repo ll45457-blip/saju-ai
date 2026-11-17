@@ -1329,6 +1329,16 @@ body::before {
 }
 .pt-name { font-family: var(--serif); font-size: 11.5px; line-height: 1.45; color: #EFE6D2; font-weight: 500; }
 .pt-desc { font-size: 9.8px; line-height: 1.55; color: #A9A394; }
+.pt-scope { font-size: 9px; line-height: 1.6; color: #8F897C; letter-spacing: -.01em; }
+.pt-scope.is-cover { color: #C9B473; }
+.pay-tier.is-on .pt-scope.is-cover { color: #E8D79A; }
+.pay-scope-warn {
+  display: block; width: 100%; margin: -2px 0 2px; padding: 7px 9px;
+  border-radius: 9px; font-size: 9.8px; line-height: 1.6; text-align: left;
+  color: #F2C9A0; background: rgba(190, 110, 40, .16);
+  border: 1px solid rgba(214, 140, 70, .38);
+}
+.pay-scope-warn[hidden] { display: none !important; }
 .pt-price { flex: 0 0 auto; padding-left: 4px; font-family: var(--serif); font-size: 12px; line-height: 1.5; color: var(--gold-lt); white-space: nowrap; }
 .pay-tier.is-on .pt-name { color: #FFF7DF; }
 .pay-tier.is-on .pt-desc { color: #C6BEAC; }
