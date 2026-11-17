@@ -263,7 +263,7 @@
         : noYearV[v]);
       const noMineV = [
         '내 일지 ' + chart.pillars.day.hanja + '와는 부딪히지도 붙지도 않아, ' + base.no + '월에는 생활의 리듬을 그대로 지킬 수 있습니다.',
-        '내 일지 ' + chart.pillars.day.hanja + '와 ' + base.no + '월 ' + base.hanja + '은 아무 작용이 없습니다. 생활의 큰 틀은 흔들리지 않으니 평소대로 가시면 됩니다.',
+        '내 일지 ' + chart.pillars.day.hanja + '(' + chart.pillars.day.branchKo + ') 쪽과 ' + base.no + '월 ' + base.hanja + '은 아무 작용이 없습니다. 생활의 큰 틀은 흔들리지 않으니 평소대로 가시면 됩니다.',
         base.no + '월은 내 자리(' + chart.pillars.day.hanja + ')와 조용한 달입니다 — 크게 얻을 것도 잃을 것도 없이 담담하게 지나갑니다.'
       ];
       story.push(relMine.length

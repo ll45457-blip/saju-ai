@@ -1350,7 +1350,7 @@
       chart.pillars.month.hanja + ' ' + chart.pillars.day.hanja + (chart.pillars.hour ? ' ' + chart.pillars.hour.hanja : '') + '</span>' +
       '<em class="y27-tag">' + (item.price ? won(item.price) + '원' : '무료') + ' · ' + esc(item.badge) + '</em></div></div>' +
       pdfBarHTML() +
-      '<p class="rp-voice">' + esc('2027년 책력과 ' + dm.hanja + '(' + dm.ko + ') ' + dm.elem + ' 일간인 내 여덟 글자를 나란히 놓고 달마다 짚어 봤습니다. 용신 ' + chart.yongsin.elem + '이 ' + chart.pct[chart.yongsin.elem] + '%인 이 사주에게 2027년은 반짝하고 오는 해가 아니에요. 대신 버티는 사람이 이깁니다. 달마다 왜 그런지, 무엇을 조심해야 하는지 하나씩 말씀드릴게요.') + '</p>';
+      '<p class="rp-voice">' + esc('2027년 책력과 ' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간인 내 여덟 글자를 나란히 놓고 달마다 짚어 봤습니다. 용신 ' + chart.yongsin.elem + ' 기운이 ' + chart.pct[chart.yongsin.elem] + '%인 이 사주에게 2027년은 반짝하고 오는 해가 아니에요. 대신 버티는 사람이 이깁니다. 달마다 왜 그런지, 무엇을 조심해야 하는지 하나씩 말씀드릴게요.') + '</p>';
 
     const preview = paid
       ? '<div class="y27-free"><span class="y27-free-kicker">무료 맛보기 · 여덟 글자로 먼저 짚어 봄</span>' +
