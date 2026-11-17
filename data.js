@@ -193,18 +193,18 @@ window.SAJU_DATA = (function () {
 
   /* ---------------- 주제 12 ---------------- */
   const TOPICS = [
-    { id: 'qna', label: '질문즉답', hanja: '問', cat: 'fate', desc: '궁금한 것을 지금 바로', question: '지금 제일 궁금한 걸 하나만 봐 주세요' },
-    { id: 'classic', label: '정통', hanja: '命', cat: 'fate', desc: '사주 원국과 대운', question: '제 사주 원국과 평생 흐름을 봐 주세요' },
-    { id: 'love', label: '연애', hanja: '戀', cat: 'love', desc: '마음의 온도와 타이밍', question: '지금 제 연애운은 어떤가요' },
-    { id: 'reunion', label: '재회', hanja: '緣', cat: 'reunion', desc: '끊긴 인연의 매듭', question: '헤어진 그 사람과 다시 만날 수 있을까요' },
-    { id: 'match', label: '궁합', hanja: '合', cat: 'love', desc: '두 사람의 합과 충', question: '이 사람과 저는 잘 맞을까요' },
-    { id: 'wedding', label: '결혼', hanja: '婚', cat: 'love', desc: '배우자궁과 혼인 시기', question: '제게 결혼운이 언제 오나요' },
-    { id: 'money', label: '재물', hanja: '財', cat: 'money', desc: '재물 그릇과 돈벌이', question: '올해 제 재물 흐름이 궁금해요' },
-    { id: 'job', label: '직업', hanja: '職', cat: 'work', desc: '적성과 이직의 때', question: '지금 이직하는 게 맞을까요' },
-    { id: 'exam', label: '시험', hanja: '及', cat: 'exam', desc: '합격운과 공부법', question: '올해 시험 합격운이 있을까요' },
-    { id: 'newyear', label: '신년', hanja: '新', cat: 'fate', desc: '한 해의 큰 흐름', question: '내년 한 해 운세를 봐 주세요' },
-    { id: 'today', label: '오늘운세', hanja: '今', cat: 'today', desc: '오늘의 일진', question: '' },
-    { id: 'free', label: '무료', hanja: '無', cat: 'free', desc: '무료 사주 6종', question: '' }
+    { id: 'qna', label: '질문즉답', icon: '💬', cat: 'fate', desc: '궁금한 것을 지금 바로', question: '지금 제일 궁금한 걸 하나만 봐 주세요' },
+    { id: 'classic', label: '정통', icon: '📜', cat: 'fate', desc: '사주 원국과 대운', question: '제 사주 원국과 평생 흐름을 봐 주세요' },
+    { id: 'love', label: '연애', icon: '💕', cat: 'love', desc: '마음의 온도와 타이밍', question: '지금 제 연애운은 어떤가요' },
+    { id: 'reunion', label: '재회', icon: '🌙', cat: 'reunion', desc: '끊긴 인연의 매듭', question: '헤어진 그 사람과 다시 만날 수 있을까요' },
+    { id: 'match', label: '궁합', icon: '🧩', cat: 'love', desc: '두 사람의 합과 충', question: '이 사람과 저는 잘 맞을까요' },
+    { id: 'wedding', label: '결혼', icon: '💍', cat: 'love', desc: '배우자궁과 혼인 시기', question: '제게 결혼운이 언제 오나요' },
+    { id: 'money', label: '재물', icon: '💰', cat: 'money', desc: '재물 그릇과 돈벌이', question: '올해 제 재물 흐름이 궁금해요' },
+    { id: 'job', label: '직업', icon: '💼', cat: 'work', desc: '적성과 이직의 때', question: '지금 이직하는 게 맞을까요' },
+    { id: 'exam', label: '시험', icon: '🎓', cat: 'exam', desc: '합격운과 공부법', question: '올해 시험 합격운이 있을까요' },
+    { id: 'newyear', label: '신년', icon: '🎍', cat: 'fate', desc: '한 해의 큰 흐름', question: '내년 한 해 운세를 봐 주세요' },
+    { id: 'today', label: '오늘운세', icon: '☀️', cat: 'today', desc: '오늘의 일진', question: '' },
+    { id: 'free', label: '무료', icon: '🎁', cat: 'free', desc: '무료 사주 6종', question: '' }
   ];
 
   /* ---------------- TOP 5 ---------------- */

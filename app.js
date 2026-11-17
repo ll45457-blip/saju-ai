@@ -133,7 +133,7 @@
   function renderTopics() {
     $('#topicGrid').innerHTML = D.TOPICS.map(t => (
       '<button class="topic" data-topic="' + t.id + '" aria-label="' + esc(t.label) + '">' +
-      '<span class="topic-glyph">' + t.hanja + '</span>' +
+      '<span class="topic-glyph">' + t.icon + '</span>' +
       '<span class="topic-label">' + esc(t.label) + '</span>' +
       '</button>'
     )).join('');
@@ -709,7 +709,7 @@
   /* ---------------- 검색 / 메뉴 ---------------- */
   function openSearch() {
     const items = D.TOPICS.filter(t => t.question).map(t =>
-      '<button class="menu-item" data-q="' + esc(t.question) + '" data-cat="' + t.cat + '"><span class="mi-icon">' + t.hanja + '</span>' + esc(t.label) + '<span class="mi-sub">' + esc(t.desc) + '</span></button>'
+      '<button class="menu-item" data-q="' + esc(t.question) + '" data-cat="' + t.cat + '"><span class="mi-icon">' + t.icon + '</span>' + esc(t.label) + '<span class="mi-sub">' + esc(t.desc) + '</span></button>'
     ).join('');
     openSheet('무엇이 궁금하세요', '<div class="search-box"><input id="searchInput" placeholder="주제 검색: 연애, 재물, 이직…" /></div><div class="menu-list" id="searchList">' + items + '</div>');
     const list = $('#searchList');
