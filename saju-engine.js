@@ -383,7 +383,7 @@
 
   function pickYongsin(dayEl, strength, counts, scores) {
     const el = i => ELEMENTS[(dayEl + i) % 5];
-    const sik = el(1), jae = el(2), gwan = el(3), in = el(4);
+    const sik = el(1), jae = el(2), gwan = el(3), insung = el(4);
     if (strength === 'strong') {
       const primary = gwan;
       const secondary = counts[gwan] >= 2 ? jae : (counts[jae] >= 2 ? sik : jae);
@@ -395,7 +395,7 @@
     }
     if (strength === 'weak') {
       return {
-        elem: in, hee: el(0),
+        elem: insung, hee: el(0),
         reason: '기운이 약한 사주라 나를 살려 주는 오행의 도움이 필요합니다',
         care: '혼자 밀어붙이기보다 사람과 환경의 도움을 받을 때 길이 열립니다'
       };
