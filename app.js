@@ -925,7 +925,7 @@
       '<div class="lucky-item"><span>행운의 숫자</span><b>' + L.number.join(' · ') + '</b></div>' +
       '<div class="lucky-item"><span>길한 방위</span><b>' + L.dir + '</b></div>' +
       '<div class="lucky-item"><span>좋은 시간</span><b>' + L.time + '</b></div>' +
-      '<div class="lucky-item"><span>2027년 키워드</span><b>' + chart.yongsin.elem + '을 채우는 한 해</b></div>' +
+      '<div class="lucky-item"><span>2027년 키워드</span><b>오행 ' + chart.yongsin.elem + '를 채우는 한 해</b></div>' +
       '<div class="lucky-item"><span>피할 것</span><b style="font-size:11px;line-height:1.5">' + esc(chart.yongsin.care) + '</b></div></div>';
   }
 

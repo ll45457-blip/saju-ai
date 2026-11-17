@@ -179,7 +179,10 @@
       let fix = negs.length ? FIX[negs[0]] : (['겁재', '편관', '편인'].indexOf(god) >= 0 ? FIX[god] : '');
       if (!fix) fix = '급하게 벌이기보다 이 달에 정한 한 가지를 끝내는 편이 좋습니다.';
 
-      const relTxt = relYear.length ? '未와 ' + relYear.join('·') : '未와 특별한 작용 없음';
+      const relTxt = [
+        relYear.length ? '未와 ' + relYear.join('·') : '',
+        relMine.length ? '내 일지와 ' + relMine.join('·') : ''
+      ].filter(Boolean).join(', ') || '충·합 없음';
       const verdict = score >= 62 ? '추진' : (score >= 48 ? '균형' : '방어');
 
       const line = '<b>' + base.no + '월(' + base.hanja + ')</b> — ' + god + ' · ' + stage + ' · ' + relTxt + '. '

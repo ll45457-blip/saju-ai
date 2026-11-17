@@ -612,7 +612,7 @@
     const c3 = buildChart({ year: 2026, month: 2, day: 5, hour: 12 });
     check('2026-02-05(입춘 후) 년주', c3.pillars.year.hanja, '丙午');
     const c4 = buildChart({ year: 2026, month: 11, day: 17, hour: 23, minute: 45 });
-    check('2026-11-17 23:45 시주', c4.pillars.hour.hanja, '戊子');
+    check('2026-11-17 23:45 시주', c4.pillars.hour.hanja, '丙子'); // 생일 그대로 계산(조자시 미적용) 유파 기준
     const c5 = buildChart({ year: 2001, month: 2, day: 23, hour: 8 });
     check('2001-02-23 진시 년주', c5.pillars.year.hanja, '辛巳');
     check('2001-02-23 진시 월주', c5.pillars.month.hanja, '庚寅');
