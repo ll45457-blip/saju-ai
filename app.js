@@ -147,6 +147,8 @@
       if (t.id === 'today') { showView('today'); return; }
       if (t.id === 'newyear' && Y27) { y2027Open('newyear'); return; }
       if (t.id === 'free') { showView('home'); $('#freeGrid').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+      if (t.id === 'match' || t.id === 'wedding' || t.id === 'reunion') { openCompatForm({ topic: t }); return; }
+      if (t.id === 'classic') { openDaeun(); return; }
       openAskWithTopic(t);
     });
   }
@@ -354,6 +356,12 @@
   }
 
   function reopenReport(h) {
+    if (h.kind === 'compat' && h.partner) {
+      try { compatSheet(E.buildChart(h.chart), E.buildChart(h.partner)); } catch (e) { showToast('이 기록을 다시 열 수 없어요'); }
+      return;
+    }
+    if (h.kind === 'daeun') { try { daeunSheet(E.buildChart(h.chart)); } catch (e) { showToast('이 기록을 다시 열 수 없어요'); } return; }
+    if (h.kind === 'gilil') { try { gililSheet(E.buildChart(h.chart)); } catch (e) { showToast('이 기록을 다시 열 수 없어요'); } return; }
     if (h.kind === 'y2027' && Y27) { y2027Sheet(h.y, h.chart); return; }
     if (h.kind === 'today') {
       const c = charById(h.charId);
@@ -549,6 +557,7 @@
     if (!chart) return chart;
     if (chart.sinsal && chart.gwisin && chart.yinyang && chart.stages) return chart;
     if (chart.input) { try { return E.buildChart(chart.input); } catch (e) { return chart; } }
+    if (chart.year && chart.month && chart.day) { try { return E.buildChart(chart); } catch (e) { return chart; } }
     return chart;
   }
 
@@ -877,6 +886,9 @@
     openSheet('전체 메뉴',
       '<div class="menu-list">' +
       '<button class="menu-item" data-m="y2027"><span class="mi-icon">🎍</span>2027 정미년 특별관<span class="mi-sub">12개월 · 삼재</span></button>' +
+      '<button class="menu-item" data-m="compat"><span class="mi-icon">🧩</span>정밀 궁합 · 두 사람<span class="mi-sub">16글자 비교</span></button>' +
+      '<button class="menu-item" data-m="daeun"><span class="mi-icon">🧭</span>10년 대운<span class="mi-sub">전성기 · 조심할 10년</span></button>' +
+      '<button class="menu-item" data-m="gilil"><span class="mi-icon">📅</span>2027 길일<span class="mi-sub">계약 · 이직 · 이사</span></button>' +
       '<button class="menu-item" data-m="today"><span class="mi-icon">今</span>오늘의 운세<span class="mi-sub">무료</span></button>' +
       '<button class="menu-item" data-m="archive"><span class="mi-icon">庫</span>보관함<span class="mi-sub">내 사주 · 기록</span></button>' +
       '<button class="menu-item" data-m="profile"><span class="mi-icon">生</span>내 사주 등록·수정<span class="mi-sub">생년월일</span></button>' +
@@ -886,6 +898,9 @@
       if (m) {
         closeSheet();
         if (m.dataset.m === 'y2027') { showView('home'); const b = $('#y2027Block'); if (b) b.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        if (m.dataset.m === 'compat') openCompatForm({});
+        if (m.dataset.m === 'daeun') openDaeun();
+        if (m.dataset.m === 'gilil') openGilil();
         if (m.dataset.m === 'today') showView('today');
         if (m.dataset.m === 'archive') showView('archive');
         if (m.dataset.m === 'profile') openBirthForm({ title: '내 사주 등록' });
@@ -1228,6 +1243,403 @@
       '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 2027년 월운은 24절기 절입 기준입니다.<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
   }
 
+  /* ================= 정밀 궁합 · 10년 대운 · 2027 길일 ================= */
+  const P = window.SAJU_PLUS;
+  const K_PARTNER = 'wolha_partner_v1';
+  const WHY = {
+    '천을귀인일': '천을귀인(天乙貴人)이 내리는 날 — 막힌 일을 풀어 줄 사람이 그 자리에 나타나기 쉬운 날입니다.',
+    '일지 육합': '내 일지와 육합(六合)하는 날 — 맺고 묶이는 힘이 있어 약속이 오래갑니다.',
+    '일지 반합': '내 일지와 반합(半合)하는 날 — 힘은 절반이지만 방향이 맞으면 통합니다.',
+    '정재일': '정재(正財)의 날 — 숫자와 서류가 깔끔하게 맞습니다.',
+    '정관일': '정관(正官)의 날 — 공식 자리에서 이름이 오르기 좋습니다.',
+    '식신일': '식신(食神)의 날 — 말과 손이 잘 풀립니다.',
+    '편재일': '편재(偏財)의 날 — 예상 밖의 길이 열리지만 씀씀이도 함께 커집니다.',
+    '정인일': '정인(印星)의 날 — 문서와 윗사람의 도움이 붙습니다.'
+  };
+  const BADWHY = {
+    '일지 충일': '내 일지와 정면으로 부딪히는 날 — 계약·이사·큰 결제를 피하세요.',
+    '상관견관일': '상관견관(傷官見官) — 말과 서류가 어긋나기 쉬운 날입니다.',
+    '겁재일': '겁재(劫財)의 날 — 돈이 오가는 자리에서 손실이 생기기 쉽습니다.',
+    '일지 형일': '형(刑)이 드는 날 — 가까운 사람과 마찰이 생깁니다.',
+    '일지 파일': '파(破)가 드는 날 — 맺은 약속이 어긋나기 쉽습니다.',
+    '일지 해일': '해(害)가 드는 날 — 말과 마음이 어긋납니다.'
+  };
+
+  function renderPlus() {
+    const box = $('#plusGrid'); if (!box || !P) return;
+    const cards = [
+      { id: 'compat', icon: '🧩', tag: '2인 입력', title: '정밀 궁합', sub: '두 사람 여덟 글자 · 결혼·재회까지' },
+      { id: 'daeun', icon: '🧭', tag: '평생 흐름', title: '10년 대운', sub: '내 인생 전성기 · 조심할 10년' },
+      { id: 'gilil', icon: '📅', tag: '2027', title: '계약·이직·이사 길일', sub: '도장 찍을 날과 피할 날' }
+    ];
+    box.innerHTML = cards.map(c => '<button class="plus-card" data-plus="' + c.id + '">' +
+      '<span class="plus-icon">' + c.icon + '</span>' +
+      '<span class="plus-tag">' + c.tag + '</span>' +
+      '<span class="plus-title">' + c.title + '</span>' +
+      '<span class="plus-sub">' + c.sub + '</span></button>').join('');
+    box.addEventListener('click', e => {
+      const b = e.target.closest('[data-plus]'); if (!b) return;
+      if (b.dataset.plus === 'compat') openCompatForm({});
+      else if (b.dataset.plus === 'daeun') openDaeun();
+      else if (b.dataset.plus === 'gilil') openGilil();
+    });
+  }
+
+  /* ---- 정밀 궁합: 두 사람 입력 ---- */
+  function personFieldsHTML(key, title, p) {
+    const y = p && p.year ? p.year : 1995, m = p && p.month ? p.month : 1, d = p && p.day ? p.day : 1;
+    const hourOpts = '<option value=""' + (!p || p.hour == null || p.hour === '' ? ' selected' : '') + '>태어난 시간 모름</option>' +
+      SIZI.map(s => '<option value="' + s.v + '"' + (p && +p.hour === s.v ? ' selected' : '') + '>' + s.l + '</option>').join('');
+    return '<div class="pf-block">' +
+      '<div class="pf-title">' + title + '</div>' +
+      '<div class="field"><label>이름 또는 별명</label><input id="pf' + key + 'Name" maxlength="12" placeholder="' + (key === 'B' ? '상대 이름' : '내 이름') + '" value="' + esc(p && p.name || '') + '" /></div>' +
+      '<div class="field"><label>성별</label><div class="seg" id="pf' + key + 'Gender">' +
+      '<button type="button" data-g="male"' + (!p || p.gender !== 'female' ? ' class="is-on"' : '') + '>남성</button>' +
+      '<button type="button" data-g="female"' + (p && p.gender === 'female' ? ' class="is-on"' : '') + '>여성</button></div></div>' +
+      '<div class="field"><label>생년월일 (양력)</label><div class="field-row">' +
+      '<select id="pf' + key + 'Y">' + rangeOpts(1930, 2026, y, '년') + '</select>' +
+      '<select id="pf' + key + 'M">' + rangeOpts(1, 12, m, '월') + '</select>' +
+      '<select id="pf' + key + 'D">' + rangeOpts(1, 31, d, '일') + '</select></div></div>' +
+      '<div class="field"><label>태어난 시간</label><select id="pf' + key + 'H">' + hourOpts + '</select></div>' +
+      '</div>';
+  }
+
+  function compatFormHTML(pa, pb) {
+    return '<form class="form-grid cp-form" id="compatForm" autocomplete="off">' +
+      '<p class="pf-note">두 사람의 생년월일시로 사주팔자를 여덟 글자씩 세워, 열여섯 글자를 나란히 놓고 봅니다. 상대의 시간을 모르면 비워 두셔도 됩니다 — 큰 흐름은 그대로 읽힙니다.</p>' +
+      personFieldsHTML('A', '나', pa) + personFieldsHTML('B', '상대', pb) +
+      '<div class="form-note" id="cpNote">' + esc(D.REPORT.solarNote) + '</div>' +
+      '<button class="btn-gold wide" type="submit">두 사람 궁합 보기</button>' +
+      '<button type="button" class="btn-ghost wide" id="cpSolo">상대 생년월일 없이 내 사주만으로 보기</button>' +
+      '</form>';
+  }
+
+  function openCompatForm(opts) {
+    opts = opts || {};
+    const pa = state.profile || null;
+    const pb = store.get(K_PARTNER, null);
+    openSheet('정밀 궁합 · 두 사람', compatFormHTML(pa, pb));
+    let gA = pa && pa.gender ? pa.gender : 'male';
+    let gB = pb && pb.gender ? pb.gender : 'female';
+    const bindSeg = (key, set) => {
+      const el = $('#pf' + key + 'Gender'); if (!el) return;
+      el.addEventListener('click', e => {
+        const b = e.target.closest('button[data-g]'); if (!b) return;
+        set(b.dataset.g);
+        $$('#pf' + key + 'Gender button').forEach(x => x.classList.toggle('is-on', x === b));
+      });
+    };
+    bindSeg('A', v => { gA = v; });
+    bindSeg('B', v => { gB = v; });
+    const solo = $('#cpSolo');
+    if (solo) solo.addEventListener('click', () => {
+      closeSheet();
+      if (opts.topic) openAskWithTopic(opts.topic);
+      else openBirthForm({});
+    });
+    $('#compatForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const read = key => ({
+        name: $('#pf' + key + 'Name').value.trim(),
+        gender: key === 'A' ? gA : gB,
+        year: +$('#pf' + key + 'Y').value, month: +$('#pf' + key + 'M').value,
+        day: +$('#pf' + key + 'D').value,
+        hour: $('#pf' + key + 'H').value === '' ? null : +$('#pf' + key + 'H').value,
+        minute: $('#pf' + key + 'H').value === '' ? 0 : 30
+      });
+      const a = read('A'), b = read('B');
+      for (const p of [a, b]) {
+        const dt = new Date(p.year, p.month - 1, p.day);
+        if (dt.getMonth() + 1 !== p.month || dt.getDate() !== p.day) {
+          $('#cpNote').textContent = '존재하지 않는 날짜가 섞여 있어요. 두 사람의 생년월일을 다시 확인해 주세요.';
+          $('#cpNote').classList.add('warn');
+          return;
+        }
+      }
+      let ca, cb;
+      try { ca = E.buildChart(a); cb = E.buildChart(b); }
+      catch (err) { $('#cpNote').textContent = '글자를 세다가 문제가 생겼어요: ' + err.message; return; }
+      store.set(K_PARTNER, b);
+      if (!state.profile) { state.profile = a; store.set(K_PROFILE, a); renderTodayWidget(); }
+      closeSheet();
+      compatSheet(ca, cb);
+    });
+  }
+
+  /* ---- 정밀 궁합 리포트 ---- */
+  function cpCell(label, p, isDay) {
+    if (!p) return '<div class="cp-cell is-empty"><span class="cp-lbl">' + label + '</span><div class="cp-gz"><b>·</b></div><i>모름</i></div>';
+    return '<div class="cp-cell' + (isDay ? ' is-day' : '') + '">' +
+      '<span class="cp-lbl">' + label + '</span>' +
+      '<div class="cp-gz"><b class="' + ELCLS[p.stemElem] + '">' + p.stemName + '</b><b class="' + ELCLS[p.branchElem] + '">' + p.branchName + '</b></div>' +
+      '<i>' + p.ko + ' · ' + p.animal + '</i></div>';
+  }
+
+  function cpRow(chart, who) {
+    const p = chart.pillars;
+    return '<div class="cp-row">' +
+      '<div class="cp-who"><b>' + esc(chart.input.name || who) + '</b><span>' + (chart.input.gender === 'female' ? '여' : '남') + ' · ' + chart.input.year + '.' + pad(chart.input.month) + '.' + pad(chart.input.day) + '</span><span>' + esc(P.timeLabel(chart)) + '</span></div>' +
+      cpCell('년', p.year) + cpCell('월', p.month) + cpCell('일', p.day, true) + cpCell('시', p.hour) + '</div>';
+  }
+
+  function compatHTML(res) {
+    const A = res.a, B = res.b;
+    const t = res.tally || {};
+    const chips = [];
+    if (t['합']) chips.push('합 ' + t['합']);
+    if (t['반합']) chips.push('반합 ' + t['반합']);
+    if (t['충']) chips.push('충 ' + t['충']);
+    if (t['형']) chips.push('형 ' + t['형']);
+    if ((t['파'] || 0) + (t['해'] || 0)) chips.push('파·해 ' + (t['파'] + t['해']));
+
+    const head = '<div class="cp-top">' +
+      '<div class="cp-top-txt"><b>정밀 궁합 · 두 사람의 여덟 글자</b>' +
+      '<span>' + esc(res.names.a) + ' ' + A.pillars.day.hanja + ' · ' + esc(res.names.b) + ' ' + B.pillars.day.hanja + '</span></div></div>' +
+      '<div class="cp-scorebox"><div class="score-ring cp-ring" style="--v:' + res.score + '"><b>' + res.score + '<small>점</small></b></div>' +
+      '<div class="cp-grade"><b>' + esc(res.grade.label) + '</b><span>' + esc(res.grade.line) + '</span></div></div>' +
+      pdfBarHTML() +
+      '<p class="rp-voice">' + esc(res.say.open) + '</p>';
+
+    const free = '<div class="y27-free"><span class="y27-free-kicker">무료 맛보기 · 열여섯 글자를 나란히</span>' +
+      '<div class="cp-table">' +
+      '<div class="cp-row cp-head"><div class="cp-who">　</div><div class="cp-lbl-c">년</div><div class="cp-lbl-c">월</div><div class="cp-lbl-c">일</div><div class="cp-lbl-c">시</div></div>' +
+      cpRow(A, '나') + cpRow(B, '상대') + '</div>' +
+      '<div class="cp-chem">' + res.chem.map(c => '<div class="cp-chem-item"><b>' + esc(c.t) + '</b><span>' + esc(c.d) + '</span></div>').join('') + '</div>' +
+      (chips.length ? '<div class="cp-parts">' + chips.map(c => '<i>' + esc(c) + '</i>').join('') + '<em>두 사람 지지 16자리 관계</em></div>' : '') +
+      '</div>';
+
+    const fM = res.fightMonths.length ? res.fightMonths.map(n => n + '월').join(' · ') : '없음';
+    const pM = res.peaceMonths.length ? res.peaceMonths.map(n => n + '월').join(' · ') : '없음';
+    const rx = [
+      '싸움이 길어지면 그 자리에서 결론을 내지 마세요. 이 궁합은 하루를 두고 다시 말할 때 풀립니다.',
+      res.fightMonths.length ? '2027년 ' + fM + '에는 두 사람의 자리가 흔들립니다. 이 달에는 이사·계약·큰 지출을 겹쳐 두지 마세요.' : '2027년에는 두 사람의 자리를 직접 치는 달이 없습니다. 대신 말이 앞서는 순간을 스스로 조심하세요.',
+      '두 사람 사이에 오가는 돈은 금액과 날짜를 문자로 남기세요. 이 습관 하나가 이 궁합을 오래 가게 합니다.',
+      '서운함은 그날 안에 꺼내세요. 참아 둔 것이 다음 날 두 배로 돌아오는 사주입니다.',
+      '한 달에 한 번은 두 사람만의 자리를 새로 만드세요. 익숙함이 이 관계에서 가장 큰 적입니다.'
+    ];
+
+    const body =
+      '<div class="rp-title"><span>일간 — 두 사람의 중심</span></div><p class="rp-lead">' + esc(res.say.gan) + '</p>' +
+      '<div class="rp-title"><span>일지 — 부부의 자리</span></div><p class="rp-para">' + esc(res.say.ji) + '</p>' +
+      '<div class="rp-title"><span>열여섯 글자의 지지 관계</span></div><p class="rp-para">' + esc(res.say.cross) + '</p>' +
+      '<div class="rp-title"><span>서로에게 필요한 오행</span></div><p class="rp-para">' + esc(res.say.fill) + '</p>' +
+      '<div class="rp-title"><span>속궁합 — 살결의 온도</span></div><p class="rp-para">' + esc(res.say.bed) + '</p>' +
+      '<div class="rp-title"><span>결혼 시기</span></div><p class="rp-para">' + res.say.marriage + '</p>' +
+      '<div class="rp-title"><span>다툼과 화해의 달</span></div>' +
+      '<div class="y27-track bad"><span>부딪히기 쉬운 달</span><div class="y27-chips">' + (res.fightMonths.length ? res.fightMonths.map(n => '<i>' + n + '월</i>').join('') : '<i class="none">없음</i>') + '</div></div>' +
+      '<div class="y27-track open"><span>화해의 문이 열리는 달</span><div class="y27-chips">' + (res.peaceMonths.length ? res.peaceMonths.map(n => '<i>' + n + '월</i>').join('') : '<i class="none">없음</i>') + '</div></div>' +
+      '<p class="rp-para">' + esc(res.say.fight) + '</p><p class="rp-para">' + esc(res.say.peace) + '</p>' +
+      '<div class="rp-title"><span>두 사람의 처방전</span></div><ul class="rp-list advice">' + rx.map(r => '<li>' + esc(r) + '</li>').join('') + '</ul>' +
+      '<div class="rp-title"><span>점수 구성</span></div><div class="cp-parts detail">' + res.parts.map(p => '<i class="' + (p.v.charAt(0) === '+' ? 'up' : 'down') + '">' + esc(p.k) + ' ' + esc(p.v) + '</i>').join('') + '</div>';
+
+    return head + free +
+      payWrapHTML({ kind: 'compat', price: 29900, list: 59000, label: '두 사람의 심층 궁합 전체 열기', desc: '일간·일지·16글자 관계 · 속궁합 · 결혼 시기 · 다툼과 화해의 달 · 처방전', inner: body }) +
+      '<div class="rp-actions"><button class="btn-ghost" id="cpClose">닫기</button><button class="btn-ghost" id="cpAgain">상대 바꿔 보기</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="cpSave">보관함 저장</button></div>' +
+      '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 두 사람의 생년월일시로 세운 사주팔자를 마주 놓고 본 풀이입니다.<br />' + esc(D.BRAND.footer) + '</div>';
+  }
+
+  function compatSheet(A, B) {
+    const res = P.buildCompat(A, B);
+    const title = '정밀 궁합 · ' + (A.input.name || '나') + ' · ' + (B.input.name || '상대');
+    openSheet(title, compatHTML(res));
+    bindPay($('#sheetBody'), 'compat');
+    bindPdf($('#sheetBody'));
+    const cl = $('#cpClose'); if (cl) cl.addEventListener('click', closeSheet);
+    const ag = $('#cpAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openCompatForm({}); });
+    const sv = $('#cpSave');
+    if (sv) sv.addEventListener('click', () => {
+      saveHistory({
+        kind: 'compat', typeLabel: '정밀 궁합', charId: 'yeonhwa', category: 'love',
+        title: (A.input.name || '나') + ' · ' + (B.input.name || '상대') + ' 궁합', question: '',
+        chart: A.input, partner: B.input,
+        dateLabel: (new Date().getMonth() + 1) + '월 ' + new Date().getDate() + '일',
+        summary: res.score + '점 · ' + res.grade.label
+      });
+      showToast(D.REPORT.savedToast);
+      sv.disabled = true; sv.textContent = '보관함에 저장됨';
+    });
+  }
+
+  /* ---- 10년 대운 ---- */
+  function openDaeun(chart) {
+    const go = c => daeunSheet(c);
+    if (chart) { go(chart); return; }
+    if (!state.profile) { openBirthForm({ title: '대운 · 생년월일 확인', onDone: go }); return; }
+    go(E.buildChart(state.profile));
+  }
+
+  function daeunRow(x, cur) {
+    return '<div class="du-tr' + (cur ? ' is-now' : '') + '">' +
+      '<span class="du-age"><b>' + x.ageFrom + '~' + x.ageTo + '</b><i>' + x.startLabel + '</i></span>' +
+      '<span class="du-year">' + x.yearFrom + '</span>' +
+      '<span class="du-gz"><b class="' + ELCLS[x.stemEl] + '">' + E.STEMS[x.stem] + '</b><b class="' + ELCLS[x.branchEl] + '">' + E.BRANCHES[x.branch] + '</b></span>' +
+      '<span class="du-god">' + x.stemGod + '<i>' + x.branchGod + '</i></span>' +
+      '<span class="du-st">' + x.stage + '</span>' +
+      '<span class="du-bar"><i style="width:' + x.score + '%"></i><em>' + x.score + '</em></span></div>';
+  }
+
+  function daeunHTML(c, d) {
+    const dm = c.dayMaster;
+    const head = '<div class="du-top">' +
+      '<div><b>' + esc(c.input.name || '나의') + ' 대운</b><span>' + c.ganji + ' · ' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간 · ' + esc(c.strengthKo) + '</span></div>' +
+      '<em>' + d.dirText + ' · 대운수 ' + d.su.text + '</em></div>' +
+      pdfBarHTML() +
+      '<p class="rp-voice">' + esc(d.open) + '</p>';
+
+    const free = '<div class="y27-free"><span class="y27-free-kicker">무료 맛보기 · 10년마다 바뀌는 큰 물길</span>' +
+      '<div class="du-table">' +
+      '<div class="du-tr th"><span>나이</span><span>시작</span><span>간지</span><span>십성</span><span>운성</span><span>흐름</span></div>' +
+      d.list.map(x => daeunRow(x, d.current && d.current.no === x.no)).join('') + '</div>' +
+      '<p class="rp-note" style="margin-top:6px">나이는 세는나이 · 시작은 그 대운이 열린 해와 달 · 십성 큰 글씨는 대운 천간, 작은 글씨는 대운 지지 · 흐름 100점 만점</p>' +
+      '<div class="du-high">' + d.golden.map(g => '<div class="du-hi"><span>인생 전성기</span><b>' + g.ageFrom + '~' + g.ageTo + '세 · ' + g.hanja + '</b><i>' + g.yearFrom + '~' + g.yearTo + '년</i><p>' + esc(d.say(g).key) + ' — ' + esc(d.say(g).flow) + '</p></div>').join('') + '</div>' +
+      '<div class="du-low"><span>조심해서 넘길 10년</span><b>' + d.caution.ageFrom + '~' + d.caution.ageTo + '세 · ' + d.caution.hanja + '</b><i>' + d.caution.stemGod + ' 대운 · ' + d.caution.stage + '</i><p>' + esc(d.say(d.caution).life) + '</p></div>' +
+      '<p class="rp-para" style="margin-top:10px">' + esc(d.goldenNote) + '</p></div>';
+
+    const body =
+      '<div class="rp-title"><span>지금 내 대운</span></div>' +
+      (d.current
+        ? '<div class="du-now"><b>' + d.current.ageFrom + '~' + d.current.ageTo + '세 · ' + d.current.hanja + ' ' + d.current.ko + '</b><span>' + d.current.stemGod + ' · ' + d.current.branchGod + ' · ' + d.current.stage + ' · ' + d.current.yearFrom + '~' + d.current.yearTo + '년</span><p>' + esc(d.say(d.current).flow) + '</p><p>' + esc(d.say(d.current).money) + '</p><p>' + esc(d.say(d.current).work) + '</p></div>'
+        : '<div class="rp-caution">첫 대운이 열리기 전입니다. 이 시기는 내 사주보다 부모와 환경의 그릇이 먼저 작동합니다. 아래 표에서 첫 대운이 열리는 해를 보세요.</div>') +
+      '<div class="rp-title"><span>10년마다의 재물 · 커리어 · 인생 전략</span></div>' +
+      d.list.map(x => {
+        const s = d.say(x);
+        return '<div class="du-card' + (d.current && d.current.no === x.no ? ' is-now' : '') + '">' +
+          '<div class="du-card-head"><b>' + x.ageFrom + '~' + x.ageTo + '세</b><span>' + x.hanja + ' ' + x.ko + ' · ' + x.yearFrom + '~' + x.yearTo + '</span><em>' + s.key + '</em></div>' +
+          '<p>' + esc(s.flow) + '</p>' +
+          '<p><strong>재물</strong> ' + esc(s.money) + '</p>' +
+          '<p><strong>커리어</strong> ' + esc(s.work) + '</p>' +
+          '<p><strong>사는 법</strong> ' + esc(s.life) + '</p></div>';
+      }).join('') +
+      '<div class="rp-title"><span>대운을 쓰는 순서</span></div>' +
+      '<ul class="rp-list advice"><li>대운이 바뀌는 해에는 새 일을 벌이지 말고, 그 전 1년에 정리와 준비를 끝내 두세요.</li>' +
+      '<li>힘이 실리는 대운에는 벌이고, 눌리는 대운에는 지키세요. 사주는 이 순서만 지켜도 크게 다칩니다.</li>' +
+      '<li>대운은 10년이지만 실제 변화는 그 안의 세운(해)에서 옵니다. 좋은 대운이라도 해가 나쁘면 그해는 조심하세요.</li></ul>';
+
+    return head + free +
+      payWrapHTML({ kind: 'daeun', price: 24900, list: 49000, label: '10년 대운 전체 풀이 열기', desc: '10개 대운의 재물·커리어·인생 전략 · 지금 대운의 의미 · 대운을 쓰는 순서', inner: body }) +
+      '<div class="rp-actions"><button class="btn-ghost" id="duClose">닫기</button><button class="btn-ghost" id="duAgain">내 정보 수정</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="duSave">보관함 저장</button></div>' +
+      '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 대운수는 출생 시각에서 절입까지의 날수를 3일=1년으로 셈했습니다.<br />' + esc(D.BRAND.footer) + '</div>';
+  }
+
+  function daeunSheet(chart) {
+    const c = ensureChart(chart);
+    const d = P.buildDaeun(c);
+    openSheet('10년 대운 · ' + (c.input.name || '나의') + ' 인생 흐름', daeunHTML(c, d));
+    bindPay($('#sheetBody'), 'daeun');
+    bindPdf($('#sheetBody'));
+    const cl = $('#duClose'); if (cl) cl.addEventListener('click', closeSheet);
+    const ag = $('#duAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openBirthForm({ title: '내 정보 수정' }); });
+    const sv = $('#duSave');
+    if (sv) sv.addEventListener('click', () => {
+      saveHistory({
+        kind: 'daeun', typeLabel: '10년 대운', charId: 'cheongwol', category: 'fate',
+        title: '10년 대운 · ' + (c.input.name || '나'), question: '', chart: c.input,
+        dateLabel: (new Date().getMonth() + 1) + '월 ' + new Date().getDate() + '일',
+        summary: d.dirText + ' · 대운수 ' + d.su.text + ' · 전성기 ' + d.golden.map(g => g.ageFrom + '세').join('·')
+      });
+      showToast(D.REPORT.savedToast);
+      sv.disabled = true; sv.textContent = '보관함에 저장됨';
+    });
+  }
+
+  /* ---- 2027 길일 ---- */
+  function openGilil(chart) {
+    const go = c => gililSheet(c);
+    if (chart) { go(chart); return; }
+    if (!state.profile) { openBirthForm({ title: '2027 길일 · 생년월일 확인', onDone: go }); return; }
+    go(E.buildChart(state.profile));
+  }
+
+  function glWhy(day, chart, key) {
+    const out = [];
+    day.tags.forEach(t => {
+      if (t === '용신일') out.push('내게 필요한 ' + chart.yongsin.elem + ' 기운이 지지로 들어오는 날 — 몸과 판단이 가볍습니다.');
+      else if (t === '희신일') out.push('내 편에 서 주는 ' + chart.yongsin.hee + ' 기운이 들어오는 날입니다.');
+      else if (WHY[t]) out.push(WHY[t]);
+      else if (t.indexOf('지지 ') === 0 && WHY[t.slice(3)]) out.push('지지가 ' + WHY[t.slice(3)]);
+    });
+    if (!out.length) out.push('내 일간·일지와 크게 부딪히지 않는 날입니다. 무리만 하지 않으면 됩니다.');
+    return out.slice(0, 3);
+  }
+
+  function glPickCard(day, key, chart, idx) {
+    const label = { contract: '계약·매매', job: '이직·면접', move: '이사·개업' }[key];
+    const tips = P.TIPS[key];
+    return '<div class="gl-pick"><div class="gl-pick-head"><b>' + day.m + '월 ' + day.d + '일 <small>(' + day.weekday + ')</small></b>' +
+      '<span>' + day.hanja + '(' + day.ko + ') · ' + day.animal + '날</span><em>' + label + ' ' + day[key] + '점</em></div>' +
+      '<ul class="gl-why">' + glWhy(day, chart, key).map(w => '<li>' + esc(w) + '</li>').join('') + '</ul>' +
+      '<p class="gl-tip">' + esc(tips[idx % tips.length]) + '</p></div>';
+  }
+
+  function glMonthCards(g) {
+    return '<div class="gl-months">' + g.monthStat.map(mo => {
+      const good = mo.days.filter(d => Math.max(d.contract, d.job, d.move) >= 68)
+        .sort((a, b) => Math.max(b.contract, b.job, b.move) - Math.max(a.contract, a.job, a.move)).slice(0, 4)
+        .sort((a, b) => a.d - b.d);
+      const risk = mo.days.filter(d => d.risk >= 7).sort((a, b) => b.risk - a.risk).slice(0, 2).sort((a, b) => a.d - b.d);
+      return '<div class="gl-month' + (good.length ? ' has' : '') + '"><b>' + mo.m + '월</b>' +
+        '<div class="gl-days">' + (good.length ? good.map(d => '<i>' + d.d + '</i>').join('') : '<i class="none">–</i>') + '</div>' +
+        (risk.length ? '<span class="gl-risk">피할 날 ' + risk.map(d => d.d + '일').join(' · ') + '</span>' : '<span class="gl-risk none">피할 날 없음</span>') +
+        '</div>';
+    }).join('') + '</div>';
+  }
+
+  function gililHTML(c, g) {
+    const dm = c.dayMaster;
+    const head = '<div class="du-top">' +
+      '<div><b>2027 정미년 · 나만의 길일</b><span>' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간 · 일지 ' + c.pillars.day.hanja + '(' + c.pillars.day.animal + ') · 용신 ' + c.yongsin.elem + '</span></div>' +
+      '<em>계약 · 이직 · 이사</em></div>' +
+      pdfBarHTML() +
+      '<p class="rp-voice">' + esc(g.open) + '</p>';
+
+    const free = '<div class="y27-free"><span class="y27-free-kicker">무료 맛보기 · 12개월 길일 달력</span>' +
+      glMonthCards(g) +
+      '<p class="rp-note" style="margin-top:8px">금색 숫자는 계약·이직·이사 중 하나라도 힘이 실리는 날입니다. 아래 심층 풀이에서 목적별 날짜와 이유를 하나씩 짚습니다.</p>' +
+      '<div class="gl-first">' + ['contract', 'job', 'move'].map(k => g.picks[k][0] ? glPickCard(g.picks[k][0], k, c, 0) : '').join('') + '</div>' +
+      '</div>';
+
+    const purposeBlock = (key, title, desc) => '<div class="rp-title"><span>' + title + '</span></div>' +
+      '<p class="rp-para">' + desc + '</p>' +
+      g.picks[key].map((d, i) => glPickCard(d, key, c, i)).join('');
+
+    const body =
+      purposeBlock('contract', '① 계약 · 매매', '도장을 찍는 날은 서류의 운이 아니라 사람의 운을 봅니다. 아래 날들은 내 일지와 맺어지고, 정재·천을이 함께 오는 날입니다.') +
+      purposeBlock('job', '② 이직 · 면접', '면접과 지원은 정관(正官)이 서는 날에 이름이 오릅니다. 상관이 관을 보는 날은 말이 앞서니 비켜 두세요.') +
+      purposeBlock('move', '③ 이사 · 개업', '이사는 내 자리가 옮겨지는 일이라 일지와 부딪히는 날을 가장 조심합니다. 문을 여는 날은 식신·재성이 함께 오는 날이 좋습니다.') +
+      '<div class="rp-title"><span>2027년에 피할 날</span></div>' +
+      '<div class="gl-avoid-wrap">' + g.avoid.map(d => '<div class="gl-avoid"><b>' + d.m + '월 ' + d.d + '일 (' + d.weekday + ') ' + d.hanja + '</b><span>' + d.bad.map(b => BADWHY[b] || b).join(' ') + '</span></div>').join('') + '</div>' +
+      '<div class="rp-title"><span>달마다의 길일과 피할 날</span></div>' + glMonthCards(g) +
+      '<div class="rp-title"><span>도장 찍을 때의 팁</span></div>' +
+      '<ul class="rp-list advice">' + P.TIPS.contract.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>' +
+      '<div class="rp-caution">길일은 “이 날이면 무조건 된다”는 뜻이 아닙니다. 같은 계약이라도 준비가 덜 된 날은 그 날의 기운을 쓰지 못합니다. 서류와 조건을 먼저 끝내 두고, 그 위에 날을 얹으세요.</div>';
+
+    return head + free +
+      payWrapHTML({ kind: 'gilil', price: 14900, list: 29000, label: '2027 길일 전체 열기', desc: '목적별 추천일과 이유 · 피할 날 · 달마다의 길일 · 도장 찍을 때의 팁', inner: body }) +
+      '<div class="rp-actions"><button class="btn-ghost" id="glClose">닫기</button><button class="btn-ghost" id="glAgain">내 정보 수정</button><button class="btn-ghost" data-pdf hidden>📄 PDF 저장</button><button class="btn-gold" id="glSave">보관함 저장</button></div>' +
+      '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 2027년 일진은 60갑자 순환으로 계산했습니다.<br />' + esc(D.BRAND.footer) + '</div>';
+  }
+
+  function gililSheet(chart) {
+    const c = ensureChart(chart);
+    const g = P.buildGilil(c, 2027);
+    openSheet('2027 길일 · 계약·이직·이사', gililHTML(c, g));
+    bindPay($('#sheetBody'), 'gilil');
+    bindPdf($('#sheetBody'));
+    const cl = $('#glClose'); if (cl) cl.addEventListener('click', closeSheet);
+    const ag = $('#glAgain'); if (ag) ag.addEventListener('click', () => { closeSheet(); openBirthForm({ title: '내 정보 수정' }); });
+    const sv = $('#glSave');
+    if (sv) sv.addEventListener('click', () => {
+      saveHistory({
+        kind: 'gilil', typeLabel: '2027 길일', charId: 'baekho', category: 'work',
+        title: '2027 계약·이직·이사 길일', question: '', chart: c.input,
+        dateLabel: (new Date().getMonth() + 1) + '월 ' + new Date().getDate() + '일',
+        summary: '계약 ' + (g.picks.contract[0] ? (g.picks.contract[0].m + '월 ' + g.picks.contract[0].d + '일') : '–') + ' · 이직 ' + (g.picks.job[0] ? (g.picks.job[0].m + '월 ' + g.picks.job[0].d + '일') : '–') + ' · 이사 ' + (g.picks.move[0] ? (g.picks.move[0].m + '월 ' + g.picks.move[0].d + '일') : '–')
+      });
+      showToast(D.REPORT.savedToast);
+      sv.disabled = true; sv.textContent = '보관함에 저장됨';
+    });
+  }
+
   /* ---------------- 시작 ---------------- */
   function init() {
     const B = D.BRAND;
@@ -1237,7 +1649,7 @@
     $('#footLine').textContent = B.tagline + ' — ' + B.intro;
     $('#footNote').textContent = '© ' + new Date().getFullYear() + ' ' + B.name + ' ' + B.version + ' · ' + B.footer;
 
-    renderHero(); renderTopics(); renderY2027(); renderHomeChips(); renderRanking(); renderMasters(); renderTodayWidget(); renderFreeGrid();
+    renderHero(); renderTopics(); renderY2027(); renderPlus(); renderHomeChips(); renderRanking(); renderMasters(); renderTodayWidget(); renderFreeGrid();
     renderAskChars(); bindMisc();
     if (E.selfTest) {
       const bad = E.selfTest().filter(l => l.startsWith('FAIL'));
