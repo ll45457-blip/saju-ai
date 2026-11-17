@@ -32,6 +32,15 @@
   const STAGES = ['장생', '목욕', '관대', '건록', '제왕', '쇠', '병', '사', '묘', '절', '태', '양'];
   const STAGE_START = [11, 6, 2, 9, 2, 9, 5, 0, 8, 3]; // 甲亥 乙午 丙寅 丁酉 戊寅 己酉 庚巳 辛子 壬申 癸卯
 
+  // 십이신살 — 년지 삼합 기준, 각 국의 절지(絶地)에서 시작
+  const SINSAL = ['겁살', '재살', '천살', '지살', '년살(도화)', '월살', '망신살', '장성살', '반안살', '역마살', '육해살', '화개살'];
+  const SINSAL_START = { 2: 11, 6: 11, 10: 11, 8: 5, 0: 5, 4: 5, 5: 2, 9: 2, 1: 2, 11: 8, 3: 8, 7: 8 };
+
+  // 천덕귀인 (월지 기준 — 값은 천간 또는 지지 한자)
+  const CHEONDEOK = { 2: '丁', 3: '申', 4: '壬', 5: '辛', 6: '亥', 7: '甲', 8: '癸', 9: '寅', 10: '丙', 11: '乙', 0: '巳', 1: '庚' };
+  // 월덕귀인 (월지 삼합 기준 천간)
+  const WOLDEAK = { 2: 2, 6: 2, 10: 2, 8: 8, 0: 8, 4: 8, 5: 6, 9: 6, 1: 6, 11: 0, 3: 0, 7: 0 };
+
   // 24절기 (황경 315° 입춘부터 15° 간격)
   const TERMS = [
     '입춘', '우수', '경칩', '춘분', '청명', '곡우',
@@ -313,6 +322,70 @@
 
     const missing = ELEMENTS.filter(el => counts[el] === 0);
 
+    /* 13) 십이신살 (년지 삼합 기준) */
+    const sinsalStart = SINSAL_START[yearBranchIdx];
+    const sinsalOf = b => SINSAL[((b - sinsalStart) % 12 + 12) % 12];
+    const sinsal = {
+      year: sinsalOf(yearBranchIdx),
+      month: sinsalOf(monthBranch),
+      day: sinsalOf(dayBranch),
+      hour: hasTime ? sinsalOf(hourBranch) : null
+    };
+
+    /* 14) 귀인 (천을·천덕·월덕) */
+    const pillarList = [['년주', P.year], ['월주', P.month], ['일주', P.day]].concat(P.hour ? [['시주', P.hour]] : []);
+    const matchStem = stemIdx => {
+      const hits = [];
+      pillarList.forEach(([n, p]) => { if (p.stem === stemIdx) hits.push(n + ' ' + STEMS[stemIdx]); });
+      pillarList.forEach(([n, p]) => {
+        if (BRANCH_MAIN_STEM[p.branch] === stemIdx) hits.push(n + ' ' + BRANCHES[p.branch] + '(정기 ' + STEMS[stemIdx] + ')');
+      });
+      return hits;
+    };
+    const matchBranch = branchIdx => {
+      const hits = [];
+      pillarList.forEach(([n, p]) => { if (p.branch === branchIdx) hits.push(n + ' ' + BRANCHES[branchIdx]); });
+      return hits;
+    };
+    const CHEONEUL_STEM = [[1, 7], [0, 8], [11, 9], [11, 9], [1, 7], [0, 8], [1, 7], [2, 6], [5, 3], [5, 3]];
+    const cheondeokChar = CHEONDEOK[monthBranch];
+    const woldeokStem = WOLDEAK[monthBranch];
+    const gwisinOf = ch => {
+      const sf = STEMS.indexOf(ch), bf = BRANCHES.indexOf(ch);
+      return (sf >= 0 ? matchStem(sf) : []).concat(bf >= 0 ? matchBranch(bf) : []);
+    };
+    const gwisin = {
+      cheondeok: { char: cheondeokChar, label: '천덕귀인', hits: gwisinOf(cheondeokChar) },
+      woldeok: { char: STEMS[woldeokStem], label: '월덕귀인', hits: matchStem(woldeokStem) },
+      cheoneul: {
+        label: '천을귀인',
+        chars: CHEONEUL_STEM[dayStem].map(b => BRANCHES[b]),
+        hits: CHEONEUL_STEM[dayStem].reduce((a, b) => a.concat(matchBranch(b)), [])
+      }
+    };
+
+    /* 15) 음양 비율 (지지는 본기·정기 천간의 음양으로 계산) */
+    const yyList = [
+      { name: '년간', char: STEMS[yearStem], yin: !!STEM_IS_YIN[yearStem] },
+      { name: '년지', char: BRANCHES[yearBranchIdx], yin: !!STEM_IS_YIN[BRANCH_MAIN_STEM[yearBranchIdx]] },
+      { name: '월간', char: STEMS[monthStem], yin: !!STEM_IS_YIN[monthStem] },
+      { name: '월지', char: BRANCHES[monthBranch], yin: !!STEM_IS_YIN[BRANCH_MAIN_STEM[monthBranch]] },
+      { name: '일간', char: STEMS[dayStem], yin: !!STEM_IS_YIN[dayStem] },
+      { name: '일지', char: BRANCHES[dayBranch], yin: !!STEM_IS_YIN[BRANCH_MAIN_STEM[dayBranch]] }
+    ];
+    if (hasTime) {
+      yyList.push({ name: '시간', char: STEMS[hourStem], yin: !!STEM_IS_YIN[hourStem] });
+      yyList.push({ name: '시지', char: BRANCHES[hourBranch], yin: !!STEM_IS_YIN[BRANCH_MAIN_STEM[hourBranch]] });
+    }
+    const yinCount = yyList.filter(x => x.yin).length;
+    const yangCount = yyList.length - yinCount;
+    const yinyang = {
+      list: yyList, yang: yangCount, yin: yinCount,
+      yangPct: Math.round(yangCount / yyList.length * 100),
+      yinPct: 100 - Math.round(yangCount / yyList.length * 100),
+      note: '지지는 본기(정기) 천간의 음양으로 계산합니다'
+    };
+
     return {
       input: {
         name: input.name || '',
@@ -343,6 +416,9 @@
       gods: gods,
       godGroups: godGroups,
       stages: stages,
+      sinsal: sinsal,
+      gwisin: gwisin,
+      yinyang: yinyang,
       timeRange: timeRange,
       month: {
         idx: monthIdx,
@@ -508,11 +584,13 @@
   /* ---------- 공개 API ---------- */
   const api = {
     STEMS, STEMS_KO, BRANCHES, BRANCHES_KO, ELEMENTS, ELEMENTS_HANJA, ELEMENT_COLOR,
-    TEN_GODS, STAGES, TERMS, MONTH_NAMES, MONTH_NAMES_KO, GOD_GROUP, LUCKY, HOUR_RANGE,
+    TEN_GODS, STAGES, TERMS, MONTH_NAMES, MONTH_NAMES_KO, GOD_GROUP, LUCKY, HOUR_RANGE, SINSAL,
     jdn, toJD, sunLongitude, jdToDate, findTermJD, formatTermTime,
     buildChart, getToday, describeDay, todayReading, tenGod, relation, stageOf, hash,
     stemElem: s => ELEMENTS[STEM_ELEM[s]],
-    branchElem: b => ELEMENTS[BRANCH_ELEM[b]]
+    branchElem: b => ELEMENTS[BRANCH_ELEM[b]],
+    branchMainStem: b => BRANCH_MAIN_STEM[b],
+    stemIsYin: s => !!STEM_IS_YIN[s]
   };
 
   global.SajuEngine = api;
@@ -535,6 +613,17 @@
     check('2026-02-05(입춘 후) 년주', c3.pillars.year.hanja, '丙午');
     const c4 = buildChart({ year: 2026, month: 11, day: 17, hour: 23, minute: 45 });
     check('2026-11-17 23:45 시주', c4.pillars.hour.hanja, '戊子');
+    const c5 = buildChart({ year: 2001, month: 2, day: 23, hour: 8 });
+    check('2001-02-23 진시 년주', c5.pillars.year.hanja, '辛巳');
+    check('2001-02-23 진시 월주', c5.pillars.month.hanja, '庚寅');
+    check('2001-02-23 진시 일주', c5.pillars.day.hanja, '丁巳');
+    check('2001-02-23 진시 시주', c5.pillars.hour.hanja, '甲辰');
+    check('2001-02-23 일간 음양', c5.dayMaster.yinYang, '음');
+    check('2001-02-23 양 비율', c5.yinyang.yangPct, 75);
+    check('2001-02-23 음 비율', c5.yinyang.yinPct, 25);
+    check('2001-02-23 월지 십이신살(寅)', c5.sinsal.month, '겁살');
+    check('2001-02-23 일지 십이신살(巳)', c5.sinsal.day, '지살');
+    check('2001-02-23 월덕귀인', c5.gwisin.woldeok.char, '丙');
     return out;
   };
 

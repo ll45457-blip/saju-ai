@@ -4,12 +4,14 @@
 (function () {
   'use strict';
 
-  const D = window.SAJU_DATA, E = window.SajuEngine;
+  const D = window.SAJU_DATA, E = window.SajuEngine, Y27 = window.SAJU_2027;
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const won = n => n.toLocaleString('ko-KR');
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const pad = n => (n < 10 ? '0' + n : '' + n);
+  const ELCLS = { 목: 'e-mok', 화: 'e-hwa', 토: 'e-to', 금: 'e-geum', 수: 'e-su' };
+  const STAGE_NOTE = { 장생: '시작과 생기', 목욕: '감정의 파동', 관대: '사회적 성장', 건록: '자립과 실력', 제왕: '힘의 정점', 쇠: '완만한 하강', 병: '점검과 회복', 사: '비움과 정리', 묘: '저장과 축적', 절: '전환점', 태: '잉태와 준비', 양: '보호와 성장' };
 
   const store = {
     get(k, fb) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; } catch (e) { return fb; } },
@@ -141,6 +143,7 @@
       const b = e.target.closest('.topic'); if (!b) return;
       const t = D.TOPICS.find(x => x.id === b.dataset.topic);
       if (t.id === 'today') { showView('today'); return; }
+      if (t.id === 'newyear' && Y27) { y2027Open('newyear'); return; }
       if (t.id === 'free') { showView('home'); $('#freeGrid').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
       openAskWithTopic(t);
     });
@@ -166,7 +169,7 @@
   function renderRanking() {
     $('#rankingList').innerHTML = D.RANKING.map((r, i) => {
       const c = charById(r.charId);
-      return '<li class="rank-item" data-q="' + esc(r.q) + '" data-cat="' + r.cat + '" data-char="' + c.id + '">' +
+      return '<li class="rank-item" data-q="' + esc(r.q) + '" data-cat="' + r.cat + '" data-char="' + c.id + '"' + (r.y ? ' data-y="' + r.y + '"' : '') + '>' +
         '<span class="rank-no">' + (i + 1) + '</span>' +
         '<img class="rank-avatar" src="' + c.img + '" alt="" loading="lazy" />' +
         '<span class="rank-main"><span class="rank-q">' + esc(r.q) + '</span>' +
@@ -175,6 +178,7 @@
     }).join('');
     $('#rankingList').addEventListener('click', e => {
       const li = e.target.closest('.rank-item'); if (!li) return;
+      if (li.dataset.y) { if (Y27) y2027Open(li.dataset.y); return; }
       askFlow({ question: li.dataset.q, category: li.dataset.cat, charId: li.dataset.char, type: 'qna' });
     });
   }
@@ -348,6 +352,7 @@
   }
 
   function reopenReport(h) {
+    if (h.kind === 'y2027' && Y27) { y2027Sheet(h.y, h.chart); return; }
     if (h.kind === 'today') {
       const c = charById(h.charId);
       openSheet('오늘의 운세 기록', '<div class="rp-top"><img class="rp-ava" src="' + c.img + '" alt="" /><div class="rp-who"><b>' + esc(h.dateLabel) + ' 운세</b><span>보관함에 저장된 기록</span></div></div>' +
@@ -496,6 +501,8 @@
     const html = reportHTML({ chart: chart, char: c, question: o.question, category: o.category, today: today, typeLabel: o.typeLabel });
 
     openSheet(c.name + '의 리포트', html, null);
+    const goto = $('#rpTo2027');
+    if (goto) goto.addEventListener('click', () => { closeSheet(); y2027Open('newyear', chart); });
 
     const closeBtn = $('#rpClose');
     if (closeBtn) closeBtn.addEventListener('click', closeSheet);
@@ -529,26 +536,35 @@
     /* 사주팔자 표 */
     const pillars = chart.pillars;
     const noTime = !pillars.hour;
-    const pl = (label, p, day, god) => {
-      if (!p) return '<div class="pl" style="opacity:.35"><span class="pl-label">' + label + '</span><div class="hz">·</div><span class="ko">시간 모름</span></div>';
-      return '<div class="pl' + (day ? ' is-day' : '') + '"><span class="pl-label">' + label + '</span>' +
-        '<div class="hz">' + p.stemName + '<br />' + p.branchName + '</div>' +
+    const pl = (label, p, day, god, stage, sinsal) => {
+      if (!p) return '<div class="pl is-empty"><span class="pl-label">' + label + '</span><div class="hz">·</div><span class="ko">시간 모름</span></div>';
+      return '<div class="pl' + (day ? ' is-day' : '') + '">' +
+        '<span class="pl-label">' + label + '</span>' +
+        '<div class="hz"><b class="' + ELCLS[p.stemElem] + '">' + p.stemName + '</b><b class="' + ELCLS[p.branchElem] + '">' + p.branchName + '</b></div>' +
         '<span class="ko">' + p.stemKo + p.branchKo + '</span>' +
-        '<div class="el">' + p.stemElem + '·' + p.branchElem + ' / ' + p.animal + '</div>' +
-        (god ? '<div class="god">' + god + '</div>' : '') + '</div>';
+        '<div class="el-chips"><i class="elc ' + ELCLS[p.stemElem] + '">' + p.stemElem + '</i><i class="elc ' + ELCLS[p.branchElem] + '">' + p.branchElem + '</i><em>' + p.animal + '</em></div>' +
+        '<div class="pl-tags">' +
+        (god ? '<span class="tg god">' + god + '</span>' : '') +
+        (stage ? '<span class="tg stage">' + stage + '</span>' : '') +
+        (sinsal ? '<span class="tg sal">' + sinsal + '</span>' : '') +
+        '</div></div>';
     };
     const pillarsHTML = '<div class="pillars' + (noTime ? ' no-time' : '') + '">' +
-      pl('년주', pillars.year, false, chart.gods.yearStem) +
-      pl('월주', pillars.month, false, chart.gods.monthStem) +
-      pl('일주', pillars.day, true, '일간') +
-      pl('시주', pillars.hour, false, chart.gods.hourStem) +
+      pl('년주', pillars.year, false, chart.gods.yearStem, chart.stages.year, chart.sinsal.year) +
+      pl('월주', pillars.month, false, chart.gods.monthStem, chart.stages.month, chart.sinsal.month) +
+      pl('일주', pillars.day, true, '일간', chart.stages.day, chart.sinsal.day) +
+      pl('시주', pillars.hour, false, chart.gods.hourStem, chart.stages.hour, chart.sinsal.hour) +
       '</div>' +
+      '<div class="pl-legend">한자 위·아래 = 천간·지지 / 색 = 오행(목 청록 · 화 적홍 · 토 황금 · 금 은회 · 수 남색)<br />배지 = 십성 · 십이운성 · 십이신살(년지 삼합 기준)</div>' +
       '<div class="rp-id" style="margin-top:9px"><span>' + chart.ganji + '</span><span>' + chart.ganjiKo + '</span>' +
       (noTime ? '<span class="pill">시간 미입력 · 3주 계산</span>' : '') + '</div>';
 
     /* 오행 차트 */
     const totalW = ELEMENTS_TOTAL(chart);
-    const elemHTML = '<div class="elem-chart">' + E.ELEMENTS.map(el => {
+    const elemCards = '<div class="el-cards">' + E.ELEMENTS.map(el =>
+      '<div class="el-card ' + ELCLS[el] + '"><b>' + el + '</b><i>' + E.ELEMENTS_HANJA[E.ELEMENTS.indexOf(el)] + '</i>' +
+      '<span>' + chart.pct[el] + '%</span><em>' + chart.counts[el] + '자</em></div>').join('') + '</div>';
+    const elemHTML = elemCards + '<div class="elem-chart">' + E.ELEMENTS.map(el => {
       const v = chart.pct[el];
       const n = chart.counts[el];
       return '<div class="elem-row"><span class="elem-name">' + el + '</span>' +
@@ -569,7 +585,37 @@
         '<span class="elem-val"><b>' + v + '</b>개</span></div>';
     }).join('') + '</div>';
 
-    /* 타고난 결 */
+    /* 음양 비율 */
+    const yy = chart.yinyang;
+    const yinyangHTML = '<div class="yy-wrap">' +
+      '<div class="yy-bar"><i style="width:' + yy.yangPct + '%"></i><b>' + yy.yinPct + '%</b></div>' +
+      '<div class="yy-legend"><span>양 ' + yy.yangPct + '%</span><span>음 ' + yy.yinPct + '%</span></div>' +
+      '<div class="yy-list">' + yy.list.map(x => '<i class="' + (x.yin ? 'yin' : 'yang') + '">' + x.name + ' ' + x.char + '</i>').join('') + '</div>' +
+      '<p class="rp-note" style="margin-top:6px">' + esc(yy.note) + '</p></div>';
+
+    /* 십이운성 */
+    const stageList = [['년지', chart.stages.year], ['월지', chart.stages.month], ['일지', chart.stages.day]]
+      .concat(chart.stages.hour ? [['시지', chart.stages.hour]] : []);
+    const unseongHTML = '<div class="mini-grid">' + stageList.map(s =>
+      '<div class="mini-item"><span>' + s[0] + '</span><b>' + s[1] + '</b><em>' + (STAGE_NOTE[s[1]] || '') + '</em></div>').join('') + '</div>' +
+      '<p class="rp-para">십이운성은 일간의 기운이 그 자리에서 어느 단계에 있는지를 보여 줍니다. <strong>' + chart.stages.month + '</strong>의 달지와 <strong>' + chart.stages.day + '</strong>의 일지는 이 사주가 사람들 앞에서 어떤 모습으로 서는지를 말해 줍니다.</p>';
+
+    /* 귀인 */
+    const gw = chart.gwisin;
+    const gwRow = (label, char, hits) => '<div class="gw-row"><span>' + label + '</span><b>' + (char || '') + '</b><em>' +
+      (hits && hits.length ? hits.join(' · ') : '사주에 없음') + '</em></div>';
+    const gwisinHTML = '<div class="gw-wrap">' +
+      gwRow('천을귀인', gw.cheoneul.chars.join(' · '), gw.cheoneul.hits) +
+      gwRow('천덕귀인', gw.cheondeok.char, gw.cheondeok.hits) +
+      gwRow('월덕귀인', gw.woldeok.char, gw.woldeok.hits) + '</div>' +
+      '<p class="rp-para">귀인은 막힌 일을 풀어 주는 자리입니다. 사주에 앉아 있으면 그 자리의 띠·사람·달이 도움으로 들어옵니다.</p>';
+
+    /* 십이신살 */
+    const sinsalList = [['년주', chart.sinsal.year], ['월주', chart.sinsal.month], ['일주', chart.sinsal.day]]
+      .concat(chart.sinsal.hour ? [['시주', chart.sinsal.hour]] : []);
+    const sinsalHTML = '<div class="mini-grid">' + sinsalList.map(s =>
+      '<div class="mini-item"><span>' + s[0] + '</span><b>' + s[1] + '</b><em>' + (s[1].indexOf('도화') >= 0 ? '사람을 끄는 힘' : s[1] === '역마살' ? '움직이는 기운' : s[1] === '화개살' ? '혼자 깊어지는 자리' : '') + '</em></div>').join('') + '</div>' +
+      '<p class="rp-note" style="margin-top:6px">십이신살은 년지 삼합을 기준으로 계산합니다(겁살·재살·천살·지살·년살·월살·망신·장성·반안·역마·육해·화개).</p>';
     const natureHTML = '<p class="rp-lead"><span class="em">' + esc(dm.key) + ' · ' + esc(dm.name) + '</span>의 사주입니다.</p>' +
       '<p class="rp-para">' + esc(dm.text) + '</p>' +
       '<p class="rp-para"><strong>' + esc(group.name) + '이 강한 구조</strong> — ' + esc(group.trait) + '</p>' +
@@ -610,15 +656,20 @@
 
       (o.question ? '<div class="rp-question"><b>질문</b>' + esc(o.question) + '</div>' : '') +
 
-      '<div class="rp-title"><span>1. 사주팔자</span></div>' + pillarsHTML +
-      '<div class="rp-title"><span>2. 오행 분포</span></div>' + elemHTML +
-      '<div class="rp-title"><span>3. 십신 분포</span></div>' + godHTML +
-      '<div class="rp-title"><span>4. 타고난 결</span></div>' + natureHTML +
-      '<div class="rp-title"><span>5. 질문에 대한 답</span></div>' + coreHTML +
-      '<div class="rp-title"><span>6. 시기와 흐름</span></div>' + timingHTML +
-      '<div class="rp-title"><span>7. 지금 할 일</span></div>' + adviceHTML +
-      '<div class="rp-title"><span>8. 조심할 점</span></div>' + cautionHTML +
-      '<div class="rp-title"><span>9. 행운 포인트</span></div>' + luckyHTML +
+      '<div class="rp-title"><span>1. 사주팔자 · 만세력</span></div>' + pillarsHTML +
+      '<div class="rp-title"><span>2. 오행 분포 · 음양</span></div>' + elemHTML +
+      '<div class="rp-title"><span>3. 음양 비율</span></div>' + yinyangHTML +
+      '<div class="rp-title"><span>4. 십신 분포</span></div>' + godHTML +
+      '<div class="rp-title"><span>5. 십이운성</span></div>' + unseongHTML +
+      '<div class="rp-title"><span>6. 십이신살</span></div>' + sinsalHTML +
+      '<div class="rp-title"><span>7. 귀인</span></div>' + gwisinHTML +
+      '<div class="rp-title"><span>8. 타고난 결</span></div>' + natureHTML +
+      '<div class="rp-title"><span>9. 질문에 대한 답</span></div>' + coreHTML +
+      '<div class="rp-title"><span>10. 시기와 흐름</span></div>' + timingHTML +
+      '<div class="rp-title"><span>11. 지금 할 일</span></div>' + adviceHTML +
+      '<div class="rp-title"><span>12. 조심할 점</span></div>' + cautionHTML +
+      '<div class="rp-title"><span>13. 행운 포인트</span></div>' + luckyHTML +
+      '<div class="rp-cta"><b>2027 정미년, 내 12개월은?</b><span>2027년 월운표와 좋은 달·조심할 달을 같은 사주로 바로 계산합니다.</span><button class="btn-gold wide" id="rpTo2027">2027 정미년 12개월 신년운세 →</button></div>' +
 
       '<div class="rp-actions"><button class="btn-ghost" id="rpClose">닫기</button><button class="btn-gold" id="rpSave">보관함 저장</button></div>' +
       '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · ' + esc(D.REPORT.noTimeNote) + '<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
@@ -689,14 +740,15 @@
   function renderFreeGrid() {
     $('#freeGrid').innerHTML = D.FREE_SAJU.map(f => {
       const c = charById(f.charId);
-      return '<button class="free-card" data-key="' + f.key + '" data-cat="' + f.cat + '" data-char="' + c.id + '">' +
-        '<span class="free-glyph">' + f.hanja + '</span>' +
+      return '<button class="free-card" data-key="' + f.key + '" data-cat="' + f.cat + '" data-char="' + c.id + '" data-y="' + (f.y || '') + '">' +
+        '<span class="free-glyph">' + (f.icon || f.hanja) + '</span>' +
         '<span class="free-name">' + esc(f.label) + '</span>' +
         '<span class="free-desc">' + esc(f.desc) + '</span>' +
         '<span class="free-badge">무료</span></button>';
     }).join('');
     $('#freeGrid').addEventListener('click', e => {
       const b = e.target.closest('.free-card'); if (!b) return;
+      if (b.dataset.y && Y27) { y2027Open(b.dataset.y); return; }
       const f = D.FREE_SAJU.find(x => x.key === b.dataset.key);
       askFlow({
         question: f.title + ' — ' + f.desc,
@@ -730,6 +782,7 @@
     const c = D.CHARACTERS.map(x => '<button class="menu-item" data-char="' + x.id + '"><span class="mi-icon">道</span>' + esc(x.name) + '<span class="mi-sub">' + esc(x.fields[0]) + '</span></button>').join('');
     openSheet('전체 메뉴',
       '<div class="menu-list">' +
+      '<button class="menu-item" data-m="y2027"><span class="mi-icon">🎍</span>2027 정미년 특별관<span class="mi-sub">12개월 · 삼재</span></button>' +
       '<button class="menu-item" data-m="today"><span class="mi-icon">今</span>오늘의 운세<span class="mi-sub">무료</span></button>' +
       '<button class="menu-item" data-m="archive"><span class="mi-icon">庫</span>보관함<span class="mi-sub">내 사주 · 기록</span></button>' +
       '<button class="menu-item" data-m="profile"><span class="mi-icon">生</span>내 사주 등록·수정<span class="mi-sub">생년월일</span></button>' +
@@ -738,6 +791,7 @@
       const m = e.target.closest('[data-m]'), ch = e.target.closest('[data-char]');
       if (m) {
         closeSheet();
+        if (m.dataset.m === 'y2027') { showView('home'); const b = $('#y2027Block'); if (b) b.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
         if (m.dataset.m === 'today') showView('today');
         if (m.dataset.m === 'archive') showView('archive');
         if (m.dataset.m === 'profile') openBirthForm({ title: '내 사주 등록' });
@@ -759,6 +813,257 @@
     });
   }
 
+  /* ================= 2027 정미년 특별관 ================= */
+  function renderY2027() {
+    const box = $('#y27Grid'); if (!box || !Y27) return;
+    const lead = $('#y27Lead'); if (lead) lead.textContent = D.Y2027.lead;
+    box.innerHTML = D.Y2027.items.map(it => {
+      const price = it.price
+        ? '<b>' + won(it.price) + '원</b><s>' + won(it.list) + '원</s>'
+        : '<b class="free">무료</b><s>' + won(it.list) + '원</s>';
+      return '<button class="y27-card" data-y="' + it.id + '">' +
+        '<span class="y27-badge">' + esc(it.badge) + '</span>' +
+        '<span class="y27-icon">' + it.icon + '</span>' +
+        '<span class="y27-title">' + esc(it.title) + '</span>' +
+        '<span class="y27-sub">' + esc(it.sub) + '</span>' +
+        '<span class="y27-price">' + price + '</span></button>';
+    }).join('');
+    box.addEventListener('click', e => {
+      const b = e.target.closest('[data-y]'); if (!b) return;
+      y2027Open(b.dataset.y);
+    });
+  }
+
+  function y2027Open(kind, chart) {
+    const item = D.Y2027.items.find(x => x.id === kind); if (!item) return;
+    const go = c => y2027Sheet(kind, c);
+    if (chart) { go(chart); return; }
+    if (!state.profile) { openBirthForm({ title: '2027 정미년 · 생년월일 확인', onDone: go }); return; }
+    go(E.buildChart(state.profile));
+  }
+
+  function y2027Sheet(kind, chart, opts) {
+    opts = opts || {};
+    const item = D.Y2027.items.find(x => x.id === kind); if (!item) return;
+    const y = Y27.build(chart);
+    openSheet(item.title, y2027HTML(item, chart, y));
+    const cl = $('#y27Close'); if (cl) cl.addEventListener('click', closeSheet);
+    const hm = $('#y27Home');
+    if (hm) hm.addEventListener('click', () => {
+      closeSheet(); showView('home');
+      const b = $('#y2027Block'); if (b) b.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    const sv = $('#y27Save');
+    if (sv) sv.addEventListener('click', () => {
+      saveHistory({
+        kind: 'y2027', y: kind, typeLabel: '2027 정미년', title: item.title,
+        question: '', category: item.kind === 'moneyleak' || item.kind === 'calendar' ? 'money' : item.kind === 'reunion' ? 'reunion' : 'fate',
+        charId: item.charId, chart: chart,
+        dateLabel: (new Date().getMonth() + 1) + '월 ' + new Date().getDate() + '일',
+        summary: Y27.summary(chart, kind)
+      });
+      showToast(D.REPORT.savedToast);
+      sv.disabled = true; sv.textContent = '보관함에 저장됨';
+    });
+  }
+
+  /* ---- 2027 리포트 조각 ---- */
+  function y27Row(m) {
+    return '<div class="y27-tr ' + m.gradeKey + '">' +
+      '<span class="c-no">' + m.no + '월</span>' +
+      '<span class="c-gz"><b>' + m.hanja + '</b><i>' + m.startLabel + '</i></span>' +
+      '<span class="c-god">' + m.god + '<i>' + m.branchGod + '</i></span>' +
+      '<span class="c-stage">' + m.stage + '</span>' +
+      '<span class="c-rel">' + (m.relYear.length ? m.relYear.join('·') : '–') + '</span>' +
+      '<span class="c-bar"><i style="width:' + m.score + '%"></i><em>' + m.score + '</em></span></div>';
+  }
+
+  function y27Table(y) {
+    return '<div class="y27-table">' +
+      '<div class="y27-tr th"><span>월</span><span>간지</span><span>십성</span><span>운성</span><span>未 관계</span><span>흐름</span></div>' +
+      y.months.map(y27Row).join('') + '</div>' +
+      '<p class="rp-note" style="margin-top:6px">간지 아래 날짜는 절입(節入)일 · 십성 큰 글씨는 월간, 작은 글씨는 월지 본기 기준 · 흐름 100점 만점</p>';
+  }
+
+  function y27Picks(y) {
+    return '<div class="y27-picks">' +
+      y.good.map(m => '<div class="y27-pick good"><b>' + m.no + '월</b><span>' + m.hanja + ' · ' + m.god + '</span><em>' + m.tag + ' ' + m.score + '</em><p>' + esc(m.action) + '에 힘을 싣기 좋은 달</p></div>').join('') +
+      y.warn.map(m => {
+        const neg = m.relYear.concat(m.relMine).filter(r => ['충', '형', '파', '해'].indexOf(r) >= 0)[0];
+        return '<div class="y27-pick bad"><b>' + m.no + '월</b><span>' + m.hanja + ' · ' + m.god + '</span><em>' + m.tag + ' ' + m.score + '</em><p>' + esc(neg || m.god) + ' — 방어가 필요한 달</p></div>';
+      }).join('') + '</div>';
+  }
+
+  function y27Lines(arr) {
+    return '<div class="y27-lines">' + arr.map(m =>
+      '<div class="y27-line ' + m.gradeKey + '"><p>' + m.line + '</p>' +
+      '<p class="y27-fix">방어 · ' + esc(m.fix) + '</p></div>').join('') + '</div>';
+  }
+
+  function y27Half(h, label) {
+    return '<div class="y27-half"><div class="y27-half-head"><b>' + label + '</b><span>평균 ' + h.avg + '점 · 최고 ' + h.best.no + '월 · 최저 ' + h.worst.no + '월</span></div>' +
+      y27Lines(h.arr) + '</div>';
+  }
+
+  function y27RelText(rel) {
+    const map = { 충: '부딪히고 바뀌는 자리 — 이동·계약 변동', 합: '묶이고 맺어지는 자리 — 인연·거래 성사', 형: '서로 눌리는 자리 — 말·서류 마찰', 파: '깨지는 자리 — 약속·관계 어긋남', 해: '어긋나는 자리 — 오해와 소모', 복음: '같은 기운이 겹친 자리 — 판단이 강해짐' };
+    return rel.map(r => map[r] || r).join(' / ');
+  }
+
+  function y27YearRel(y) {
+    const hits = y.yearHits;
+    return (hits.length
+      ? '<div class="y27-hits">' + hits.map(h => '<div class="y27-hit"><b>' + h.label + ' ' + h.name + '</b><em>' + h.rel.join('·') + '</em><span>' + y27RelText(h.rel) + '</span></div>').join('') + '</div>'
+      : '<div class="rp-caution">내 지지와 未토 사이에 충·합·형·파가 없습니다. 2027년은 내 사주를 크게 흔드는 해가 아니라 쌓은 것을 그대로 쓰는 해입니다.</div>') +
+      (y.samhapYear ? '<p class="rp-para">내 지지가 未와 <b>' + y.samhapYear + '국</b>을 이룹니다 — 이 해에 판이 크게 움직입니다.</p>' : '');
+  }
+
+  function y27Lucky(chart) {
+    const lk = chart.yongsin.elem, L = E.LUCKY[lk];
+    return '<div class="lucky-grid">' +
+      '<div class="lucky-item"><span>도움이 되는 오행</span><b>' + lk + ' · ' + L.color + '</b></div>' +
+      '<div class="lucky-item"><span>행운의 숫자</span><b>' + L.number.join(' · ') + '</b></div>' +
+      '<div class="lucky-item"><span>길한 방위</span><b>' + L.dir + '</b></div>' +
+      '<div class="lucky-item"><span>좋은 시간</span><b>' + L.time + '</b></div>' +
+      '<div class="lucky-item"><span>2027년 키워드</span><b>' + chart.yongsin.elem + '을 채우는 한 해</b></div>' +
+      '<div class="lucky-item"><span>피할 것</span><b style="font-size:11px;line-height:1.5">' + esc(chart.yongsin.care) + '</b></div></div>';
+  }
+
+  function y27RiskMonths(y) {
+    const risk = y.months.filter(m => m.relYear.concat(m.relMine).some(r => ['충', '형', '파', '해'].indexOf(r) >= 0));
+    if (!risk.length) return '<div class="rp-caution">내 일지와 부딪히는 달이 없습니다. 올해는 흔들림 없이 갈 수 있는 해입니다.</div>';
+    return '<div class="y27-table">' +
+      '<div class="y27-tr th"><span>월</span><span>간지</span><span>십성</span><span>운성</span><span>관계</span><span>흐름</span></div>' +
+      risk.map(y27Row).join('') + '</div>' +
+      '<div class="rp-caution" style="margin-top:8px">' + risk.slice(0, 2).map(m => m.no + '월 — ' + esc(m.fix)).join('<br />') + '</div>';
+  }
+
+  function y27Track(name, months, cls) {
+    return '<div class="y27-track ' + cls + '"><span>' + name + '</span><div class="y27-chips">' +
+      (months.length ? months.map(mo => '<i>' + mo + '월</i>').join('') : '<i class="none">해당 달 없음</i>') + '</div></div>';
+  }
+
+  function y27Share(title, sub) {
+    return '<div class="y27-share"><b>' + title + '</b><p>' + sub + '</p><em>#월하사주 #2027정미년</em></div>';
+  }
+
+  function y2027HTML(item, chart, y) {
+    const dm = chart.dayMaster;
+    const heart = D.COPY.category.heart;
+    const groupKey = dominantGodGroup(chart);
+    const head = '<div class="y27-head">' +
+      '<span class="y27-seal">2027<b>丁未</b></span>' +
+      '<div class="y27-head-txt"><b>' + item.icon + ' ' + esc(item.title) + '</b>' +
+      '<span>' + dm.hanja + '(' + dm.ko + ') ' + dm.elem + ' 일간 · ' + chart.pillars.year.hanja + ' ' +
+      chart.pillars.month.hanja + ' ' + chart.pillars.day.hanja + (chart.pillars.hour ? ' ' + chart.pillars.hour.hanja : '') + '</span>' +
+      '<em class="y27-tag">' + (item.price ? won(item.price) + '원' : '무료') + ' · ' + esc(item.badge) + '</em></div></div>' +
+      '<p class="rp-lead">2027 정미년의 천간 <b>丁(음화)</b>과 지지 <b>未(음토)</b>가 내 사주와 만나면, 천간은 내게 <b>' + y.yearGod + '</b>의 자리가 됩니다. ' +
+      '아래는 실제 만세력으로 계산한 12개월 월운입니다.</p>';
+
+    let body = '';
+
+    if (item.kind === 'newyear') {
+      body =
+        '<div class="rp-title"><span>한눈에 · 좋은 달 3 / 조심할 달 3</span></div>' + y27Picks(y) +
+        '<div class="rp-title"><span>2027년 12개월 월운표</span></div>' + y27Table(y) +
+        '<div class="rp-title"><span>상반기 1~6월 실전 풀이</span></div>' + y27Half(y.half1, '상반기') +
+        '<div class="rp-title"><span>하반기 7~12월 실전 풀이</span></div>' + y27Half(y.half2, '하반기') +
+        '<div class="rp-title"><span>내 사주와 未토</span></div>' + y27YearRel(y) +
+        '<div class="rp-title"><span>행운 포인트</span></div>' + y27Lucky(chart) +
+        y27Share('내 2027 최고의 달은 ‘' + y.good[0].no + '월’, 조심할 달은 ‘' + y.warn[0].no + '월’',
+          dm.ko + ' ' + dm.elem + ' 일간 · 정미년 未토와 ' + (y.yearHits.length ? y.yearHits[0].rel.join('·') : '별다른 작용 없음') + ' · 좋은 달 ' + y.good.map(m => m.no + '월').join('·'));
+    }
+
+    if (item.kind === 'samjae') {
+      body =
+        '<div class="rp-title"><span>삼재 판정</span></div>' +
+        '<div class="y27-samjae ' + (y.samjae.is ? 'on' : 'off') + '"><b>' + esc(y.samjae.head) + '</b><p>' + esc(y.samjae.body) + '</p>' +
+        '<ul class="rp-list advice">' + y.samjae.todo.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul></div>' +
+        '<div class="rp-title"><span>내 지지 ↔ 未 분석</span></div>' + y27YearRel(y) +
+        '<div class="rp-title"><span>2027년 충·형이 오는 달</span></div>' + y27RiskMonths(y) +
+        '<div class="rp-title"><span>방어 3원칙</span></div>' +
+        '<ul class="rp-list advice"><li><b>돈은 묶고 계약은 미루기</b> — 새 보증·동업·큰 대출은 2028년으로 넘기세요.</li>' +
+        '<li><b>몸을 먼저 챙기기</b> — 삼재는 몸과 사람에서 옵니다. 수면·검진을 일정에 먼저 넣으세요.</li>' +
+        '<li><b>문서로 남기기</b> — 구두 약속은 그 해에 흔들립니다. 돈과 일은 반드시 글로 남기세요.</li></ul>' +
+        y27Share('2027년 내 삼재 판정 — ' + y.samjae.stage, esc(y.samjae.head));
+    }
+
+    if (item.kind === 'moneyleak') {
+      body =
+        '<div class="rp-title"><span>돈 새는 구멍 ' + y.leaks.length + '곳</span></div>' +
+        '<div class="y27-leaks">' + y.leaks.map((l, i) => '<div class="y27-leak"><span class="lv">' + (i + 1) + '순위</span><b>' + esc(l.title) + '</b><em>' + esc(l.why) + '</em><p>' + esc(l.fix) + '</p></div>').join('') + '</div>' +
+        '<div class="rp-title"><span>돈이 들어오는 길</span></div>' +
+        '<p class="rp-para">이 사주는 <b>' + chart.dayMaster.elem + ' 일간 · ' + chart.strengthKo + '</b> 구조로, 재물은 ' +
+        (chart.godGroups.재성 >= 2 ? '재성 ' + chart.godGroups.재성 + '개로 직접 들어오는 길이 있습니다. 벌이의 그릇은 충분하니 지키는 장치가 관건입니다.' : chart.godGroups.재성 === 1 ? '재성 1개로 길이 하나입니다. 그 하나를 넓히는 데 집중해야 합니다.' : '재성이 비어 있어 직접 벌이보다 기술·콘텐츠(식상)로 우회해 들어옵니다.') +
+        '</p>' +
+        '<div class="rp-title"><span>귀인 띠</span></div>' +
+        '<div class="y27-guin">' + y.guin.list.map(g => '<div class="y27-guin-item ' + (g.here ? 'on' : '') + '"><b>' + g.animal + '</b><span>' + g.char + '</span><em>' + (g.here ? '내 사주에 있음 — 가장 가까운 귀인' : '이 띠의 사람·달이 도움') + '</em></div>').join('') + '</div>' +
+        '<p class="rp-para">' + esc(y.guin.note) + ' 2027년에 부딪히기 쉬운 띠는 <b>' + esc(y.guin.avoidAnimal) + '(' + y.guin.avoidChar + ')</b>입니다. 큰 결정을 함께할 때는 한 번 더 확인하세요.</p>' +
+        '<div class="rp-title"><span>2027년 돈이 들어오는 달</span></div>' +
+        (y.focus.money.months.length ? '<div class="y27-chips big">' + y.focus.money.months.map(mo => '<i>' + mo + '월</i>').join('') + '</div>' +
+          y27Lines(y.months.filter(m => y.focus.money.months.indexOf(m.no) >= 0)) : '<div class="rp-caution">월간 기준 재성의 달이 없습니다. 대신 월지 재성운이 오는 달에 정산·계약을 몰아 두세요.</div>') +
+        y27Share('내 사주 돈 새는 구멍 1순위는 “' + esc(y.leaks[0].title) + '”',
+          esc(y.guin.note) + ' · 조심할 띠 ' + esc(y.guin.avoidAnimal) + ' · 2027 돈 들어오는 달 ' + y.focus.money.months.join('·'));
+    }
+
+    if (item.kind === 'sal') {
+      body =
+        '<div class="rp-title"><span>내 특수살 판정</span></div>' +
+        '<div class="y27-sal">' + y.sal.map(s => '<div class="y27-sal-card ' + (s.on ? 'on' : 'off') + '"><span>' + s.name + '</span><b>' + (s.on ? '있음' : '없음') + '</b><em>' + (s.on ? '내 ' + s.where.join(' · ') + '에 ' + s.branchName : s.branchName + '가 있어야 성립') + '</em></div>').join('') + '</div>' +
+        '<div class="rp-title"><span>살마다의 의미</span></div>' +
+        y.sal.map(s => '<p class="rp-para"><strong>' + s.name + ' ' + (s.on ? '○' : '×') + '</strong> — ' + esc(s.meaning) + ' ' + esc(s.use) + '</p>').join('') +
+        '<div class="rp-title"><span>2027년 未와의 작용</span></div>' +
+        '<ul class="rp-list">' + y.sal.map(s => {
+          const rel = Y27.relOf(7, s.branch);
+          return '<li><b>' + s.name + '</b> 자리 ' + s.branchName + ' — 未와 ' + (rel.length ? rel.join('·') : '특별한 작용 없음') + (rel.indexOf('합') >= 0 ? ' (2027년에 이 살이 열립니다)' : rel.indexOf('충') >= 0 ? ' (이 살이 흔들리는 해, 감정 소모 주의)' : '') + '</li>';
+        }).join('') + '</ul>' +
+        y27Share('내 특수살은 ' + (y.sal.filter(s => s.on).map(s => s.name).join('·') || '없음'), y.sal.map(s => s.name + ' ' + (s.on ? '○' : '×')).join(' · '));
+    }
+
+    if (item.kind === 'calendar') {
+      const pickLines = mo => y.months.filter(m => mo.indexOf(m.no) >= 0);
+      body =
+        '<div class="rp-title"><span>3개 트랙 한눈에</span></div>' +
+        y27Track('재물 (편재·정재)', y.focus.money.months, 'money') +
+        y27Track('이직·직장 (정관·편관)', y.focus.job.months, 'job') +
+        y27Track('1인 사업·부업 (식신·상관)', y.focus.biz.months, 'biz') +
+        '<div class="rp-title"><span>2027년 12개월 월운표</span></div>' + y27Table(y) +
+        '<div class="rp-title"><span>재물 트랙 — 언제 돈을 움직일까</span></div>' +
+        (y.focus.money.months.length ? y27Lines(pickLines(y.focus.money.months)) : '<div class="rp-caution">월간 재성의 달이 없습니다. 정산·계약은 조심할 달을 피해 잡으세요.</div>') +
+        '<div class="rp-title"><span>이직 트랙 — 언제 움직일까</span></div>' +
+        (y.focus.job.months.length ? y27Lines(pickLines(y.focus.job.months)) : '<div class="rp-caution">월간 관성의 달이 없습니다. 이직은 준비를 길게, 지원은 다음 해로 미루는 편이 낫습니다.</div>') +
+        '<div class="rp-title"><span>1인 사업·부업 트랙</span></div>' +
+        (y.focus.biz.months.length ? y27Lines(pickLines(y.focus.biz.months)) : '<div class="rp-caution">식상의 달이 약합니다. 새 일을 벌이기보다 손에 익은 일을 키우세요.</div>') +
+        '<div class="rp-title"><span>2027년 주의할 달</span></div>' + y27Picks({ good: [], warn: y.warn }) +
+        y27Share('재물 ' + (y.focus.money.months.join('·') || '–') + ' / 이직 ' + (y.focus.job.months.join('·') || '–'), '2027 정미년 · ' + dm.ko + ' ' + dm.elem + ' 일간 기준');
+    }
+
+    if (item.kind === 'reunion') {
+      body =
+        '<div class="rp-title"><span>2027 인연의 문</span></div>' +
+        '<div class="y27-samjae ' + (y.reunion.yearOpen ? 'on' : 'off') + '"><b>' + esc(y.reunion.head) + '</b><p>' +
+        '내 일지 <b>' + chart.pillars.day.hanja + '(' + chart.pillars.day.animal + ')</b>과 2027년 未토는 ' + (y.reunion.yearOpen ? '육합' : y.reunion.yearRough ? '충' : '특별한 합·충이 없는') + ' 관계입니다. ' +
+        (y.reunion.yearOpen ? '합은 묶이는 자리라, 끊긴 인연이 다시 이어지기 좋은 해입니다.' : y.reunion.yearRough ? '충은 부딪히는 자리라, 미련이 정리되고 새 사람이 들어오는 해입니다.' : '그래서 2027년의 재회는 해의 기운보다 달의 타이밍이 결정합니다.') + '</p></div>' +
+        '<div class="rp-title"><span>속마음 읽기</span></div>' +
+        '<p class="rp-lead">' + esc(heart.reflect) + '</p>' +
+        '<p class="rp-para"><strong>' + esc(groupKey) + ' 구조</strong> — ' + esc(heart.via[groupKey] || '') + '</p>' +
+        '<div class="rp-title"><span>연락이 올 달 · 마찰 달</span></div>' +
+        '<div class="y27-track open"><span>인연의 문이 열리는 달</span><div class="y27-chips">' + (y.reunion.open.length ? y.reunion.open.map(mo => '<i>' + mo + '월</i>').join('') : '<i class="none">해당 달 없음</i>') + '</div></div>' +
+        '<div class="y27-track bad"><span>부딪히기 쉬운 달</span><div class="y27-chips">' + (y.reunion.rough.length ? y.reunion.rough.map(mo => '<i>' + mo + '월</i>').join('') : '<i class="none">해당 달 없음</i>') + '</div></div>' +
+        (y.reunion.open.length ? y27Lines(y.months.filter(m => y.reunion.open.indexOf(m.no) >= 0)) : '') +
+        '<div class="rp-title"><span>첫 연락 문장</span></div>' +
+        '<ul class="rp-list advice"><li>“요즘 어떻게 지내? 문득 생각나서.” — 용건 없이 안부만. 답이 오면 두 번째 대화로 넘어가세요.</li>' +
+        '<li>“전에 네가 좋아하던 ○○, 아직 하니?” — 그 사람의 취향을 기억한 한 문장이 가장 안전합니다.</li>' +
+        '<li>“급한 건 아니야. 시간 될 때 답 줘.” — 문을 열어 두는 문장이 재회 확률을 높입니다.</li></ul>' +
+        '<div class="rp-caution">밤 11시 이후 연락과 긴 문자는 재회 확률을 낮춥니다. 낮의 짧은 안부가 길을 엽니다.</div>' +
+        y27Share(y.reunion.head, '내 일지 ' + chart.pillars.day.hanja + ' · 2027년에 문이 열리는 달 ' + (y.reunion.open.join('·') || '없음'));
+    }
+
+    return head + body +
+      '<div class="rp-actions"><button class="btn-ghost" id="y27Close">닫기</button><button class="btn-ghost" id="y27Home">2027 전체 보기</button><button class="btn-gold" id="y27Save">보관함 저장</button></div>' +
+      '<div class="rp-note">' + esc(D.REPORT.solarNote) + ' · 2027년 월운은 24절기 절입 기준입니다.<br />' + esc(D.REPORT.mockNote) + ' ' + esc(D.BRAND.footer) + '</div>';
+  }
+
   /* ---------------- 시작 ---------------- */
   function init() {
     const B = D.BRAND;
@@ -768,7 +1073,7 @@
     $('#footLine').textContent = B.tagline + ' — ' + B.intro;
     $('#footNote').textContent = '© ' + new Date().getFullYear() + ' ' + B.name + ' ' + B.version + ' · ' + B.footer;
 
-    renderHero(); renderTopics(); renderHomeChips(); renderRanking(); renderMasters(); renderTodayWidget(); renderFreeGrid();
+    renderHero(); renderTopics(); renderY2027(); renderHomeChips(); renderRanking(); renderMasters(); renderTodayWidget(); renderFreeGrid();
     renderAskChars(); bindMisc();
     if (E.selfTest) {
       const bad = E.selfTest().filter(l => l.startsWith('FAIL'));

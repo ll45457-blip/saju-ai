@@ -202,29 +202,84 @@ window.SAJU_DATA = (function () {
     { id: 'money', label: '재물', icon: '💰', cat: 'money', desc: '재물 그릇과 돈벌이', question: '올해 제 재물 흐름이 궁금해요' },
     { id: 'job', label: '직업', icon: '💼', cat: 'work', desc: '적성과 이직의 때', question: '지금 이직하는 게 맞을까요' },
     { id: 'exam', label: '시험', icon: '🎓', cat: 'exam', desc: '합격운과 공부법', question: '올해 시험 합격운이 있을까요' },
-    { id: 'newyear', label: '신년', icon: '🎍', cat: 'fate', desc: '한 해의 큰 흐름', question: '내년 한 해 운세를 봐 주세요' },
+    { id: 'newyear', label: '신년', icon: '🎍', cat: 'fate', desc: '2027 정미년 12개월', question: '2027년 한 해 운세를 봐 주세요' },
     { id: 'today', label: '오늘운세', icon: '☀️', cat: 'today', desc: '오늘의 일진', question: '' },
-    { id: 'free', label: '무료', icon: '🎁', cat: 'free', desc: '무료 사주 6종', question: '' }
+    { id: 'free', label: '무료', icon: '🎁', cat: 'free', desc: '무료 사주 8종', question: '' }
   ];
 
-  /* ---------------- TOP 5 ---------------- */
+  /* ---------------- TOP 5 (2027 시즌) ---------------- */
   const RANKING = [
-    { q: '지금 그 사람, 나를 어떻게 생각할까', cat: 'heart', charId: 'yeonhwa', count: 4281, trend: '▲' },
-    { q: '2026년 내 재물 그릇은 얼마나 될까', cat: 'money', charId: 'hwanggeum', count: 3904, trend: '▲' },
-    { q: '이직, 지금 움직여도 되는 걸까', cat: 'work', charId: 'baekho', count: 3512, trend: 'new' },
-    { q: '헤어진 사람에게 연락이 올까', cat: 'reunion', charId: 'yeonhwa', count: 3180, trend: '▲' },
-    { q: '올해 나에게 오는 큰 기회는', cat: 'fate', charId: 'cheongwol', count: 2845, trend: '-' }
+    { q: '2027 정미년, 내게 좋은 달은 언제일까', cat: 'fate', charId: 'geumbangul', count: 5210, trend: '▲', y: 'newyear' },
+    { q: '2027년 삼재, 나는 해당될까', cat: 'fate', charId: 'cheongwol', count: 4382, trend: 'new', y: 'samjae' },
+    { q: '내 사주 돈 새는 구멍은 어디일까', cat: 'money', charId: 'hwanggeum', count: 3960, trend: '▲', y: 'moneyleak' },
+    { q: '나는 도화살·홍염살일까', cat: 'love', charId: 'yeonhwa', count: 3411, trend: '▲', y: 'sal' },
+    { q: '2027년 이직, 지금 준비해도 될까', cat: 'work', charId: 'baekho', count: 2955, trend: '-', y: 'calendar' }
   ];
 
-  /* ---------------- 무료 사주 6종 ---------------- */
+  /* ---------------- 무료 사주 8종 ---------------- */
   const FREE_SAJU = [
-    { key: 'fate', label: '인연', hanja: '緣', title: '타고난 인연의 결', desc: '배우자궁으로 보는 인연의 모양', cat: 'love', charId: 'yeonhwa' },
-    { key: 'health', label: '건강', hanja: '健', title: '체질과 몸의 리듬', desc: '오행 균형으로 보는 약한 곳', cat: 'health', charId: 'cheongwol' },
-    { key: 'fire', label: '파이어족', hanja: '自', title: '돈에서 자유로워지는 때', desc: '재성과 식상으로 보는 독립 시기', cat: 'money', charId: 'hwanggeum' },
-    { key: 'money', label: '재물', hanja: '財', title: '재물 그릇과 돈의 습관', desc: '벌이와 관리의 균형', cat: 'money', charId: 'hwanggeum' },
-    { key: 'pattern', label: '연애패턴', hanja: '戀', title: '반복되는 사랑의 모양', desc: '일지와 십신으로 보는 연애 습관', cat: 'love', charId: 'yeonhwa' },
-    { key: 'job', label: '직업적성', hanja: '職', title: '타고난 재능과 직업', desc: '관성·식상으로 보는 일의 그릇', cat: 'work', charId: 'baekho' }
+    { key: 'fate', label: '인연', icon: '💞', hanja: '緣', title: '타고난 인연의 결', desc: '배우자궁으로 보는 인연의 모양', cat: 'love', charId: 'yeonhwa' },
+    { key: 'health', label: '건강', icon: '🩺', hanja: '健', title: '체질과 몸의 리듬', desc: '오행 균형으로 보는 약한 곳', cat: 'health', charId: 'cheongwol' },
+    { key: 'fire', label: '파이어족', icon: '🔥', hanja: '自', title: '돈에서 자유로워지는 때', desc: '재성과 식상으로 보는 독립 시기', cat: 'money', charId: 'hwanggeum' },
+    { key: 'money', label: '재물', icon: '💰', hanja: '財', title: '재물 그릇과 돈의 습관', desc: '벌이와 관리의 균형', cat: 'money', charId: 'hwanggeum' },
+    { key: 'leak', label: '돈 새는 구멍', icon: '💸', hanja: '泄', title: '돈이 새는 자리와 귀인 띠', desc: '재성·일간 기준 + 천을귀인', cat: 'money', charId: 'hwanggeum', y: 'moneyleak' },
+    { key: 'sal', label: '특수살', icon: '🧿', hanja: '殺', title: '도화살·홍염살·역마살 판정', desc: '지지로 보는 내 매력 살', cat: 'love', charId: 'yeonhwa', y: 'sal' },
+    { key: 'pattern', label: '연애패턴', icon: '💘', hanja: '戀', title: '반복되는 사랑의 모양', desc: '일지와 십신으로 보는 연애 습관', cat: 'love', charId: 'yeonhwa' },
+    { key: 'job', label: '직업적성', icon: '💼', hanja: '職', title: '타고난 재능과 직업', desc: '관성·식상으로 보는 일의 그릇', cat: 'work', charId: 'baekho' }
   ];
+
+  /* ---------------- 2027 정미년 특별 리포트 ---------------- */
+  const Y2027 = {
+    year: 2027, hanja: '丁未', ko: '정미', animal: '양',
+    kicker: '2027 SPECIAL',
+    title: '2027 정미년 특별관',
+    sub: '붉은 양의 해, 내 사주로 미리 계산한 12개월',
+    lead: '정미년의 천간 丁(화)과 지지 未(토)를 내 사주팔자와 직접 맞물려 계산합니다. 좋은 달과 조심할 달, 삼재와 충살, 돈이 새는 자리까지 — 생년월일만 있으면 지금 바로 나옵니다.',
+    items: [
+      {
+        id: 'newyear', kind: 'newyear', icon: '🎍', badge: '2027 대표', charId: 'geumbangul',
+        title: '2027 정미년 12개월 신년운세',
+        sub: '좋은 달 · 조심할 달 + 방어 리포트',
+        price: 19900, list: 39000,
+        bullets: ['2027년 1월~12월 월운표 (십성·12운성·충합형)', '내게 좋은 달 3 · 조심할 달 3 자동 판정', '조심할 달마다 실전 방어 문장']
+      },
+      {
+        id: 'samjae', kind: 'samjae', icon: '🛡️', badge: '리스크', charId: 'cheongwol',
+        title: '2027 삼재 · 충살 방어',
+        sub: '내 지지와 未토의 충·형·파 판정',
+        price: 12900, list: 29000,
+        bullets: ['삼재 해당 여부 · 몇 년차인지', '년지·월지·일지·시지별 충·형·파 해 분석', '삼재 3원칙과 조심할 달']
+      },
+      {
+        id: 'moneyleak', kind: 'moneyleak', icon: '💸', badge: '무료 바이럴', charId: 'hwanggeum',
+        title: '내 사주 돈 새는 구멍 & 귀인 띠',
+        sub: '일간·재성 기준 · 천을귀인 띠',
+        price: 0, list: 3900,
+        bullets: ['새는 자리 1~3순위와 막는 법', '내 천을귀인 띠 · 피할 띠', '2027년 돈이 들어오는 달']
+      },
+      {
+        id: 'sal', kind: 'sal', icon: '🧿', badge: 'MZ 인기', charId: 'yeonhwa',
+        title: '내 사주 특수살 (도화·홍염·역마)',
+        sub: '사주 지지로 보는 실제 유무 판정',
+        price: 0, list: 4900,
+        bullets: ['도화살 · 홍염살 · 역마살 있음/없음', '몇 번째 지지에 앉았는지', '매력 살 활용법과 주의점']
+      },
+      {
+        id: 'calendar', kind: 'calendar', icon: '📅', badge: '2030 직장인', charId: 'baekho',
+        title: '2027 재물 · 이직 · 1인 사업 타이밍',
+        sub: '3개 트랙 월별 캘린더',
+        price: 14900, list: 29000,
+        bullets: ['재물 문 열리는 달', '이직·승진에 유리한 달', '1인 사업·부업을 시작할 달']
+      },
+      {
+        id: 'reunion', kind: 'reunion', icon: '💌', badge: '소액 입문', charId: 'yeonhwa',
+        title: '그 사람 속마음 & 2027 재회 가능성',
+        sub: '인연의 문이 열리는 달까지',
+        price: 4900, list: 12900,
+        bullets: ['일지 합·충으로 보는 2027 인연', '연락이 올 달 · 마찰이 생길 달', '첫 연락의 타이밍과 문장']
+      }
+    ]
+  };
 
   /* ---------------- 추천 질문 ---------------- */
   const CHIPS = {
@@ -459,5 +514,5 @@ window.SAJU_DATA = (function () {
     savedToast: '보관함에 저장했어요'
   };
 
-  return { BRAND, CHARACTERS, TOPICS, RANKING, FREE_SAJU, CHIPS, COPY, REPORT };
+  return { BRAND, CHARACTERS, TOPICS, RANKING, FREE_SAJU, Y2027, CHIPS, COPY, REPORT };
 })();
