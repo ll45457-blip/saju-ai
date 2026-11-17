@@ -1185,11 +1185,11 @@ body::before {
   display: grid; grid-template-columns: 54px repeat(4, 1fr); gap: 4px; align-items: stretch;
 }
 .cp-head .cp-lbl-c { font-size: 8.5px; color: var(--ink-3); text-align: center; align-self: center; }
-.cp-who { display: flex; flex-direction: column; justify-content: center; gap: 1px; }
+.cp-who { display: flex; flex-direction: column; justify-content: center; gap: 1px; min-width: 0; }
 .cp-who b { font-family: var(--serif); font-size: 11.5px; color: #EFE7D6; }
 .cp-who span { font-size: 7.5px; color: var(--ink-3); line-height: 1.35; }
 .cp-cell {
-  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0;
   padding: 6px 2px 5px; border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, .07); background: rgba(255, 255, 255, .025);
 }
@@ -1197,7 +1197,7 @@ body::before {
 .cp-cell .cp-lbl { font-size: 7.5px; color: var(--ink-3); }
 .cp-cell .cp-gz { display: flex; gap: 1px; font-family: var(--serif); }
 .cp-cell .cp-gz b { font-size: 16px; line-height: 1.2; font-weight: 700; }
-.cp-cell i { font-style: normal; font-size: 7px; color: var(--ink-3); }
+.cp-cell i { font-style: normal; font-size: 7px; color: var(--ink-3); max-width: 100%; overflow: hidden; white-space: nowrap; }
 .cp-cell.is-empty .cp-gz b { color: #57534C; }
 
 .cp-chem { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }

@@ -1375,7 +1375,7 @@
     return '<div class="cp-cell' + (isDay ? ' is-day' : '') + '">' +
       '<span class="cp-lbl">' + label + '</span>' +
       '<div class="cp-gz"><b class="' + ELCLS[p.stemElem] + '">' + p.stemName + '</b><b class="' + ELCLS[p.branchElem] + '">' + p.branchName + '</b></div>' +
-      '<i>' + p.ko + ' · ' + p.animal + '</i></div>';
+      '<i>' + p.ko + '</i></div>';
   }
 
   function cpRow(chart, who) {
@@ -1616,7 +1616,7 @@
       g.picks[key].map((d, i) => glPickCard(d, key, c, i)).join('');
 
     const body =
-      purposeBlock('contract', '① 계약 · 매매', '도장을 찍는 날은 서류의 운이 아니라 사람의 운을 봅니다. 아래 날들은 내 일지와 맺어지고, 정재·천을이 함께 오는 날입니다.') +
+      purposeBlock('contract', '① 계약 · 매매', '도장을 찍는 날은 서류의 운이 아니라 사람의 운을 봅니다. 아래 날들은 내 일지와 맺어지거나 천을귀인·정재가 함께 오는 날입니다.') +
       purposeBlock('job', '② 이직 · 면접', '면접과 지원은 정관(正官)이 서는 날에 이름이 오릅니다. 상관이 관을 보는 날은 말이 앞서니 비켜 두세요.') +
       purposeBlock('move', '③ 이사 · 개업', '이사는 내 자리가 옮겨지는 일이라 일지와 부딪히는 날을 가장 조심합니다. 문을 여는 날은 식신·재성이 함께 오는 날이 좋습니다.') +
       '<div class="rp-title"><span>2027년에 피할 날</span></div>' +
