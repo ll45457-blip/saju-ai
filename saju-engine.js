@@ -922,8 +922,12 @@
         ? '혼자 밀면 쉽게 지치지만 사람과 환경이 받쳐 주면 두세 배의 결과가 나옵니다. 이 사주의 운은 늘 \'누구와 함께하느냐\'에서 갈립니다.'
         : '크게 치솟지도 가라앉지도 않아 오래 버티는 힘이 있습니다. 대신 스스로 강한 자극을 걸어야 판이 커지는 사주입니다.';
 
+    /* 받쳐 주는 자리가 하나도 없을 수 있다 — 빈 자리를 문장으로 메운다 */
+    const supLine = sup.length
+      ? '여덟 글자에서 나를 받쳐 주는 쪽(비겁·인성)은 ' + top(sup) + ', 나를 쓰는 쪽은 ' + top(drain) + '입니다.'
+      : '여덟 글자에 나를 받쳐 주는 자리(비겁·인성)가 하나도 없고, 나를 쓰는 쪽은 ' + top(drain) + '입니다.';
     const nature = [
-      '일간 ' + dm.hanja + '(' + dm.ko + ') ' + dm.elem + ' — ' + ELEM_DEEP[dm.elem].name + '의 기운으로 태어났습니다. 여덟 글자에서 나를 받쳐 주는 쪽은 ' + top(sup) + ', 나를 쓰는 쪽은 ' + top(drain) + '입니다. 이 배치로 기운은 ' + chart.strengthKo + '(' + chart.strengthRatio + '%)입니다. ' + strengthBody +
+      '일간 ' + dm.hanja + '(' + dm.ko + ') ' + dm.elem + ' — ' + ELEM_DEEP[dm.elem].name + '의 기운으로 태어났습니다. ' + supLine + ' 이 배치로 기운은 ' + chart.strengthKo + '(' + chart.strengthRatio + '%)입니다. ' + strengthBody +
       ' 월지 ' + chart.pillars.month.branchName + '(' + chart.pillars.month.branchKo + ')의 자리는 ' + chart.stages.month + ' — ' + STAGE_DEEP[chart.stages.month] + '.',
       (function () {
         const yy = chart.yinyang;
@@ -987,7 +991,7 @@
     else if (g.비겁 >= 2) style = { key: '자립·영업형', text: '내 힘으로 판을 여는 사주입니다. 영업·중개·프리랜서·동업처럼 내 이름이 걸린 일에서 강합니다. 다만 혼자 결정하는 습관이 커지면 협업이 어려워지니, 성과 배분을 처음에 글로 정해 두세요.' };
     else style = { key: '균형·운영형', text: '한쪽으로 치우치지 않아 어떤 판에도 무리 없이 적응하는 사주입니다. 다만 강한 무기가 하나는 있어야 대우가 따라오니, 가장 잘하는 일 하나를 골라 3년을 파세요.' };
     const workP1 = '이 사주는 ' + style.key + '에 가깝습니다 — 관성 ' + g.관성 + ' · 식상 ' + g.식상 + ' · 재성 ' + g.재성 + ' · 인성 ' + g.인성 + ' · 비겁 ' + g.비겁 + '의 배치가 그렇게 말합니다. ' + style.text;
-    const workP2 = '사회로 나가는 자리인 월지 ' + chart.pillars.month.branchName + '의 십성은 ' + chart.gods.monthBranch + ' — ' + josa(GOD_SIT[chart.gods.monthBranch].sit, '으로', '로') + ', 12운성으로는 ' + josa(chart.stages.month, '이라', '라') + ' ' + STAGE_DEEP[chart.stages.month] + '. 일지 ' + chart.pillars.day.branchName + '의 ' + josa(chart.gods.dayBranch, '은', '는') + ' 내가 일을 대하는 방식입니다 — ' + josa(GOD_SIT[chart.gods.dayBranch].scene, '을', '를') + ' 자연스럽게 여긴다는 뜻이고, 반대로 ' + GOD_SIT[chart.gods.dayBranch].risk + '이 반복되면 일이 두 배로 늘어납니다.';
+    const workP2 = '사회로 나가는 자리인 월지 ' + chart.pillars.month.branchName + '의 십성은 ' + chart.gods.monthBranch + ' — ' + josa(GOD_SIT[chart.gods.monthBranch].sit, '으로', '로') + ', 12운성으로는 ' + josa(chart.stages.month, '이라', '라') + ' ' + STAGE_DEEP[chart.stages.month] + '. 일지 ' + chart.pillars.day.branchName + '의 ' + josa(chart.gods.dayBranch, '은', '는') + ' 내가 일을 대하는 방식입니다 — ' + josa(GOD_SIT[chart.gods.dayBranch].scene, '을', '를') + ' 자연스럽게 여긴다는 뜻이고, 반대로 ' + josa(GOD_SIT[chart.gods.dayBranch].risk, '이', '가') + ' 반복되면 일이 두 배로 늘어납니다.';
     const workP3 = chart.strength === 'weak'
       ? '지금 당장의 창업은 권하지 않습니다. ' + dm.hanja + ' 일간에 ' + chart.strengthKo + ' ' + chart.strengthRatio + '%인 이 사주는 혼자 버티는 힘이 약해, 준비 없이 나가면 몸과 자금이 동시에 빠집니다. 대신 재직 중에 부업으로 6개월 검증하세요. 기준은 하나면 충분합니다 — 본업 월급의 30%를 부업으로 세 번 연속 벌어 보는 것. 그 기준을 넘기면 그때 나가도 늦지 않습니다.'
       : '결정권이 있는 자리로 옮기는 것이 맞습니다. ' + dm.hanja + ' 일간에 ' + chart.strengthKo + ' ' + chart.strengthRatio + '%인 이 사주는 남의 지시만 받는 자리에 오래 있으면 기운이 새고, 책임을 맡으면 오히려 단단해집니다. 다만 사람을 크게 쓰는 확장은 한 박자 늦추세요 — 매출보다 인건비가 먼저 늘어나는 순간이 가장 위험합니다.';

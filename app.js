@@ -2040,7 +2040,7 @@
     if (item.kind === 'samjae') {
       body =
         '<div class="rp-title"><span>삼재 판정</span></div>' +
-        '<div class="y27-samjae ' + (y.samjae.is ? 'on' : 'off') + '"><b>' + esc(y.samjae.head) + '</b><p>' + esc(y.samjae.body + ' ' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간은 ' + chart.strengthKo + ' ' + chart.strengthRatio + '%에 용신이 ' + chart.yongsin.elem + '이라, 삼재의 작용이 ' + (chart.strength === 'weak' ? '몸과 체력 쪽으로 먼저 나타납니다.' : chart.strength === 'strong' ? '사람과 자리다툼 쪽으로 먼저 나타납니다.' : '생활의 리듬이 흔들리는 쪽으로 나타납니다.')) + '</p>' +
+        '<div class="y27-samjae ' + (y.samjae.is ? 'on' : 'off') + '"><b>' + esc(y.samjae.head) + '</b><p>' + esc(y.samjae.body + ' ' + dm.hanja + '(' + dm.ko + dm.elem + ') 일간은 ' + chart.strengthKo + ' ' + chart.strengthRatio + '%에 용신이 ' + E.josa(chart.yongsin.elem, '이라', '라') + ', 삼재의 작용이 ' + (chart.strength === 'weak' ? '몸과 체력 쪽으로 먼저 나타납니다.' : chart.strength === 'strong' ? '사람과 자리다툼 쪽으로 먼저 나타납니다.' : '생활의 리듬이 흔들리는 쪽으로 나타납니다.')) + '</p>' +
         '<ul class="rp-list advice">' + RX.y27(f, 'samjae', y).todo.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul></div>' +
         '<div class="rp-title"><span>내 지지 ↔ 未 분석</span></div>' + y27YearRel(y) +
         '<div class="rp-title"><span>2027년 충·형이 오는 달</span></div>' + y27RiskMonths(y) +
