@@ -904,8 +904,9 @@
       '<p class="rp-para">시기를 정할 때는 감이 아니라 달력으로 정하세요. 2027 정미년의 좋은 달과 조심할 달은 아래 2027 리포트에서 달 단위로 짚어 드립니다.</p>';
 
     const adviceHTML = '<ul class="rp-list advice">' +
-      catCopy.advice.map(a => '<li>' + esc(a) + '</li>').join('') +
-      dx.money.tips.slice(0, 2).map(a => '<li>' + esc(a) + '</li>').join('') +
+      catCopy.advice.concat(dx.money.tips.slice(0, 2))
+        .filter((v, i, arr) => v && arr.indexOf(v) === i)
+        .map(a => '<li>' + esc(a) + '</li>').join('') +
       '</ul>';
 
     const leak = E.moneyLeaks(chart)[0];
