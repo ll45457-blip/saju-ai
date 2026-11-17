@@ -1152,7 +1152,7 @@
         '<p class="rp-para">이 사주는 <b>' + dm2.elem + ' 일간 · ' + chart.strengthKo + '</b> 구조로, 재물은 ' +
         (chart.godGroups.재성 >= 2 ? '재성 ' + chart.godGroups.재성 + '개로 직접 들어오는 길이 있습니다. 벌이의 그릇은 충분하니 지키는 장치가 관건입니다.' : chart.godGroups.재성 === 1 ? '재성 1개로 길이 하나입니다. 그 하나를 넓히는 데 집중해야 합니다.' : '재성이 비어 있어 직접 벌이보다 기술·콘텐츠(식상)로 우회해 들어옵니다.') +
         '</p>' +
-        '<p class="rp-para">' + esc(E.deepRead(chart).money.paras[1]) + '</p>' +
+        '<ul class="rp-list advice">' + E.deepRead(chart).money.tips.slice(0, 2).map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>' +
         '<div class="rp-title"><span>귀인 띠</span></div>' +
         '<div class="y27-guin">' + y.guin.list.map(g => '<div class="y27-guin-item ' + (g.here ? 'on' : '') + '"><b>' + g.animal + '</b><span>' + g.char + '</span><em>' + (g.here ? '내 사주에 있음 — 가장 가까운 귀인' : '이 띠의 사람·달이 도움') + '</em></div>').join('') + '</div>' +
         '<p class="rp-para">' + esc(y.guin.note) + ' 2027년에 부딪히기 쉬운 띠는 <b>' + esc(y.guin.avoidAnimal) + '(' + y.guin.avoidChar + ')</b>입니다. 큰 결정을 함께할 때는 한 번 더 확인하세요.</p>' +
