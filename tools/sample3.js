@@ -1,0 +1,13 @@
+var E = window.SajuEngine, W = window.WOLHA_APP, D = window.SAJU_DATA;
+var c = E.buildChart({ name: '김민수', gender: 'male', year: 1995, month: 8, day: 15, hour: 12, minute: 0 });
+var html = W.reportHTML({ chart: c, char: W.charById('hwanggeum'), question: '올해 시험 합격운이 있을까요', category: 'exam', typeLabel: '질문즉답' });
+var bad = ['하루 공부의 시작 시간을 고정', '들어온 돈의 10%를', '오답을 따로 모아', '잠을 줄이지 마세요. 이 구조는', '확신을 얻으려고'];
+bad.forEach(function (b) { console.log((html.indexOf(b) >= 0 ? 'FOUND ' : 'ok    ') + b); });
+var i = html.indexOf('pay-card');
+console.log('--- pay card ---');
+console.log(html.slice(i - 40, i + 1100));
+console.log('--- pdf bars ---');
+console.log('top/bottom pdf buttons: ' + (html.match(/pdf-btn/g) || []).length + ' / ' + (html.match(/data-pdf/g) || []).length);
+console.log('--- section 16 ---');
+var j = html.indexOf('16. 지금 할 일');
+console.log(html.slice(j, j + 900));
