@@ -541,7 +541,7 @@ window.SAJU_RX = (function () {
           '두 사람은 서운함을 오래 기억하는 쪽이라, 그날의 말 한마디가 다음 계절까지 갑니다.'
         ], 'srw' + fa.dayG + fb.dayG),
       pickv([
-        '한 달에 한 번은 ' + fa.yong + '·' + fb.yong + ' 기운이 있는 자리(' + YONG[fa.yong].place + ')에서 두 사람만의 시간을 만드세요. 이 두 사주는 익숙함보다 새로운 자리에서 다시 붙습니다.',
+        '한 달에 한 번은 ' + (fa.yong === fb.yong ? fa.yong : fa.yong + '·' + fb.yong) + ' 기운이 있는 자리(' + YONG[fa.yong].place + ')에서 두 사람만의 시간을 만드세요. 이 두 사주는 익숙함보다 새로운 자리에서 다시 붙습니다.',
         '한 달에 한 번은 ' + names.a + ' 님의 ' + fa.yong + ' 자리(' + YONG[fa.yong].place + ')와 ' + names.b + ' 님의 ' + fb.yong + ' 자리(' + YONG[fb.yong].place + ') 중 한 곳을 골라 두 사람만의 시간을 만드세요. 고르는 사람이 그날의 분위기를 잡게 됩니다.',
         '한 달에 한 번은 ' + E.josa(YONG[fa.yong].time, '이나', '나') + ' ' + YONG[fb.yong].time + '처럼 두 사람의 기운이 살아나는 시간에 만나세요. 같은 장소라도 그 시간대에 앉으면 이 사주는 훨씬 부드러워집니다.',
         '한 달에 한 번은 두 사람이 각자 좋아하는 것을 하나씩 준비해 오세요 — ' + names.a + ' 님은 ' + fa.yong + ' 기운(' + YONG[fa.yong].item + '), ' + names.b + ' 님은 ' + fb.yong + ' 기운(' + YONG[fb.yong].item + '). 이 두 사주는 나누는 자리에서 다시 붙습니다.'

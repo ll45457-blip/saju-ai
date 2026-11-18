@@ -286,7 +286,10 @@
     let fillText;
     if (fill.bHasA >= 20) fillText = '상대의 사주에 ' + aOwn + '에게 필요한 ' + fill.aNeed + '(' + { 목: '木', 화: '火', 토: '土', 금: '金', 수: '水' }[fill.aNeed] + ') 기운이 넉넉히 있습니다. ' + aSubj + ' 혼자 할 때 막히던 일이 이 사람과 함께하면 풀리는 이유가 여기에 있습니다.';
     else if (fill.bHasA >= 12) fillText = '상대의 사주에도 ' + aOwn + '에게 필요한 ' + fill.aNeed + ' 기운이 조금 있습니다. 결정적인 도움은 아니지만, ' + aSubj + ' 지칠 때 곁에서 숨을 고르게 해 주는 정도는 됩니다.';
-    else fillText = '상대의 사주에 ' + aOwn + '에게 필요한 ' + fill.aNeed + ' 기운은 많지 않습니다. ' + aOwn + '에게 필요한 기운은 이 사람이 아니라 생활에서 채워야 합니다 — ' + (fill.aNeed === '목' ? '아침 산책과 새로 시작하는 취미' : fill.aNeed === '화' ? '햇빛을 쬐는 시간과 사람을 만나는 자리' : fill.aNeed === '토' ? '규칙적인 끼니와 익숙한 공간' : fill.aNeed === '금' ? '정리와 마감, 그리고 단호한 거절' : '물가를 걷는 시간과 충분한 잠') + '이 두 사람 사이에서 ' + (A.input.name ? A.input.name + ' 님을' : '나를') + ' 지켜 줍니다.';
+    else {
+      const fillAct = (fill.aNeed === '목' ? '아침 산책과 새로 시작하는 취미' : fill.aNeed === '화' ? '햇빛을 쬐는 시간과 사람을 만나는 자리' : fill.aNeed === '토' ? '규칙적인 끼니와 익숙한 공간' : fill.aNeed === '금' ? '정리와 마감, 그리고 단호한 거절' : '물가를 걷는 시간과 충분한 잠');
+      fillText = '상대의 사주에 ' + aOwn + '에게 필요한 ' + fill.aNeed + ' 기운은 많지 않습니다. ' + aOwn + '에게 필요한 기운은 이 사람이 아니라 생활에서 채워야 합니다 — ' + E.josa(fillAct, '이', '가') + ' 두 사람 사이에서 ' + (A.input.name ? A.input.name + ' 님을' : '나를') + ' 지켜 줍니다.';
+    }
     if (fill.aHasB >= 20) fillText += ' 반대로 ' + bOwn + '도 ' + aOwn + '에게서 ' + fill.bNeed + ' 기운을 받고 있습니다. 서로에게 필요한 것을 주고받는, 드문 짝입니다.';
     else if (fill.aHasB < 12) fillText += ' ' + bOwn + '에게 필요한 ' + fill.bNeed + ' 기운도 ' + aOwn + '에게서 크게 나오지는 않습니다. 그래서 두 사람 모두 상대에게 모든 걸 기대하지 않는 편이 오래갑니다.';
     fillText += ' ' + (fill.aNeed === fill.bNeed
@@ -297,7 +300,9 @@
     const jiElA = aJi.branchElem, jiElB = bJi.branchElem;
     const elRel = E.relation(E.ELEMENTS.indexOf(aEl), E.ELEMENTS.indexOf(bEl));
     const paceKey = aEl === bEl ? 'same' : (elRel === '식상' || elRel === '인성' ? 'saeng' : (elRel === '비겁' ? 'bi' : 'geuk'));
-    const ganPaceText = '생활로 들어가면 ' + aOwn + '은 ' + ELEM_CHAR[aEl] + '이고 ' + bOwn + '은 ' + ELEM_CHAR[bEl] + '입니다. 두 사람은 ' + ELEM_PACE[paceKey] + '.';
+    const ganPaceText = aEl === bEl
+      ? '생활로 들어가면 두 사람 모두 ' + ELEM_CHAR[aEl] + '입니다. 두 사람은 ' + ELEM_PACE.same + '.'
+      : '생활로 들어가면 ' + aOwn + '은 ' + ELEM_CHAR[aEl] + '이고 ' + bOwn + '은 ' + ELEM_CHAR[bEl] + '입니다. 두 사람은 ' + ELEM_PACE[paceKey] + '.';
     const bedKey = jiElA === jiElB ? 'same' : (E.relation(E.ELEMENTS.indexOf(jiElA), E.ELEMENTS.indexOf(jiElB)) === '식상' ? 'saeng' : 'geuk');
     const bedElementText = bedKey === 'same'
       ? '두 사람의 일지가 모두 ' + jiElA + '의 결이라 ' + BED_ELEM[jiElA]
@@ -340,7 +345,14 @@
           : hit.indexOf('형') >= 0
             ? ' 해의 지지 ' + brJosa(x.yb, '이', '가') + ' 두 사람 중 한 사람을 누르니, 이 해에는 가족 문제를 먼저 정리해 두세요.'
             : ' 해의 지지 ' + brJosa(x.yb, '은', '는') + ' 두 사람의 자리를 건드리지 않아, 이 해는 두 사람의 의지로 정해집니다.';
-      const tip = { 목: '새로 시작하는 자리 — 새 집, 새 지역처럼 처음 여는 자리에서 이야기가 나옵니다.', 화: '사람이 모이는 자리 — 양가가 만나는 자리에서 결론이 나기 쉬운 해입니다.', 토: '자리를 잡는 해 — 서류와 살림처럼 남는 것을 정리할 때입니다.', 금: '마감하는 해 — 미뤄 둔 정리를 이 해에 끝내면 다음이 가벼워집니다.', 수: '마음을 가라앉히는 해 — 말보다 시간을 두는 쪽이 오래갑니다.' }[el];
+      const tipBank = {
+        목: ['새로 시작하는 자리 — 새 집, 새 지역처럼 처음 여는 자리에서 이야기가 나옵니다.', '문을 여는 해 — 새로 시작하는 자리에서 말을 꺼내면 흐름이 따라옵니다.'],
+        화: ['사람이 모이는 자리 — 양가가 만나는 자리에서 결론이 나기 쉬운 해입니다.', '사람의 해 — 두 사람을 아는 사람이 늘어나는 자리에서 이야기가 무르익습니다.'],
+        토: ['자리를 잡는 해 — 서류와 살림처럼 남는 것을 정리할 때입니다.', '뿌리내리는 해 — 사는 곳과 생활의 틀을 정하면 그 위에서 결정이 쉽습니다.'],
+        금: ['마감하는 해 — 미뤄 둔 정리를 이 해에 끝내면 다음이 가벼워집니다.', '끊는 해 — 정리할 것을 먼저 끊어 내면 두 사람 사이가 오히려 맑아집니다.'],
+        수: ['마음을 가라앉히는 해 — 말보다 시간을 두는 쪽이 오래갑니다.', '흐르는 해 — 서두르지 말고 흐름을 타면 결론이 자연스럽게 옵니다.']
+      }[el];
+      const tip = tipBank[x.year % 2];
       return open + rel + ' ' + tip;
     };
     const marriageText = best.length
