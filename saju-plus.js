@@ -123,6 +123,11 @@
     무관: '일지끼리 특별한 ' + E.plain('합') + '도 ' + E.plain('충') + '도 없습니다. 나쁜 사주는 아니고, 관계의 온도가 두 사람의 노력에 따라 정해지는 사주입니다. 서로의 생활 시간을 존중하는 것만으로 오래갑니다.'
   };
 
+  const JI_KEY_WORD = {
+    합: '육합으로 묶인 자리', 충: '충으로 부딪히는 자리', 형: '형으로 눌리는 자리', 파: '파로 어긋나는 자리', 해: '해로 마음이 어긋나는 자리',
+    복음: '같은 글자가 겹친 자리', 반합: '방향이 같은 반합의 자리', 무관: '큰 합충이 없는 자리'
+  };
+
   function compatScore(A, Bc) {
     const aStem = A.dayMaster.stem, bStem = Bc.dayMaster.stem;
     const aEl = ELEM.indexOf(A.dayMaster.elem), bEl = ELEM.indexOf(Bc.dayMaster.elem);
@@ -228,9 +233,37 @@
         return s;
       });
       const tot = each[0] + each[1];
-      out.push({ year: y, hanja: STEMS[ys] + BRANCHES[yb], ko: STEMS_KO[ys] + BRANCHES_KO[yb], a: each[0], b: each[1], total: tot });
+      out.push({ year: y, hanja: STEMS[ys] + BRANCHES[yb], ko: STEMS_KO[ys] + BRANCHES_KO[yb], ys: ys, yb: yb, a: each[0], b: each[1], total: tot });
     }
     return out.sort((x, y) => y.total - x.total);
+  }
+
+  /* ---------- 오행 짝별 생활 리듬 — 같은 일간 관계라도 오행이 다르면 다른 문장 ---------- */
+  const ELEM_CHAR = {
+    목: '아침에 먼저 문을 열고 나가는 쪽',
+    화: '사람을 만나며 기분을 푸는 쪽',
+    토: '익숙한 자리와 시간을 지키는 쪽',
+    금: '정리하고 마감하며 끝을 보는 쪽',
+    수: '혼자 생각을 가다듬은 뒤에 말하는 쪽'
+  };
+  const ELEM_PACE = {
+    same: '같은 리듬이라 말하지 않아도 시간이 맞습니다. 대신 둘 다 같은 방식으로 지치니 한 사람이 먼저 쉬어야 다른 사람도 쉽니다',
+    saeng: '한 사람이 시작하면 다른 사람이 이어 받는 리듬이라 일이 자연스럽게 굴러갑니다. 다만 이어 받는 쪽이 계속 따라가면 말없이 지칩니다',
+    geuk: '서로 다른 속도로 움직여 일정을 맞추는 데 시간이 걸립니다. 대신 한 사람이 놓친 것을 다른 사람이 집어 주는 자리가 생깁니다',
+    bi: '같은 방향을 보되 온도가 조금 달라, 결정의 순간에 서로의 속도를 한 번 확인하면 편해집니다'
+  };
+  const BED_ELEM = {
+    목: '아침의 기운이라 잠들기 전보다 아침에 말이 잘 통합니다',
+    화: '열의 기운이라 감정이 앞서면 말이 세지니 불을 낮추는 시간이 필요합니다',
+    토: '흙의 기운이라 같은 자리, 같은 순서에서 편안함을 느낍니다',
+    금: '쇠의 기운이라 선을 분명히 할 때 오히려 가까워집니다',
+    수: '물의 기운이라 말없이 곁에 있는 시간이 애정으로 쌓입니다'
+  };
+
+  /* 한자(독음) 뒤 조사 — 괄호로 끝나는 표기에서도 독음 기준으로 붙인다 */
+  function brJosa(yb, withC, withoutC) {
+    const read = BRANCHES_KO[yb];
+    return E.BRANCHES[yb] + '(' + read + ')' + E.josa(read, withC, withoutC).slice(read.length);
   }
 
   function buildCompat(A, Bc, opts) {
@@ -256,20 +289,62 @@
     else fillText = '상대의 사주에 ' + aOwn + '에게 필요한 ' + fill.aNeed + ' 기운은 많지 않습니다. ' + aOwn + '에게 필요한 기운은 이 사람이 아니라 생활에서 채워야 합니다 — ' + (fill.aNeed === '목' ? '아침 산책과 새로 시작하는 취미' : fill.aNeed === '화' ? '햇빛을 쬐는 시간과 사람을 만나는 자리' : fill.aNeed === '토' ? '규칙적인 끼니와 익숙한 공간' : fill.aNeed === '금' ? '정리와 마감, 그리고 단호한 거절' : '물가를 걷는 시간과 충분한 잠') + '이 두 사람 사이에서 ' + (A.input.name ? A.input.name + ' 님을' : '나를') + ' 지켜 줍니다.';
     if (fill.aHasB >= 20) fillText += ' 반대로 ' + bOwn + '도 ' + aOwn + '에게서 ' + fill.bNeed + ' 기운을 받고 있습니다. 서로에게 필요한 것을 주고받는, 드문 짝입니다.';
     else if (fill.aHasB < 12) fillText += ' ' + bOwn + '에게 필요한 ' + fill.bNeed + ' 기운도 ' + aOwn + '에게서 크게 나오지는 않습니다. 그래서 두 사람 모두 상대에게 모든 걸 기대하지 않는 편이 오래갑니다.';
+    fillText += ' ' + (fill.aNeed === fill.bNeed
+      ? '두 사람에게 필요한 기운이 둘 다 ' + fill.aNeed + '이라, 같은 것을 함께 채우러 다니는 사이입니다. 둘 다 채워지는 일을 함께 하면 이 관계가 가장 편해집니다.'
+      : aOwn + '에게는 ' + fill.aNeed + ', ' + bOwn + '에게는 ' + fill.bNeed + '이 필요합니다. 한 사람이 좋아하는 일이 다른 사람에게는 숙제가 될 수 있으니, 각자 채우는 시간을 서로 허락해 주세요.');
 
     /* 속궁합 — 일지·오행 온도 */
     const jiElA = aJi.branchElem, jiElB = bJi.branchElem;
+    const elRel = E.relation(E.ELEMENTS.indexOf(aEl), E.ELEMENTS.indexOf(bEl));
+    const paceKey = aEl === bEl ? 'same' : (elRel === '식상' || elRel === '인성' ? 'saeng' : (elRel === '비겁' ? 'bi' : 'geuk'));
+    const ganPaceText = '생활로 들어가면 ' + aOwn + '은 ' + ELEM_CHAR[aEl] + '이고 ' + bOwn + '은 ' + ELEM_CHAR[bEl] + '입니다. 두 사람은 ' + ELEM_PACE[paceKey] + '.';
+    const bedKey = jiElA === jiElB ? 'same' : (E.relation(E.ELEMENTS.indexOf(jiElA), E.ELEMENTS.indexOf(jiElB)) === '식상' ? 'saeng' : 'geuk');
+    const bedElementText = bedKey === 'same'
+      ? '두 사람의 일지가 모두 ' + jiElA + '의 결이라 ' + BED_ELEM[jiElA]
+      : bedKey === 'saeng'
+        ? '일지의 결이 ' + E.josa(jiElA, '에서', '에서') + ' ' + jiElB + '로 이어지니 ' + BED_ELEM[jiElB]
+        : '일지의 결이 ' + E.josa(jiElA, '과', '와') + ' ' + jiElB + '로 갈리니, 한 사람은 ' + BED_ELEM[jiElA] + ' 다른 사람은 ' + BED_ELEM[jiElB];
     let bedText;
     if (sc.jiRel.indexOf('합') >= 0) bedText = '일지가 합을 하니 살결의 온도와 생활의 리듬이 빨리 맞습니다. 이 사주는 말보다 몸이 먼저 가까워지는 사이이고, 잠자리에서 정한 것이 다음 날에도 그대로 남습니다. 다만 익숙해지는 속도가 빨라 설렘을 관리하지 않으면 2~3년 뒤 무뎌지기 쉬우니, 한 달에 한 번은 둘만의 자리를 새로 만드세요.';
     else if (sc.jiRel.indexOf('충') >= 0) bedText = '일지가 충을 하니 끌림이 강한 대신 리듬이 자주 어긋납니다. 한 사람이 원할 때 다른 사람은 지쳐 있는 날이 많습니다. 이 사주는 눈치로 맞추려 하면 서운함이 쌓입니다. “오늘은 피곤해”를 서운함 없이 말할 수 있는 사이가 되는 것이 이 관계의 속궁합을 살리는 길입니다.';
     else if (sc.jiRel.indexOf('형') >= 0) bedText = '일지가 형을 하니 가까울수록 서로를 조이는 자리입니다. 애정이 강한 만큼 표현이 투정으로 나가기 쉽습니다. 이 사주는 잠자리 앞에서 그날의 서운함을 꺼내지 않는 규칙 하나만 세워도 관계가 부드러워집니다.';
-    else bedText = '일지에 큰 합도 충도 없어 두 사람의 온도는 서로가 만드는 대로 갑니다. ' + (jiElA === jiElB ? '두 사람 모두 ' + jiElA + '의 결이라 같은 온도에서 편안함을 느낍니다.' : '한 사람은 ' + jiElA + ', 다른 사람은 ' + jiElB + '의 결이라 온도가 다릅니다. 서로의 속도를 재지 말고 물어보는 편이 훨씬 낫습니다.') + (jiElA === '수' || jiElB === '수' ? ' 특히 물의 결이 섞여 있어 감정이 깊어지면 말수가 줄어드니, 침묵을 서운함으로 읽지 마세요.' : ' 특히 불의 결이 섞여 있어 감정이 올라오면 말이 앞서니, 그 순간엔 안고 있는 편이 낫습니다.');
+    else bedText = '일지에 큰 합도 충도 없어 두 사람의 온도는 서로가 만드는 대로 갑니다. ' + (jiElA === jiElB ? '두 사람 모두 ' + jiElA + '의 결이라 같은 온도에서 편안함을 느낍니다.' : '한 사람은 ' + jiElA + ', 다른 사람은 ' + jiElB + '의 결이라 온도가 다릅니다. 서로의 속도를 재지 말고 물어보는 편이 훨씬 낫습니다.') + (jiElA === '수' || jiElB === '수' ? ' 특히 물의 결이 섞여 있어 감정이 깊어지면 말수가 줄어드니, 침묵을 서운함으로 읽지 마세요.' : jiElA === '화' || jiElB === '화' ? ' 특히 불의 결이 섞여 있어 감정이 올라오면 말이 앞서니, 그 순간엔 안고 있는 편이 낫습니다.' : ' 두 사람 다 감정을 말보다 행동으로 먼저 드러내니, 말이 없는 날을 서운함으로 읽지 마세요.');
+    if (sc.jiRel.indexOf('합') >= 0 || sc.jiRel.indexOf('충') >= 0 || sc.jiRel.indexOf('형') >= 0) bedText += ' ' + bedElementText + '.';
 
-    /* 결혼 시기 */
+    /* 결혼 시기 — 해마다 간지·열리는 쪽·일지 관계가 달라 문장도 달라진다 */
     const my = marriageYears(A, Bc, nowYear + 1, nowYear + 6);
     const best = my.slice(0, 3).filter(x => x.total > 0);
+    const marriageLine = x => {
+      const aGate = x.a >= x.b;
+      const who = aGate ? aOwn : bOwn;
+      const other = aGate ? bOwn : aOwn;
+      const relA = relOf(aJi.branch, x.yb), relB = relOf(bJi.branch, x.yb);
+      const hit = (aGate ? relA : relB).concat(aGate ? relB : relA);
+      const el = E.branchElem(x.yb);
+      const v = x.year % 3;
+      const open = x.total >= 16
+        ? ['<b>' + x.year + '년(' + x.hanja + ')</b> — 두 사람의 배우자 자리가 같이 열리는 해입니다. ' + who + ' 쪽이 먼저 마음을 정하고, ' + other + '도 같은 방향을 보고 있습니다.',
+           '<b>' + x.year + '년(' + x.hanja + ')</b> — 두 사람의 배우자 자리가 한 해에 함께 서는 드문 자리입니다. 이 해에 정한 약속은 주변도 자연스럽게 따라옵니다.',
+           '<b>' + x.year + '년(' + x.hanja + ')</b> — 한 해에 두 사람의 자리가 함께 열립니다. ' + other + '보다 ' + who + ' 쪽이 반 박자 빠르니, 먼저 꺼내는 쪽이 유리합니다.'][v]
+        : x.total >= 10
+          ? ['<b>' + x.year + '년(' + x.hanja + ')</b> — ' + who + '의 인연의 문이 확실히 열리는 해입니다. 이 해에 말을 꺼내는 쪽이 다음 해를 편하게 만듭니다.',
+             '<b>' + x.year + '년(' + x.hanja + ')</b> — ' + who + ' 쪽 배우자 자리가 크게 열립니다. ' + other + '도 무리는 아니라, 이 해에 시작한 이야기가 다음 해에 결론으로 옵니다.',
+             '<b>' + x.year + '년(' + x.hanja + ')</b> — 이 해는 ' + who + '에게 인연의 문이 열리는 때입니다. 결정을 급하게 하지 말고 그해 안에 방향만 맞춰 두세요.'][v]
+          : ['<b>' + x.year + '년(' + x.hanja + ')</b> — ' + who + ' 쪽이 조금 더 준비되어 있는 해입니다. 약속을 정하기보다 대화를 시작해 두면 맞는 해가 됩니다.',
+             '<b>' + x.year + '년(' + x.hanja + ')</b> — 이 해는 ' + who + ' 쪽이 마음을 정리하는 때입니다. ' + other + '은 기다리는 쪽에 서면 이 해가 편하게 지나갑니다.',
+             '<b>' + x.year + '년(' + x.hanja + ')</b> — 두 사람의 자리가 아직 크게 열리지는 않습니다. ' + who + '의 생활이 정리되는 해라, 그 뒤에 이야기하는 편이 낫습니다.'][v];
+      const rel = hit.indexOf('합') >= 0
+        ? ' 게다가 해의 지지 ' + brJosa(x.yb, '이', '가') + ' 두 사람의 자리를 묶어 주니, 같은 해에 정한 약속은 오래 갑니다.'
+        : hit.indexOf('충') >= 0
+          ? ' 다만 해의 지지 ' + brJosa(x.yb, '이', '가') + ' 두 사람의 자리와 부딪히니, 이 해의 결정은 급하게 하지 말고 날짜를 두고 정하세요.'
+          : hit.indexOf('형') >= 0
+            ? ' 해의 지지 ' + brJosa(x.yb, '이', '가') + ' 두 사람 중 한 사람을 누르니, 이 해에는 가족 문제를 먼저 정리해 두세요.'
+            : ' 해의 지지 ' + brJosa(x.yb, '은', '는') + ' 두 사람의 자리를 건드리지 않아, 이 해는 두 사람의 의지로 정해집니다.';
+      const tip = { 목: '새로 시작하는 자리 — 새 집, 새 지역처럼 처음 여는 자리에서 이야기가 나옵니다.', 화: '사람이 모이는 자리 — 양가가 만나는 자리에서 결론이 나기 쉬운 해입니다.', 토: '자리를 잡는 해 — 서류와 살림처럼 남는 것을 정리할 때입니다.', 금: '마감하는 해 — 미뤄 둔 정리를 이 해에 끝내면 다음이 가벼워집니다.', 수: '마음을 가라앉히는 해 — 말보다 시간을 두는 쪽이 오래갑니다.' }[el];
+      return open + rel + ' ' + tip;
+    };
     const marriageText = best.length
-      ? best.map(x => '<b>' + x.year + '년(' + x.hanja + ')</b> — ' + (x.total >= 16 ? '두 사람의 배우자 자리가 함께 열리는 해입니다. 이 해에 약속을 정하면 오래 갑니다.' : x.total >= 10 ? '한 사람의 인연의 문이 확실히 열리고 다른 사람도 무리는 아닌 해입니다.' : '한쪽이 조금 더 준비되어 있는 해입니다. 이 해에 대화를 시작해 두면 다음 해가 편합니다.')).join(' ')
+      ? best.map(marriageLine).join(' ')
       : '향후 7년 안에 두 사람의 배우자 자리가 동시에 크게 열리는 해는 뚜렷하지 않습니다. 그래서 이 사주는 날짜보다 “지금 함께 있는 시간”이 결혼을 만듭니다. 서두르지 않아도 됩니다.';
 
     /* 다툼·화해 달 */
@@ -282,12 +357,18 @@
       if (bad) fightM.push(m.no);
       if (good) peaceM.push(m.no);
     });
+    const fList = fightM.map(n => n + '월').join(' · ');
+    const pList = peaceM.map(n => n + '월').join(' · ');
     const fightText = fightM.length
-      ? '2027년에는 ' + fightM.map(n => n + '월').join(' · ') + '에 두 사람의 부부 자리가 흔들립니다. 이 달에는 이사·계약·큰 지출처럼 판을 바꾸는 결정을 겹쳐 두지 마세요. 같은 달에 두 가지가 겹치면 사소한 말이 크게 번집니다.'
-      : '2027년에는 두 사람의 부부 자리를 직접 치는 달이 없습니다. 대신 말이 앞서는 달을 스스로 조심하면 됩니다.';
+      ? '2027년에는 ' + fList + '에 두 사람의 부부 자리가 흔들립니다. ' + (fightM.length >= 4
+        ? '흔들리는 달이 여러 번 오는 해라, 이 해에는 이사·계약처럼 판을 바꾸는 일을 한 달에 하나만 두세요.'
+        : '그 달에는 이사·계약·큰 지출을 겹쳐 두지 마세요. 같은 달에 두 가지가 겹치면 사소한 말이 크게 번집니다.') + ' 두 사람의 일지가 ' + E.josa(JI_KEY_WORD[sc.jiKey], '이라', '라') + ', 흔들릴 때는 ' + (sc.jiKey === '충' ? '같은 집에 오래 머무는 대신 짧게라도 자리를 바꿔 주는 쪽' : sc.jiKey === '합' ? '떨어져 있는 시간을 줄이는 쪽' : '말을 반 박자 늦추는 쪽') + '이 낫습니다.'
+      : '2027년에는 두 사람의 부부 자리를 직접 치는 달이 없습니다. 대신 말이 앞서는 달을 스스로 조심하면 됩니다 — 두 사람의 일지가 ' + E.josa(JI_KEY_WORD[sc.jiKey], '이라', '라') + ' ' + (sc.jiKey === '무관' ? '감정이 올라올 때 그 자리에서 결론을 내지 않는 것' : '서로의 생활 시간을 먼저 확인하는 것') + '만으로 이 해는 지나갑니다.';
     const peaceText = peaceM.length
-      ? '반대로 ' + peaceM.map(n => n + '월').join(' · ') + '에 두 사람 사이의 문이 열립니다. 이 달에 미뤄 둔 이야기를 꺼내면 대개 부드럽게 풀립니다. 특히 화해가 필요한 일이 있다면 이 달의 낮 시간을 쓰세요.'
-      : '2027년에는 두 사람의 일지가 같이 합하는 달이 뚜렷하지 않습니다. 그래서 이 사주는 날을 기다리기보다 먼저 말을 꺼내는 쪽이 이깁니다.';
+      ? '반대로 ' + pList + '에 두 사람 사이의 문이 열립니다. ' + (peaceM.length === 1
+        ? '한 달뿐이니 그 달의 낮 시간을 비워 두고 미뤄 둔 이야기를 꺼내세요.'
+        : '이 달들에 미뤄 둔 이야기를 꺼내면 대개 부드럽게 풀립니다. 특히 화해가 필요한 일이 있다면 ' + peaceM[0] + '월의 낮 시간을 쓰세요.') + ' ' + bOwn + '에게 먼저 말을 거는 쪽이 그 문을 여는 사람이 됩니다.'
+      : '2027년에는 두 사람의 일지가 같이 합하는 달이 뚜렷하지 않습니다. 그래서 이 사주는 날을 기다리기보다 먼저 말을 꺼내는 쪽이 이깁니다. ' + aOwn + '에게 할 말이 있다면 달을 고르지 말고 이번 주에 꺼내세요.';
 
     /* 핵심 케미 3줄 */
     const chem = [];
@@ -313,7 +394,7 @@
       a: A, b: Bc, names: { a: aName, b: bName },
       say: {
         open: '두 사람의 여덟 글자를 나란히 세워 놓고 한참 봤습니다. 궁합은 좋고 나쁨을 가르는 게 아니라, 두 사람이 어디서 부딪히고 어디서 편해지는지를 미리 짚어 두는 일입니다. 아래부터 하나씩 말씀드릴게요.',
-        gan: cp.head + '. ' + cp.body,
+        gan: cp.head + '. ' + cp.body + ' ' + ganPaceText,
         ji: jt,
         cross: crossText,
         bed: bedText,

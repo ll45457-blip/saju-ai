@@ -571,10 +571,7 @@
       const del = e.target.closest('[data-del]');
       if (del) {
         e.stopPropagation();
-        const id = del.dataset.del;
-        state.history = state.history.filter(h => h.id !== id);
-        store.set(K_HISTORY, state.history);
-        renderArchive(); showToast('삭제했어요');
+        askRemoveArchive(del.dataset.del);
         return;
       }
       const card = e.target.closest('.arch-card');
@@ -583,6 +580,26 @@
         if (h) reopenReport(h);
       }
     };
+  }
+
+  /* 보관함 삭제는 실수로 지워지지 않도록 한 번 더 묻는다 */
+  function askRemoveArchive(id) {
+    const rec = state.history.find(h => h.id === id);
+    if (!rec) return;
+    const who = charById(rec.charId);
+    openSheet('기록 삭제',
+      '<div class="rp-top"><img class="rp-ava" src="' + who.img + '" alt="" /><div class="rp-who"><b>' + esc(rec.title) + '</b><span>' + esc(rec.typeLabel) + ' · ' + esc(rec.dateLabel) + '</span></div></div>' +
+      '<p class="rp-para">이 기록을 보관함에서 지울까요?<br />저장된 이 기기의 기록만 지워지고, 같은 생년월일로 언제든 다시 볼 수 있습니다.</p>' +
+      '<div class="rp-actions"><button class="btn-ghost" id="archDelCancel">취소</button><button class="btn-danger" id="archDelOk">삭제</button></div>');
+    const cancel = $('#archDelCancel'), ok = $('#archDelOk');
+    if (cancel) cancel.addEventListener('click', () => closeSheet());
+    if (ok) ok.addEventListener('click', () => {
+      state.history = state.history.filter(h => h.id !== id);
+      store.set(K_HISTORY, state.history);
+      closeSheet();
+      renderArchive();
+      showToast('삭제했어요');
+    });
   }
 
   function reopenReport(h) {

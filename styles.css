@@ -205,6 +205,14 @@ body::before {
 }
 .btn-ghost:hover { background: rgba(212, 175, 55, .08); border-color: rgba(212, 175, 55, .35); }
 
+.btn-danger {
+  border: 1px solid rgba(226, 160, 180, .4); background: rgba(226, 160, 180, .12);
+  color: var(--rose); padding: 10px 14px; border-radius: 12px;
+  font-family: var(--sans); font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.btn-danger:hover { background: rgba(226, 160, 180, .2); border-color: rgba(226, 160, 180, .6); }
+
 /* ============ 히어로 슬라이더 ============ */
 .hero { position: relative; padding-top: 8px; }
 .hero-track {

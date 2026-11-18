@@ -184,6 +184,15 @@ window.SAJU_RX = (function () {
   function asF(x) { return (x && x.chart) ? x : facts(x); }
   function pick(list, seed) { return list[Math.abs(seed) % list.length]; }
   function seed(chart, tag) { return E.hash(chart.ganji + '|' + tag + '|' + chart.strengthKo); }
+  /* 개수 표기 — 0은 목록에 넣지 않고 '비어 있다'로 따로 말한다 */
+  function zeroSafe(f, k) { return f.groups[k] > 0 ? k + ' ' + f.groups[k] + '개' : null; }
+  function liveList(f, keys) { return keys.map(function (k) { return zeroSafe(f, k); }).filter(Boolean).join(' · '); }
+  function emptyList(f, keys) { return keys.filter(function (k) { return f.groups[k] === 0; }); }
+  function thinPhrase(f) {
+    return f.lackN === 0 ? '원국에 아예 없는 ' + f.lack
+      : f.lackN === 1 ? '한 자리뿐인 ' + f.lack
+      : '가장 얇은 ' + f.lack + ' ' + f.lackN + '개';
+  }
   function josa(w, a, b) { return E.josa(w, a, b); }
 
   /* ---------------- 주제별 처방 ---------------- */
@@ -194,7 +203,7 @@ window.SAJU_RX = (function () {
         function (f) { return '일간 ' + f.dmKey + '에 ' + f.strong + '이고, 용신이 ' + f.yong + '인 사주의 연애는 ' + f.dm.social + '입니다. 상대를 고르는 기준도 조건보다 ' + (f.yong === '수' ? '대화의 깊이' : f.yong === '목' ? '새로 시작하는 사람의 기세' : f.yong === '화' ? '표현이 분명한 태도' : f.yong === '토' ? '생활이 정돈된 태도' : '선이 분명한 태도') + '에 두세요. 이 사주는 그 결이 맞는 사람에게 오래 갑니다.'; },
         function (f) { return '일지 ' + f.dayB + '(' + f.dayBk + ')에 ' + f.dayG + '이 앉은 자리가 이 사주의 배우자궁입니다. ' + f.jg.read + '. 그래서 연애의 답은 상대를 바꾸는 데 있지 않습니다. ' + f.jg.act + '. '; }
       ],
-      god: function (f) { return '인연은 관성 ' + f.groups.관성 + '개(오행 ' + f.gwanEl + ')와 재성 ' + f.groups.재성 + '개(오행 ' + f.jaeEl + ') 사이에서 판가름 납니다. 이 사주는 ' + (f.groups.재성 > f.groups.관성 ? '내가 챙기고 표현할 때 관계가 깊어지는 쪽' : f.groups.관성 > f.groups.재성 ? '상대가 나를 선택하는 방식으로 관계가 시작되는 쪽' : '주고받는 속도가 비슷해 먼저 나서는 쪽이 판을 잡는 쪽') + '입니다.'; },
+      god: function (f) { var live = liveList(f, ['관성', '재성']); var tot = f.groups.관성 + f.groups.재성; return '인연의 통로는 ' + (live || '비어 있음') + '입니다. ' + (tot === 0 ? '관성(책임·평가의 기운)과 재성(돈·결과물의 기운)이 모두 원국에 없어, 관계는 기다린다고 오지 않고 내가 벌여야 열립니다.' : (f.groups.관성 === 0 ? '관성(책임·평가의 기운)은 원국에 없으니 상대가 나를 골라 주기를 기다리면 늦습니다. ' : '') + (f.groups.재성 === 0 ? '재성(돈·결과물의 기운)도 없어 관계가 생활로 이어지기까지 시간이 걸립니다. ' : '')) + '이 사주는 ' + (tot === 0 ? '먼저 움직이지 않으면 아무 일도 일어나지 않는 쪽' : f.groups.재성 > f.groups.관성 ? '내가 챙기고 표현할 때 관계가 깊어지는 쪽' : f.groups.관성 > f.groups.재성 ? '상대가 나를 선택하는 방식으로 관계가 시작되는 쪽' : '주고받는 속도가 비슷해 먼저 나서는 쪽이 판을 잡는 쪽') + '입니다.'; },
       verdict: function (f) { return '정리하면 ' + f.dm.img + '의 결에 ' + f.yong + ' 기운을 채우는 만남이 답입니다. ' + SAL[f.sal].read + '. 이 사주에서는 ' + SAL[f.sal].act + '.'; },
       step: [
         function (f) { return '이번 주에 마음이 가는 사람에게 ' + YONG[f.yong].time + ' 안에 짧은 안부를 한 번 보내세요 — 용신 ' + E.josa(f.yong, '이', '가') + ' 살아나는 시간대라 말이 부드럽게 닿습니다'; },
@@ -212,7 +221,7 @@ window.SAJU_RX = (function () {
         function (f) { return '재회는 마음의 크기보다 때와 방식이 결과를 바꿉니다. 이 사주는 ' + f.dmKey + ' 일간에 ' + f.dayG + '이 일지에 앉아 ' + (f.dayG === '편관' || f.dayG === '정관' ? '한번 끊긴 관계를 쉽게 되돌리지 못하는 구조' : f.dayG === '정인' || f.dayG === '편인' ? '상대의 기억을 오래 품는 구조' : '다시 손을 내미는 데 자존심이 걸리는 구조') + '입니다. 그래서 연락은 감정이 아니라 형식으로 시작해야 합니다.'; },
         function (f) { return '일지 ' + f.dayB + '와 2027년 未토는 ' + relLabel(f) + '입니다. ' + (relHas(f, '합') ? '합은 묶이는 자리라 끊긴 인연이 다시 이어지기 좋은 해입니다.' : relHas(f, '충') ? '충은 부딪히는 자리라 미련이 정리되고 새 사람이 들어오는 해입니다.' : '해의 기운이 크게 작용하지 않으니 달의 타이밍이 결과를 가릅니다.') + ' ' + f.dm.img + '의 사주는 기다리기보다 한 번의 분명한 안부에서 방향이 정해집니다.'; }
       ],
-      god: function (f) { return '이 사주에서 인연의 통로는 ' + (f.groups.관성 + f.groups.재성) + '개(관성 ' + f.groups.관성 + ' · 재성 ' + f.groups.재성 + ')입니다. ' + (f.groups.관성 + f.groups.재성 === 0 ? '통로가 비어 있어 먼저 움직이지 않으면 아무 일도 일어나지 않습니다.' : '통로가 있어 한 번의 접촉이 관계로 이어질 수 있습니다. 다만 ' + f.lack + '이 ' + f.lackN + '개로 얇아 ' + GLACK[f.lack].read + '.'); },
+      god: function (f) { var tot = f.groups.관성 + f.groups.재성; var live = liveList(f, ['관성', '재성']); return (tot ? '이 사주에서 인연의 통로는 ' + tot + '개(' + live + ')입니다. ' : '이 사주는 인연의 통로가 비어 있습니다. ') + (tot === 0 ? '관성(책임·평가의 기운)과 재성(돈·결과물의 기운)이 모두 원국에 없어, 먼저 움직이지 않으면 아무 일도 일어나지 않습니다.' : '통로가 있어 한 번의 접촉이 관계로 이어질 수 있습니다. 다만 ' + thinPhrase(f) + ' 자리가 약해 ' + GLACK[f.lack].act + '.'); },
       verdict: function (f) { return '정리하면 재회의 답은 “기다림”이 아니라 ' + YONG[f.yong].social + '입니다. ' + (f.cheonHit ? '사주 ' + f.cheonWhere + '에 천을귀인이 앉아 있어, 결정적인 순간에 중간에서 말을 전해 줄 사람이 생깁니다.' : '천을귀인 자리(' + f.cheonChars + ')가 사주에 없어 중간에서 다리를 놓아 줄 사람은 내가 먼저 만들어야 합니다.'); },
       step: [
         function (f) { return '첫 연락은 ' + YONG[f.yong].time + '에 짧게 하세요. ' + f.yong + ' 기운이 열리는 시간이라 상대가 부담을 덜 느낍니다'; },
@@ -230,7 +239,7 @@ window.SAJU_RX = (function () {
         function (f) { return '상대의 마음은 이 사주가 사람을 읽는 방식과 겹쳐 보입니다. 일간 ' + f.dmKey + '에 ' + f.dom + '이 ' + f.domN + '개인 사주는 ' + GMAIN[f.dom].read + '. 그래서 상대의 침묵을 ' + (f.dom === '인성' ? '생각이 길어지는 신호로 읽으세요. 답이 없는 것이 아니라 정리 중인 것입니다' : f.dom === '관성' ? '책임을 재는 신호로 읽으세요. 가볍게 답하지 않는 사람일 뿐입니다' : f.dom === '식상' ? '표현이 앞서는 신호로 읽으세요. 말이 많은 날이 마음이 큰 날입니다' : f.dom === '재성' ? '현실 조건을 계산하는 신호로 읽으세요. 조건이 정리되어야 마음이 움직입니다' : '주도권을 재는 신호로 읽으세요. 먼저 답하기를 기다리는 쪽입니다') + '.'; },
         function (f) { return '일지 ' + f.dayB + '의 ' + f.dayG + '과 그 자리의 오행 ' + f.dayBranchEl + '을 보면, 이 사주는 ' + (f.jg.read) + '. 상대에게 확인하고 싶은 마음이 클수록 ' + f.jg.act + '. 이 습관이 실제 답을 앞당깁니다.'; }
       ],
-      god: function (f) { return '이 사주가 마음을 읽는 통로는 ' + f.inEl + ' 인성 ' + f.groups.인성 + '개와 ' + f.sikEl + ' 식상 ' + f.groups.식상 + '개입니다. ' + (f.groups.인성 > f.groups.식상 ? '읽는 힘은 좋은데 표현이 늦어, 상대는 이 사주가 마음이 없는 줄 압니다.' : f.groups.식상 > f.groups.인성 ? '표현이 먼저 나가 상대의 속도보다 반 박자 앞섭니다. 한 번 멈추면 오히려 깊어집니다.' : '읽기와 표현의 균형이 좋아, 확인하는 한마디가 관계를 정리합니다.') + ' 가장 얇은 ' + f.lack + ' ' + f.lackN + '개를 의식하세요.'; },
+      god: function (f) { var live = liveList(f, ['인성', '식상']); return '이 사주가 마음을 읽는 통로는 ' + (live || '인성·식상 모두 비어 있음') + '입니다. ' + (f.groups.인성 > f.groups.식상 ? '읽는 힘은 좋은데 표현이 늦어, 상대는 이 사주가 마음이 없는 줄 압니다.' : f.groups.식상 > f.groups.인성 ? '표현이 먼저 나가 상대의 속도보다 반 박자 앞섭니다. 한 번 멈추면 오히려 깊어집니다.' : '읽기와 표현의 균형이 좋아, 확인하는 한마디가 관계를 정리합니다.') + ' ' + (f.lackN === 0 ? f.lack + ' 자리는 원국에 아예 없습니다. ' + GLACK[f.lack].act + '.' : thinPhrase(f) + ' 자리를 의식하세요 — ' + GLACK[f.lack].act + '.'); },
       verdict: function (f) { return '결론은 상대의 마음이 아니라 ' + f.dmKey + '의 ' + f.yong + ' 기운을 채우는 데서 갈립니다. ' + YONG[f.yong].act + ' — 이걸 한 주만 지켜 보면 ' + f.dayB + ' 일지의 ' + f.dayG + '이 상대의 반응을 바꿉니다.'; },
       step: [
         function (f) { return '말로 확인하려 하지 말고 ' + YONG[f.yong].place + '에서 만남의 자리를 한 번 만드세요 — 이 사주는 대화보다 분위기에서 마음이 드러납니다'; },
@@ -245,10 +254,10 @@ window.SAJU_RX = (function () {
     money: {
       label: '재물', yx: 'money',
       ans: [
-        function (f) { return '재물의 답은 액수가 아니라 통로와 구멍입니다. 이 사주는 재성 ' + f.groups.재성 + '개, 재성 오행 ' + f.jaeEl + '(' + HANJA[f.jaeEl] + ')이고, ' + f.dmKey + ' 일간에 ' + f.strong + '입니다. ' + (f.groups.재성 === 0 ? '재성이 원국에 없어 돈이 직접 들어오는 문이 새겨지지 않았습니다. 만들어 파는 일을 먼저 해야 돈이 붙습니다.' : f.groups.재성 >= 3 ? '재성이 여러 개 겹쳐 기회는 많지만 손도 함께 커지는 구조입니다.' : '재성이 자리를 잡고 있어 벌이의 그릇은 충분합니다. 문제는 지키는 장치입니다.') + ' 용신 ' + f.yong + ' 기운이 이 사주의 돈길입니다.'; },
-        function (f) { return '일지 ' + f.dayB + '에 앉은 ' + f.dayG + '이 돈을 다루는 방식입니다. ' + f.jg.read + '. ' + f.jg.act + ' — 재성 ' + f.groups.재성 + '개(오행 ' + f.jaeEl + ')를 이 방식으로 움직이면 새는 돈이 줄어듭니다.'; }
+        function (f) { return '재물의 답은 액수가 아니라 통로와 구멍입니다. ' + f.dmKey + ' 일간에 ' + f.strong + '이고, 이 사주의 재성(돈·결과물의 기운)은 ' + (f.groups.재성 ? f.groups.재성 + '개 — 오행 ' + f.jaeEl : '원국에 없습니다. 재성 오행인 ' + f.jaeEl) + '(' + HANJA[f.jaeEl] + ')입니다. ' + (f.groups.재성 === 0 ? '재성이 원국에 없어 돈이 직접 들어오는 문이 새겨지지 않았습니다. 만들어 파는 일을 먼저 해야 돈이 붙습니다.' : f.groups.재성 >= 3 ? '재성이 여러 개 겹쳐 기회는 많지만 손도 함께 커지는 구조입니다.' : '재성이 자리를 잡고 있어 벌이의 그릇은 충분합니다. 문제는 지키는 장치입니다.') + ' 용신 ' + f.yong + ' 기운이 이 사주의 돈길입니다.'; },
+        function (f) { return '일지 ' + f.dayB + '에 앉은 ' + f.dayG + '이 돈을 다루는 방식입니다. ' + f.jg.read + '. ' + f.jg.act + ' — 재성 ' + (f.groups.재성 ? f.groups.재성 + '개(오행 ' + f.jaeEl + ')' : '자리는 원국에 없지만') + ' 이 방식으로 움직이면 새는 돈이 줄어듭니다.'; },
       ],
-      god: function (f) { return '이 사주에서 돈이 들어오는 길은 식상(오행 ' + f.sikEl + ') ' + f.groups.식상 + '개와 인성(오행 ' + f.inEl + ') ' + f.groups.인성 + '개, 그리고 비겁(오행 ' + f.biEl + ') ' + f.groups.비겁 + '개입니다. ' + (f.groups.식상 >= 2 ? '기술과 콘텐츠로 만들어 파는 길이 가장 넓습니다.' : f.groups.인성 >= 2 ? '자격과 문서, 쌓이는 자산이 돈이 되는 구조입니다.' : f.groups.비겁 >= 2 ? '사람이 곧 매출입니다. 다만 같이 쓰는 돈에서 새기 쉽습니다.' : '한 우물을 오래 파서 두터워지는 구조입니다.') + (f.lackN === 0 ? ' 원국에 ' + f.lack + '이 아예 없으니, 이 자리를 새로 만드는 것이 다음 과제입니다.' : ' 얇은 ' + f.lack + '(' + f.lackN + '개)을 늘리는 것이 다음 과제입니다.'); },
+      god: function (f) { var live = liveList(f, ['식상', '인성', '비겁']); var miss = emptyList(f, ['식상', '인성', '비겁']); return (live ? '이 사주에서 돈이 들어오는 길은 ' + live + '입니다.' : '식상·인성·비겁 자리가 모두 비어 있어, 돈은 재성(재물 그 자체)에서만 움직입니다.') + ' ' + (f.groups.식상 >= 2 ? '기술과 콘텐츠로 만들어 파는 길이 가장 넓습니다.' : f.groups.인성 >= 2 ? '자격과 문서, 쌓이는 자산이 돈이 되는 구조입니다.' : f.groups.비겁 >= 2 ? '사람이 곧 매출입니다. 다만 같이 쓰는 돈에서 새기 쉽습니다.' : '한 우물을 오래 파서 두터워지는 구조입니다.') + ' ' + (miss.length ? miss.join('·') + ' 자리는 원국에 없으니 억지로 만들기보다 있는 길을 넓히는 쪽이 빠릅니다.' : '세 자리가 모두 살아 있어 어느 길로도 열 수 있으니, 가장 두터운 쪽부터 밀면 됩니다.'); },
       verdict: function (f) { return '정리하면 이 사주의 돈은 ' + f.yong + ' 기운을 채우는 생활에서 먼저 늘어납니다. ' + YONG[f.yong].money + '. ' + (f.cheonHit ? '여기에 ' + f.cheonWhere + '의 천을귀인이 겹쳐, 소개와 연결이 실제 수입으로 이어지는 자리가 있습니다.' : '귀인은 사주에 없으니 소개를 기다리지 말고 먼저 만나야 합니다.'); },
       step: [
         function (f) { return E.moneyLeaks(f.chart)[0].fix + ' — 이 사주의 1순위 구멍은 “' + E.moneyLeaks(f.chart)[0].title + '”입니다'; },
@@ -256,17 +265,17 @@ window.SAJU_RX = (function () {
         function (f) { return '이번 달에 ' + f.jaeEl + ' 재성 통로를 하나만 늘리세요. ' + f.dom + ' ' + f.domN + '개 구조라 두 개를 동시에 벌이면 둘 다 어설퍼집니다'; }
       ],
       cau: [
-        function (f) { return '재성이 ' + f.groups.재성 + '개인 이 사주는 ' + (f.groups.재성 >= 3 ? '들어온 만큼 나가는 길도 넓어, 통장을 분리하지 않으면 남는 것이 없습니다' : f.groups.재성 === 0 ? '벌이가 막히면 곧바로 생활이 흔들립니다. 고정 수입 하나를 먼저 지키세요' : '큰 지출 한 번이 몇 달을 되돌립니다. 결제 전 하루를 두세요'); },
+        function (f) { return (f.groups.재성 ? '재성이 ' + f.groups.재성 + '개인 이 사주는 ' : '재성이 원국에 없는 이 사주는 ') + (f.groups.재성 >= 3 ? '들어온 만큼 나가는 길도 넓어, 통장을 분리하지 않으면 남는 것이 없습니다' : f.groups.재성 === 0 ? '벌이가 막히면 곧바로 생활이 흔들립니다. 고정 수입 하나를 먼저 지키세요' : '큰 지출 한 번이 몇 달을 되돌립니다. 결제 전 하루를 두세요'); },
         function (f) { return '용신 ' + E.josa(f.yong, '이', '가') + ' ' + f.pct[f.yong] + '%뿐인 사주는 돈을 ' + YONG[f.yong].place + ' 쪽으로 쓸 때 남습니다 — ' + f.dmKey + '의 지출 습관을 한 번 점검하세요'; }
       ]
     },
     work: {
       label: '직업·사업', yx: 'money',
       ans: [
-        function (f) { return '일의 답은 이 사주가 어디서 힘이 나는지에 달려 있습니다. 관성 ' + f.groups.관성 + ' · 식상 ' + f.groups.식상 + ' · 재성 ' + f.groups.재성 + ' · 인성 ' + f.groups.인성 + ' · 비겁 ' + f.groups.비겁 + '의 배치에 ' + f.dmKey + ' 일간과 ' + f.strong + '인 형세가 겹쳐, ' + (f.groups.관성 >= 2 ? '조직과 자격이 힘이 되는 자리' : f.groups.식상 >= 2 ? '만들어 내놓는 일에서 성과가 나는 자리' : f.groups.비겁 >= 2 ? '내 이름으로 판을 여는 자리' : f.groups.재성 >= 2 ? '성과가 숫자로 남는 자리' : '한 우물을 깊게 파는 자리') + '입니다.'; },
+        function (f) { var live = liveList(f, ['관성', '식상', '재성', '인성', '비겁']); var miss = emptyList(f, ['관성', '식상', '재성', '인성', '비겁']); return '일의 답은 이 사주가 어디서 힘이 나는지에 달려 있습니다. 여덟 글자는 ' + live + '로 짜여 있고, ' + f.dmKey + ' 일간에 ' + f.strong + '인 형세가 겹쳐 ' + (f.groups.관성 >= 2 ? '조직과 자격이 힘이 되는 자리' : f.groups.식상 >= 2 ? '만들어 내놓는 일에서 성과가 나는 자리' : f.groups.비겁 >= 2 ? '내 이름으로 판을 여는 자리' : f.groups.재성 >= 2 ? '성과가 숫자로 남는 자리' : '한 우물을 깊게 파는 자리') + '입니다. ' + (miss.length ? miss.join('·') + ' 자리는 비어 있으니 그 자리는 스스로 기준을 세워 채워야 합니다.' : '다섯 자리가 다 있어 어느 쪽으로도 설 수 있으니, 두터운 쪽을 먼저 고르세요.'); },
         function (f) { return '월지 ' + f.monB + '(' + f.monBk + ')의 ' + f.monG + '과 12운성 ' + f.monStage + '이 사회에서 서는 자리이고, 일지 ' + f.dayB + '의 ' + f.dayG + '이 일을 대하는 방식입니다. ' + f.jg.read + '. 그래서 ' + f.jg.act + '. 이 습관이 이 사주의 승진 조건입니다.'; }
       ],
-      god: function (f) { return '결핍된 ' + f.lack + '(' + f.lackN + '개)이 일의 약점입니다. ' + GLACK[f.lack].read + '. ' + GLACK[f.lack].act + '. 가장 두터운 ' + f.dom + ' ' + f.domN + '개는 무기이자 습관이라, ' + GMAIN[f.dom].act + '를 의식적으로 해야 균형이 잡힙니다.'; },
+      god: function (f) { var ph = thinPhrase(f); return E.josa(ph, '이', '가') + ' 일의 약점입니다. ' + (f.lackN === 0 ? '' : GLACK[f.lack].read + '. ') + GLACK[f.lack].act + '. 가장 두터운 ' + f.dom + ' ' + f.domN + '개는 무기이자 습관이라, ' + GMAIN[f.dom].act + '를 의식적으로 해야 균형이 잡힙니다.'; },
       verdict: function (f) { return f.strongKey === 'weak' ? '지금 당장의 독립은 권하지 않습니다. ' + f.dmKey + ' ' + f.strong + ' — ' + STR.weak.read + ' — 재직 중에 부업으로 6개월 검증하고, 본업 월급의 30%를 세 번 연속 벌어 보면 그때 나가도 늦지 않습니다.' : f.strongKey === 'strong' ? '결정권이 있는 자리로 옮기는 것이 맞습니다. ' + STR.strong.read + ' — 다만 사람을 크게 쓰는 확장은 한 박자 늦추세요. 인건비가 매출보다 먼저 늘어나는 순간이 가장 위험합니다.' : '한 자리에서 깊어지는 쪽이 이 사주에 맞습니다. ' + STR.balanced.read + ' — 3년을 한 분야에 두면 대우가 따라옵니다.'; },
       step: [
         function (f) { return '이직을 생각한다면 지금은 조건을 모으는 단계로 쓰세요. ' + f.monB + ' 월지의 ' + f.monG + '이 말하는 자리로 옮겨야 오래 갑니다'; },
@@ -275,16 +284,16 @@ window.SAJU_RX = (function () {
       ],
       cau: [
         function (f) { return '감정으로 사표를 던지는 방식은 ' + f.dmKey + ' 사주에서 가장 비싼 실수입니다. ' + f.dm.shadow + '. 그 결이 바로 그 순간에 나옵니다'; },
-        function (f) { return '관성이 ' + f.groups.관성 + '개인 이 사주는 ' + (f.groups.관성 === 0 ? '평가와 규율의 자리가 비어 있어 스스로 기준을 세우지 않으면 일이 흐려집니다' : '윗사람과의 인연이 곧 승진의 문입니다. 관계를 한 번 정리하세요'); }
+        function (f) { return (f.groups.관성 ? '관성이 ' + f.groups.관성 + '개인 이 사주는 ' : '관성이 원국에 없는 이 사주는 ') + (f.groups.관성 === 0 ? '평가와 규율의 자리가 비어 있어 스스로 기준을 세우지 않으면 일이 흐려집니다' : '윗사람과의 인연이 곧 승진의 문입니다. 관계를 한 번 정리하세요'); }
       ]
     },
     exam: {
       label: '시험·공부', yx: 'study',
       ans: [
-        function (f) { return '공부의 답은 재능이 아니라 리듬입니다. 이 사주는 ' + f.dmKey + ' 일간에 ' + f.strong + '이고, 인성 ' + f.groups.인성 + '개 · 관성 ' + f.groups.관성 + '개 · 식상 ' + f.groups.식상 + '개입니다. ' + (f.groups.인성 >= 2 ? '인성이 두터워 문서운이 강합니다. 늦게 시작해도 오래 가는 쪽입니다.' : f.groups.인성 === 0 ? '인성이 비어 있어 배움의 자리가 좁습니다. 혼자 읽기보다 설명과 반복으로 채워야 합니다.' : '인성이 한 자리 있어 꾸준함이 성적을 만듭니다.') + ' 용신 ' + f.yong + '의 시간을 공부 시간으로 쓰는 것이 핵심입니다.'; },
+        function (f) { var live = liveList(f, ['인성', '관성', '식상']); var miss = emptyList(f, ['인성', '관성', '식상']); return '공부의 답은 재능이 아니라 리듬입니다. 이 사주는 ' + f.dmKey + ' 일간에 ' + f.strong + '이고, ' + live + '로 짜여 있습니다. ' + (f.groups.인성 >= 2 ? '인성이 두터워 문서운이 강합니다. 늦게 시작해도 오래 가는 쪽입니다.' : f.groups.인성 === 0 ? '인성(배움·보호의 기운)이 원국에 없어 배움의 자리가 좁습니다. 혼자 읽기보다 설명과 반복으로 채워야 합니다.' : '인성이 한 자리 있어 꾸준함이 성적을 만듭니다.') + (miss.length ? ' ' + miss.join('·') + ' 자리는 비어 있으니 의식해서 채우세요.' : '') + ' 용신 ' + f.yong + '의 시간을 공부 시간으로 쓰는 것이 핵심입니다.'; },
         function (f) { return '일간 ' + f.dmKey + '에는 ' + E.josa(f.dm.study, '이', '가') + ' 맞습니다. ' + f.dm.shadow + '. 그래서 ' + f.dm.body + '. 이 습관을 공부에도 그대로 적용하세요. 일지 ' + f.dayB + '의 ' + f.dayG + '도 같은 방향을 가리킵니다.'; }
       ],
-      god: function (f) { return '집중을 방해하는 자리는 ' + f.sikEl + ' 식상 ' + f.groups.식상 + '개입니다. ' + (f.groups.식상 >= 2 ? '표현이 앞서 필기가 산만해집니다. 한 단원을 끝낸 뒤에 정리하세요.' : '표현이 적어 머릿속에만 쌓입니다. 소리 내어 설명하며 외우세요.') + ' 가장 두터운 ' + f.dom + ' ' + f.domN + '개는 공부에도 그대로 나옵니다. ' + GMAIN[f.dom].act + ' — 이 태도를 시험 공부에 옮기면 됩니다.'; },
+      god: function (f) { return (f.groups.식상 ? '집중을 방해하는 자리는 ' + f.sikEl + ' 식상 ' + f.groups.식상 + '개입니다. ' + (f.groups.식상 >= 2 ? '표현이 앞서 필기가 산만해집니다. 한 단원을 끝낸 뒤에 정리하세요.' : '표현이 적어 머릿속에만 쌓입니다. 소리 내어 설명하며 외우세요.') : '식상(표현의 기운)이 원국에 없어 배운 것이 머릿속에만 쌓입니다. 소리 내어 설명하며 외우세요.') + ' 가장 두터운 ' + f.dom + ' ' + f.domN + '개는 공부에도 그대로 나옵니다. ' + GMAIN[f.dom].act + ' — 이 태도를 시험 공부에 옮기면 됩니다.'; },
       verdict: function (f) { return '정리하면 합격의 문은 ' + f.yong + ' 기운이 살아나는 ' + YONG[f.yong].time + '에 열립니다. ' + YONG[f.yong].study + '. ' + f.dmKey + ' 사주는 벼락치기보다 ' + E.josa(f.dm.study, '이', '가') + ' 점수를 만듭니다.'; },
       step: [
         function (f) { return '공부 시작 시간을 ' + YONG[f.yong].time + '로 고정하세요 — 용신 ' + E.josa(f.yong, '이', '가') + ' 가장 살아나는 시간이고, 이 사주는 그 시간에 앉은 날과 안 앉은 날의 차이가 큽니다'; },
@@ -302,7 +311,7 @@ window.SAJU_RX = (function () {
         function (f) { return '몸의 답은 오행의 얇은 자리에서 나옵니다. 이 사주는 ' + E.josa(f.thinEl, '이', '가') + ' ' + f.pct[f.thinEl] + '%로 가장 얇고 ' + E.josa(f.strongEl, '이', '가') + ' ' + f.pct[f.strongEl] + '%로 두텁습니다. ' + f.dmKey + ' 일간에 ' + f.strong + '이라 ' + (f.strongKey === 'weak' ? '기운을 쓰는 일이 많으면 회복이 늦습니다.' : f.strongKey === 'strong' ? '기운이 넘쳐 열과 긴장으로 나타납니다.' : '큰 병보다 쌓인 피로가 문제입니다.') + ' 약한 자리는 ' + E.ELEM_DEEP[f.thinEl].organ + '입니다.'; },
         function (f) { return '일지 ' + f.dayB + '의 12운성은 ' + f.dayStage + ' — ' + E.STAGE_DEEP[f.dayStage] + '. 그래서 이 사주는 ' + (['병', '사', '묘', '절'].indexOf(f.dayStage) >= 0 ? '생활 자체를 조금 비워야 몸이 회복됩니다. 일정을 줄이는 것이 약보다 먼저입니다.' : '생활 리듬을 크게 흔들지 않는 것이 최선입니다. 갑작스러운 무리는 다음 주에 청구서로 옵니다.') + ' ' + f.dm.img + '의 결은 ' + f.dm.gift + '이지만, 반대로 ' + f.dm.shadow + '.'; }
       ],
-      god: function (f) { return '체력을 쓰는 방식은 ' + f.dom + ' ' + f.domN + '개가 정합니다. ' + GMAIN[f.dom].read + ' — 그래서 ' + GMAIN[f.dom].risk + '. 가장 얇은 ' + f.lack + '(' + f.lackN + '개)은 ' + GLACK[f.lack].read + '. 몸에서는 이 자리가 먼저 신호를 보냅니다.'; },
+      god: function (f) { return '체력을 쓰는 방식은 ' + f.dom + ' ' + f.domN + '개가 정합니다. ' + GMAIN[f.dom].read + ' — 그래서 ' + GMAIN[f.dom].risk + '. ' + (f.lackN === 0 ? f.lack + ' 자리는 원국에 아예 없어 ' + GLACK[f.lack].act + '.' : thinPhrase(f) + ' 자리는 ' + GLACK[f.lack].read + '.') + ' 몸에서는 이 자리가 먼저 신호를 보냅니다.'; },
       verdict: function (f) { return '정리하면 회복법은 약이 아니라 순서입니다. ' + YONG[f.yong].body + '. ' + E.ELEM_DEEP[f.thinEl].care + '부터 시작하세요. 증상이 반복되면 사주 해석보다 진료가 먼저입니다.'; },
       step: [
         function (f) { return '잠자는 시간을 ' + YONG[f.yong].time + ' 기준으로 당겨 고정하세요. 용신 ' + f.yong + '의 시간이 이 사주의 회복 시간입니다'; },
@@ -318,14 +327,14 @@ window.SAJU_RX = (function () {
       label: '인생 흐름', yx: 'act',
       ans: [
         function (f) { return '여덟 글자를 세워 보면 ' + f.ganji + '(' + f.ganjiKo + ')에 일간 ' + f.dmKey + ', ' + f.strong + ', 용신 ' + f.yong + '입니다. ' + f.dm.img + '의 결은 ' + f.dm.gift + '이고, 반대로 ' + f.dm.shadow + '. 지금의 고민은 이 결이 세상과 부딪히는 자리에서 생깁니다.'; },
-        function (f) { return '질문의 답은 이 사주의 중심 ' + f.dom + '(' + f.domN + '개)과 얇은 ' + f.lack + '(' + f.lackN + '개) 사이에 있습니다. ' + GMAIN[f.dom].read + '. ' + GLACK[f.lack].read + '. 그래서 ' + GMAIN[f.dom].act + '. 그리고 ' + GLACK[f.lack].act + ' — 두 가지를 함께 가져가야 합니다.'; }
+        function (f) { return '질문의 답은 이 사주의 중심 ' + f.dom + '(' + f.domN + '개)과 ' + thinPhrase(f) + ' 사이에 있습니다. ' + GMAIN[f.dom].read + '. ' + (f.lackN === 0 ? '' : GLACK[f.lack].read + '. ') + '그래서 ' + GMAIN[f.dom].act + '. 그리고 ' + GLACK[f.lack].act + ' — 두 가지를 함께 가져가야 합니다.'; }
       ],
       god: function (f) { return '일지 ' + f.dayB + '에 앉은 ' + f.dayG + '이 답의 형식을 정합니다. ' + f.jg.read + '. ' + f.jg.act + '. 여기에 ' + SAL[f.sal].read + '. 여기에 ' + SAL[f.sal].act + '.'; },
       verdict: function (f) { return '정리하면 이 사주의 답은 오행 ' + f.yong + '(' + HANJA[f.yong] + ')를 채우는 선택입니다. ' + YONG[f.yong].act + '. ' + (f.daeun ? '지금은 ' + f.daeun.hanja + ' ' + f.daeun.stemGod + ' 대운(' + f.daeun.ageFrom + '~' + f.daeun.ageTo + '세) 안이라, 이 선택이 다음 10년의 방향을 정합니다.' : '아직 첫 대운 전이라 부모와 환경의 그릇이 먼저 작동하는 시기입니다.'); },
       step: [
         function (f) { return '이번 달 안에 ' + YONG[f.yong].act + '. 이걸 21일만 반복해 보세요. 용신 ' + E.josa(f.yong, '이', '가') + ' ' + f.pct[f.yong] + '%인 이 사주는 그 반복이 판단의 바닥을 바꿉니다'; },
         function (f) { return f.dm.body + '. ' + f.dayG + '이 일지에 앉은 사주라 이 한 습관이 결정의 속도를 바꿉니다'; },
-        function (f) { return f.lackT.act + '. ' + f.lack + '이 ' + f.lackN + '개로 얇은 이 사주가 가장 먼저 채워야 할 자리입니다'; }
+        function (f) { return f.lackT.act + '. ' + (f.lackN === 0 ? f.lack + '이 원국에 아예 없는' : f.lack + '이 ' + f.lackN + '개로 얇은') + ' 이 사주가 가장 먼저 채워야 할 자리입니다'; }
       ],
       cau: [
         function (f) { return f.dm.shadow + ' — 이 결이 결정적인 순간에 나오면 그 판은 되돌리기 어렵습니다'; },
@@ -395,7 +404,7 @@ window.SAJU_RX = (function () {
     out.push('일간 ' + f.dmKey + '의 처방 — ' + f.dm.body + '. ' + f.jg.act + '. ' + t.label + '에서는 이 한 가지를 이번 주 안에 끝내세요.');
     out.push('용신 ' + f.yong + '(' + HANJA[f.yong] + ') — 이 사주의 답입니다. ' + YONG[f.yong].act + '. ' + (t.yx === 'act' ? '' : YONG[f.yong][t.yx] + '. ') + f.yong + ' 기운이 지금 ' + f.pct[f.yong] + '%뿐이라, 이걸 늘리는 속도가 곧 ' + t.label + '의 속도입니다.');
     out.push(f.str.act + '. 제 기운이 ' + f.ratio + '%인 ' + f.strong + ' 사주라 ' + (f.strongKey === 'strong' ? '덜어내는 만큼 결과가 남습니다.' : f.strongKey === 'weak' ? '빌리는 만큼 결과가 커집니다.' : '스스로 건 자극만큼 판이 커집니다.'));
-    out.push('얇은 ' + f.lack + '(' + f.lackN + '개)을 채우는 일 — ' + f.lackT.act + '. ' + f.lackT.read + '. 이 자리를 한 달만 의식해도 ' + t.label + '의 막힘이 풀립니다.');
+    var ph = thinPhrase(f); out.push((f.lackN === 0 ? ph + ' 자리를 새로 만드는 일' : E.josa(ph, '을', '를') + ' 채우는 일') + ' — ' + f.lackT.act + '. ' + f.lackT.read + '. 이 자리를 한 달만 의식해도 ' + t.label + '의 막힘이 풀립니다.');
     out.push(pick(t.step, seed(f.chart, 'adv' + cat))(f) + '.');
     return out;
   }
@@ -438,7 +447,7 @@ window.SAJU_RX = (function () {
       return [
         '월급날(정산일) 밤, 통장을 열어 비상금 계좌로 자동이체부터 걸어 두세요. ' + f.dmKey + ' 사주는 남는 돈을 모으는 방식이 아니라 먼저 빼 두는 방식이 통합니다 — 재성 ' + f.jaeEl + ' ' + f.pct[f.jaeEl] + '%인 이 사주는 그 한 번의 순서로 1년이 달라집니다.',
         '큰 결제는 장바구니에 담고 다음 날 아침에 다시 보세요. 밤에 누른 결제가 이 사주에서 가장 자주 후회로 남습니다 — ' + f.dmKey + ' 사주는 밤에 판단이 부드러워지고 아침에 후회하는 쪽입니다. 결제 앱은 잠들기 30분 전에 닫아 두세요.',
-        '재성 ' + f.groups.재성 + '개 · ' + f.jaeEl + ' ' + f.pct[f.jaeEl] + '% 구조라 ' + (f.groups.재성 >= 3 ? '수입이 늘면 지출도 같이 늘어납니다. 생활비를 먼저 고정하고 남은 돈을 움직이세요.' : f.groups.재성 === 0 ? '큰 벌이보다 손에 익은 기술에서 작은 유료 일을 먼저 만드세요. 그 한 건이 통로를 뚫습니다.' : '통장을 둘로 나누고 하나는 카드도 앱도 연결하지 마세요. 손이 닿지 않아야 남습니다.'),
+        (f.groups.재성 ? '재성 ' + f.groups.재성 + '개 · ' : '재성 없이 ') + f.jaeEl + ' ' + f.pct[f.jaeEl] + '% 구조라 ' + (f.groups.재성 >= 3 ? '수입이 늘면 지출도 같이 늘어납니다. 생활비를 먼저 고정하고 남은 돈을 움직이세요.' : f.groups.재성 === 0 ? '큰 벌이보다 손에 익은 기술에서 작은 유료 일을 먼저 만드세요. 그 한 건이 통로를 뚫습니다.' : '통장을 둘로 나누고 하나는 카드도 앱도 연결하지 마세요. 손이 닿지 않아야 남습니다.'),
         (f.groups.비겁 >= 2 ? '모임에서 한턱내는 날이 이 사주에서 가장 비싼 날입니다. 비겁 ' + f.groups.비겁 + '개 — 지인과의 동업·보증·공동 결제는 금액과 날짜를 문자로 남기세요.' : '새 수입원은 하나만 여세요. ' + f.dom + ' ' + f.domN + '개 구조라 두 개를 동시에 벌이면 둘 다 어설퍼집니다.')
       ];
     }
@@ -446,7 +455,7 @@ window.SAJU_RX = (function () {
       return [
         '이직을 생각한다면 이번 주엔 공고를 세 개만 모아 조건을 나란히 적어 보세요. 일지 ' + f.dayB + '의 ' + f.dayG + '이 말하는 자리로 옮겨야 오래 갑니다.',
         '이번 달 성과 하나를 문서 한 장으로 남기세요. 회의록에 “내가 맡은 것·숫자로 줄인 것”을 한 줄씩 적어 두면, ' + f.dmKey + ' 사주는 그 기록이 평가를 바꿉니다.',
-        '윗사람과의 관계를 한 번 정리하세요. 관성 ' + f.groups.관성 + '개인 이 사주는 ' + (f.groups.관성 >= 2 ? '윗사람과의 인연이 곧 승진의 문입니다. 보고는 결론부터, 하루 먼저 하세요.' : '윗사람과의 거리가 곧 스트레스의 크기입니다. 보고는 짧게, 선은 분명히 하세요.'),
+        (f.groups.관성 ? '윗사람과의 관계를 한 번 정리하세요. 관성 ' + f.groups.관성 + '개인 이 사주는 ' + (f.groups.관성 >= 2 ? '윗사람과의 인연이 곧 승진의 문입니다. 보고는 결론부터, 하루 먼저 하세요.' : '윗사람과의 거리가 곧 스트레스의 크기입니다. 보고는 짧게, 선은 분명히 하세요.') : '윗사람과의 선을 내가 먼저 그어야 스트레스가 줄어듭니다. 관성(책임·평가의 기운)이 원국에 없으니 기준은 문서로 남기고 보고는 짧게 하세요.'),
         '사표는 감정이 아니라 날짜로 정하세요. ' + f.dm.img + '의 결은 ' + f.dm.shadow + ' — 그 결이 나오는 순간 결심이 앞섭니다. 결심한 날 바로 던지지 말고 사흘을 두세요.'
       ];
     }
@@ -488,17 +497,55 @@ window.SAJU_RX = (function () {
   }
 
   /* ---------------- 궁합 처방전 ---------------- */
+  var CP_OPEN = [
+    function (fa, fb, n) { return '두 사람의 여덟 글자를 나란히 놓고 봤습니다. ' + n.a + ' 님은 ' + fa.dmKey + ' ' + fa.strong + '에 용신 ' + fa.yong + ', ' + n.b + ' 님은 ' + fb.dmKey + ' ' + fb.strong + '에 용신 ' + fb.yong + '입니다. 궁합은 좋고 나쁨을 가르는 일이 아니라, 두 사람이 어디서 맞물리고 어디서 부딪히는지를 미리 짚어 두는 일입니다.'; },
+    function (fa, fb, n) { return n.a + ' 님의 ' + fa.dmKey + ' 일간과 ' + n.b + ' 님의 ' + fb.dmKey + ' 일간을 먼저 마주 세웠습니다. 한 사람은 ' + fa.strong + '이고 다른 사람은 ' + fb.strong + '이라 버티는 방식이 다르고, 필요한 기운도 ' + fa.yong + '과 ' + fb.yong + '으로 갈립니다. 이 차이가 두 사람 사이의 편한 자리와 어긋나는 자리를 만듭니다.'; },
+    function (fa, fb, n) { return '두 사람의 일지를 가운데 두고 열여섯 글자를 봤습니다. ' + n.a + ' 님은 ' + fa.dayB + ' 일지에 ' + fa.dayG + '을 앉혔고, ' + n.b + ' 님은 ' + fb.dayB + ' 일지에 ' + fb.dayG + '을 앉혔습니다. 궁합은 이 두 자리가 어떻게 만나는지에서 절반이 정해집니다.'; },
+    function (fa, fb, n, res) { return '한 문장으로 먼저 답하면 이 궁합은 ‘' + res.grade.label + '’ 쪽입니다. ' + res.grade.line + '. ' + n.a + ' 님의 ' + fa.dmKey + '과 ' + n.b + ' 님의 ' + fb.dmKey + '이 만든 결과이니, 왜 그렇게 나오는지 아래에 하나씩 적었습니다.'; }
+  ];
+
+  /* 일지 십성 문장을 남의 사주로 말할 때 — '내 자리에'를 빼고 3인칭으로 */
+  function jgThird(read) {
+    return String(read).replace(/^내 자리에 /, '').replace(/나와 같은/g, '자기와 같은').replace(/내 자리/g, '그 자리').replace(/내가 /g, '자기가 ');
+  }
+
   function compat(res) {
     var A = res.a, B = res.b;
     var fa = facts(A), fb = facts(B);
     var names = { a: (A.input.name || '나'), b: (B.input.name || '상대') };
-    var open = '두 사람의 여덟 글자를 나란히 놓고 봤습니다. ' + names.a + ' 님은 ' + fa.dmKey + ' ' + fa.strong + '에 용신 ' + fa.yong + ', ' + names.b + ' 님은 ' + fb.dmKey + ' ' + fb.strong + '에 용신 ' + fb.yong + '입니다. 궁합은 좋고 나쁨을 가르는 일이 아니라, 두 사람이 어디서 맞물리고 어디서 부딪히는지를 미리 짚어 두는 일입니다.';
+    var pairKey = A.ganji + '>' + B.ganji;
+    function pickv(arr, tag) { return arr[Math.abs(E.hash(pairKey + '|' + tag)) % arr.length]; }
+    var open = pickv(CP_OPEN, 'open')(fa, fb, names, res);
+
+    var fMonths = res.fightMonths.map(function (n) { return n + '월'; }).join(' · ');
+    var sameJG = fa.dayG === fb.dayG;
     var rx = [
-      '일간의 짝 — ' + E.josa(fa.dmKey, '과', '와') + ' ' + E.josa(fb.dmKey, '이', '가') + ' 만나면 ' + (fa.dme === fb.dme ? '같은 ' + fa.dme + ' 기운끼리라 속도가 비슷하고 결정이 빠릅니다. 대신 둘 다 같은 자리에서 물러서지 않으면 그 자리에서 막힙니다.' : '한쪽은 ' + fa.dme + ', 다른 쪽은 ' + fb.dme + '의 결이라 생활의 리듬이 다릅니다. 서로의 속도를 재지 말고 물어보는 편이 낫습니다.') + ' ' + names.a + ' 님의 ' + fa.dayG + '과 ' + names.b + ' 님의 ' + fb.dayG + '이 일지에 앉아, 다툼은 늘 이 두 자리에서 시작됩니다.',
-      res.fightMonths.length ? '2027년 ' + res.fightMonths.map(function (n) { return n + '월'; }).join(' · ') + '에는 두 사람의 자리가 흔들립니다. 이 달에는 이사·계약·큰 지출을 겹쳐 두지 마세요. 특히 ' + fa.dmKey + '의 결(' + fa.dm.shadow + ')이 이 달에 그대로 나옵니다.' : '2027년에는 두 사람의 자리를 직접 치는 달이 없습니다. 대신 ' + fa.dmKey + '의 말이 앞서는 순간을 스스로 조심하세요.',
-      '돈 — 두 사람 사이에 오가는 돈은 금액과 날짜를 문자로 남기세요. ' + (A.godGroups.비겁 + B.godGroups.비겁 >= 3 ? '두 사람 모두 비겁이 두터워 같이 쓰는 돈에서 새기 쉽습니다.' : '한 사람이 ' + fa.dom + ' ' + fa.domN + '개, 다른 사람이 ' + fb.dom + ' ' + fb.domN + '개라 지출의 기준이 다릅니다. 기준을 하나로 정하세요.'),
-      '서운함 — ' + names.a + ' 님은 ' + fa.jg.read + '. ' + names.b + ' 님은 ' + fb.jg.read + '. 그래서 참아 둔 것이 다음 날 두 배로 돌아옵니다. 그날 안에 꺼내세요.',
-      '한 달에 한 번은 ' + fa.yong + '·' + fb.yong + ' 기운이 있는 자리(' + YONG[fa.yong].place + ')에서 두 사람만의 시간을 만드세요. 이 두 사주는 익숙함보다 새로운 자리에서 다시 붙습니다.'
+      '일간의 짝 — ' + E.josa(fa.dmKey, '과', '와') + ' ' + E.josa(fb.dmKey, '이', '가') + ' 만나면 ' + (fa.dme === fb.dme ? '같은 ' + fa.dme + ' 기운끼리라 속도가 비슷하고 결정이 빠릅니다. 대신 둘 다 같은 자리에서 물러서지 않으면 그 자리에서 막힙니다.' : '한쪽은 ' + fa.dme + ', 다른 쪽은 ' + fb.dme + '의 결이라 생활의 리듬이 다릅니다. 서로의 속도를 재지 말고 물어보는 편이 낫습니다.') + ' ' + names.a + ' 님의 ' + fa.dayG + '과 ' + names.b + ' 님의 ' + E.josa(fb.dayG, '이', '가') + ' 일지에 앉아, 다툼은 늘 이 두 자리에서 시작됩니다. ' + pickv([
+        '이 두 자리를 미리 알아 두면 다툼이 왔을 때 “또 이 자리구나” 하고 한 발 물러설 수 있습니다.',
+        '그래서 두 사람이 싸울 때는 내용보다 순서를 보세요. 누가 먼저 말했는지가 이 사주에서는 결론보다 중요합니다.',
+        '이 자리만 피하면 두 사람 사이의 큰 문제는 대개 지나갑니다. 나머지는 취향 차이입니다.',
+        '말이 세지는 순간이 이 두 자리의 신호입니다. 그때 한 문장만 삼키면 그날은 넘어갑니다.'
+      ], 'gan' + fa.dayG + fb.dayG),
+      res.fightMonths.length ? '2027년 ' + fMonths + '에는 두 사람의 자리가 흔들립니다. ' + (res.fightMonths.length >= 4 ? '흔들리는 달이 여러 번 오는 해라, 판을 바꾸는 결정은 한 달에 하나만 두세요.' : '이 달에는 이사·계약·큰 지출을 겹쳐 두지 마세요.') + ' 특히 ' + fa.dmKey + '의 결(' + fa.dm.shadow + ')이 이 달에 그대로 나옵니다.' : '2027년에는 두 사람의 자리를 직접 치는 달이 없습니다. 대신 ' + fa.dmKey + '의 말이 앞서는 순간을 스스로 조심하세요.',
+      '돈 — ' + (A.godGroups.비겁 + B.godGroups.비겁 >= 3
+        ? '두 사람 모두 비겁(내 편·동료의 기운)이 두터워 같이 쓰는 돈에서 쉽게 새어 나갑니다. 더치페이와 공동 결제는 금액을 먼저 정하고 문자로 남기세요.'
+        : A.godGroups.재성 + B.godGroups.재성 >= 3
+          ? '두 사람 모두 재성(돈을 세는 기운)이 있어 계산은 빠른데, 그만큼 서로의 지출을 눈치껏 평가합니다. ' + names.a + ' 님의 ' + fa.dom + ' ' + fa.domN + '개와 ' + names.b + ' 님의 ' + fb.dom + ' ' + fb.domN + '개가 방식이 달라, 기준을 하나로 정해야 다툼이 줄어듭니다.'
+          : '두 사람 사이에 오가는 돈은 금액과 날짜를 문자로 남기세요. 한 사람이 ' + fa.dom + ' ' + fa.domN + '개, 다른 사람이 ' + fb.dom + ' ' + fb.domN + '개라 지출의 기준이 다릅니다.'),
+      sameJG
+        ? '서운함 — 두 사람 다 일지 ' + fa.dayB + '(' + fa.dayBk + ')에 ' + E.josa(fa.dayG, '이', '가') + ' 앉아, 서운함이 쌓이는 방식도 같습니다. ' + jgThird(fa.jg.read) + '. 그래서 한 사람이 참으면 다른 사람도 같이 참다가 둘 다 같은 날 터집니다. 누가 먼저인지 따지지 말고 그날 안에 꺼내세요.'
+        : '서운함 — ' + names.a + ' 님은 일지 ' + fa.dayB + '(' + fa.dayBk + ')에 ' + E.josa(fa.dayG, '을', '를') + ' 앉혔습니다. ' + jgThird(fa.jg.read) + '. ' + names.b + ' 님은 일지 ' + fb.dayB + '(' + fb.dayBk + ')에 ' + E.josa(fb.dayG, '을', '를') + ' 앉혔습니다. ' + jgThird(fb.jg.read) + '. ' + pickv([
+          '그래서 참아 둔 것이 다음 날 두 배로 돌아옵니다. 그날 안에 꺼내세요.',
+          '이 조합은 말이 늦으면 마음이 먼저 식습니다. 짧게라도 그 자리에서 확인하세요.',
+          '서운함이 생기면 “나는 이게 서운했어”로 시작하세요. 이 두 사람은 그 문장에 약합니다.',
+          '두 사람은 서운함을 오래 기억하는 쪽이라, 그날의 말 한마디가 다음 계절까지 갑니다.'
+        ], 'srw' + fa.dayG + fb.dayG),
+      pickv([
+        '한 달에 한 번은 ' + fa.yong + '·' + fb.yong + ' 기운이 있는 자리(' + YONG[fa.yong].place + ')에서 두 사람만의 시간을 만드세요. 이 두 사주는 익숙함보다 새로운 자리에서 다시 붙습니다.',
+        '한 달에 한 번은 ' + names.a + ' 님의 ' + fa.yong + ' 자리(' + YONG[fa.yong].place + ')와 ' + names.b + ' 님의 ' + fb.yong + ' 자리(' + YONG[fb.yong].place + ') 중 한 곳을 골라 두 사람만의 시간을 만드세요. 고르는 사람이 그날의 분위기를 잡게 됩니다.',
+        '한 달에 한 번은 ' + E.josa(YONG[fa.yong].time, '이나', '나') + ' ' + YONG[fb.yong].time + '처럼 두 사람의 기운이 살아나는 시간에 만나세요. 같은 장소라도 그 시간대에 앉으면 이 사주는 훨씬 부드러워집니다.',
+        '한 달에 한 번은 두 사람이 각자 좋아하는 것을 하나씩 준비해 오세요 — ' + names.a + ' 님은 ' + fa.yong + ' 기운(' + YONG[fa.yong].item + '), ' + names.b + ' 님은 ' + fb.yong + ' 기운(' + YONG[fb.yong].item + '). 이 두 사주는 나누는 자리에서 다시 붙습니다.'
+      ], 'month' + fa.yong + fb.yong)
     ];
     return { open: open, rx: rx };
   }
@@ -554,7 +601,7 @@ window.SAJU_RX = (function () {
     var out = {};
     if (kind === 'samjae') {
       out.rules = [
-        '돈은 묶고 계약은 미루기 — ' + f.dmKey + '에게 2027년은 ' + (y.samjae.is ? '삼재의 마지막 해라 남은 것을 정리하는 때' : '삼재는 아니지만 ' + f.lack + '이 ' + f.lackN + '개로 얇아 확장보다 정리가 맞는 때') + '입니다.',
+        '돈은 묶고 계약은 미루기 — ' + f.dmKey + '에게 2027년은 ' + (y.samjae.is ? '삼재의 마지막 해라 남은 것을 정리하는 때' : '삼재는 아니지만 ' + (f.lackN === 0 ? f.lack + '이 없어' : f.lack + '이 ' + f.lackN + '개로 얇아') + ' 확장보다 정리가 맞는 때') + '입니다.',
         '몸을 먼저 챙기기 — ' + E.josa(f.strongEl, '이', '가') + ' ' + f.pct[f.strongEl] + '%로 넘치는 사주라 ' + E.ELEM_DEEP[f.strongEl].organ + '에 부담이 먼저 옵니다. 수면과 검진을 일정에 먼저 넣으세요.',
         '문서로 남기기 — 일지 ' + f.dayB + '의 ' + f.dayG + ' 결은 구두 약속을 기억하지 못합니다. 돈과 일은 반드시 글로 남기세요.'
       ];

@@ -10,6 +10,7 @@ logs = []
 
 ctx = quickjs.Context()
 ctx.add_callable('__log', lambda s: logs.append(str(s)))
+ctx.add_callable('__read', lambda p: open(os.path.join(root, p), encoding='utf-8').read())
 ctx.eval("""
 var window = globalThis;
 var console = { log: function(){ var a=[].slice.call(arguments).join(' '); __log(a); },
