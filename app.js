@@ -2075,7 +2075,7 @@
       '<div class="y27-line-head"><b>' + m.no + '월 <small>' + m.hanja + '</small></b>' +
       '<span>' + m.god + ' · ' + m.stage + '</span><em class="y27-score">' + m.tag + ' ' + m.score + '</em></div>' +
       (m.story || [m.line]).map(s => '<p>' + s + '</p>').join('') +
-      '<p class="y27-fix">방어 · ' + esc(m.fix) + '</p></div>').join('') + '</div>';
+      '<p class="y27-fix">이 달에 조심할 것 — ' + esc(m.fix) + '</p></div>').join('') + '</div>';
   }
 
   function y27Half(h, label) {

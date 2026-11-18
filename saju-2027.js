@@ -370,7 +370,7 @@
         ? base.no + '월 ' + base.hanja + '에는 ' + (ACTION[god] || '평소의 일') + '에 힘이 실립니다. ' + (relMine.indexOf('합') >= 0 ? '내 일지와 합해 사람이 붙으니 미뤄 둔 연락과 제안을 이 달에 꺼내세요.' : relYear.indexOf('합') >= 0 ? '올해의 未토와 합해 거래와 계약이 맺어지기 좋습니다.' : PUSH_T[tipIdx % PUSH_T.length])
         : verdict === '균형'
           ? base.no + '월 ' + base.hanja + '에는 ' + E.josa(ACTION[god] || '평소의 일', '은', '는') + ' 절반만 진행하세요. ' + BAL_T[tipIdx % BAL_T.length]
-          : (negs.length ? flatRel(negs) + ' 관계가 겹쳐 ' : '기운이 빠지는 달이라 ') + DEF_T[tipIdx % DEF_T.length] + ' ' + gs.tip + ' (일지 ' + chart.pillars.day.hanja + ' · ' + (relMine.length ? relMine.join('·') : '무관') + ')';
+          : (negs.length ? flatRel(negs) + ' 관계가 겹쳐 ' : '기운이 빠지는 달이라 ') + DEF_T[tipIdx % DEF_T.length] + ' ' + E.josa(ACTION[god] || '평소의 일', '은', '는') + ' 이 달에 새로 시작하지 마세요. (일지 ' + chart.pillars.day.hanja + ' · ' + (relMine.length ? relMine.join('·') : '무관') + ')';
 
       return {
         no: base.no, idx: base.idx, hanja: base.hanja, ko: base.ko,
